@@ -1,0 +1,28 @@
+/projeto-escola
+│── /assets
+│    ├── /css (Arquivos CSS personalizados)
+│    ├── /js (Scripts JavaScript e AJAX)
+│    ├── /img (Imagens e logos)
+│── /config
+│    ├── conexao.php (Conexão com o banco de dados)
+│    ├── funcoes.php (Funções auxiliares)
+│── /controllers
+│    ├── alunos.php (CRUD de alunos)
+│    ├── usuarios.php (CRUD de usuários)
+│    ├── professores.php (CRUD de professores)
+│    ├── classes.php (CRUD de classes)
+│    ├── chamadas.php (CRUD de chamadas)
+│── /views
+│    ├── index.php (Página inicial)
+│    ├── alunos.php (Listagem de alunos)
+│    ├── usuarios.php (Listagem de usuários)
+│    ├── professores.php (Listagem de professores)
+│    ├── chamadas.php (Listagem e registro de chamadas)
+│── /ajax
+│    ├── alunos.ajax.php (Requisições AJAX para alunos)
+│    ├── usuarios.ajax.php (Requisições AJAX para usuários)
+│    ├── chamadas.ajax.php (Requisições AJAX para chamadas)
+│── /logs
+│    ├── auditoria.log (Registro de ações do sistema)
+│── .htaccess (Configuração de URL amigável)
+│── index.php (Redirecionamento para a página principal)
