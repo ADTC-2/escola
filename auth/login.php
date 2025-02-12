@@ -1,4 +1,11 @@
-<?php session_start(); ?>
+<?php 
+session_start();
+
+// Captura mensagem de erro, se existir
+$mensagem = isset($_SESSION['mensagem']) ? $_SESSION['mensagem'] : '';
+unset($_SESSION['mensagem']); // Remove a mensagem da sessão após exibição
+?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -20,22 +27,25 @@
 <div class="login-container">
     <div class="login-card">
         <div class="card-header text-center">
-            <img id ="img_logo_form" src="../assets/images/biblia.png">
+            <img id="img_logo_form" src="../assets/images/biblia.png">
             <h4 id="texto_form">Escola Bíblica Dominical</h4>
-            <p>ADTC2 - MARANGUAPE </p>
+            <p>ADTC2 - MARANGUAPE</p>
         </div>
         <div class="card-body">
-            <form id="formLogin">
+            <?php if (!empty($mensagem)): ?>
+                <div class="alert alert-danger"><?= $mensagem; ?></div>
+            <?php endif; ?>
+            
+            <form method="POST" action="validar_login.php">
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" class="form-control" placeholder="Digite seu email" required>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="Digite seu email" required>
                 </div>
                 <div class="form-group">
                     <label for="senha">Senha</label>
-                    <input type="password" id="senha" class="form-control" placeholder="Digite sua senha" required>
+                    <input type="password" id="senha" name="senha" class="form-control" placeholder="Digite sua senha" required>
                 </div>
                 <button type="submit" class="btn btn-login">Entrar</button>
-                <div id="msgErro" class="text-danger mt-2"></div>
             </form>
             <div class="text-center mt-3">
                 <a href="#" class="forgot-password">Esqueceu a senha?</a>
@@ -44,10 +54,11 @@
     </div>
 </div>
 
-<!-- jQuery and Bootstrap JS -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/js/login/login.js"></script>
 </body>
 </html>
+
+
+
 
