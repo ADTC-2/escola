@@ -4,58 +4,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
+    <title>Login - Sistema E.B.D</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- FontAwesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="../assets/css/tela_login.css">
 </head>
 <body>
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header text-center">
-                    <h4>Login</h4>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="card-header text-center">
+            <img id ="img_logo_form" src="../assets/images/biblia.png">
+            <h4 id="texto_form">Escola Bíblica Dominical</h4>
+            <p>ADTC2 - MARANGUAPE </p>
+        </div>
+        <div class="card-body">
+            <form id="formLogin">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" class="form-control" placeholder="Digite seu email" required>
                 </div>
-                <div class="card-body">
-                    <form id="formLogin">
-                        <div class="mb-3">
-                            <label>Email</label>
-                            <input type="email" id="email" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label>Senha</label>
-                            <input type="password" id="senha" class="form-control" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Entrar</button>
-                        <div id="msgErro" class="text-danger mt-2"></div>
-                    </form>
+                <div class="form-group">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" class="form-control" placeholder="Digite sua senha" required>
                 </div>
+                <button type="submit" class="btn btn-login">Entrar</button>
+                <div id="msgErro" class="text-danger mt-2"></div>
+            </form>
+            <div class="text-center mt-3">
+                <a href="#" class="forgot-password">Esqueceu a senha?</a>
             </div>
         </div>
     </div>
 </div>
 
-<script src="../assets/js/jquery.min.js"></script>
-<script>
-$(document).ready(function() {
-    $("#formLogin").submit(function(event) {
-        event.preventDefault();
-        var email = $("#email").val();
-        var senha = $("#senha").val();
-
-        $.ajax({
-            url: "validar_login.php",
-            type: "POST",
-            data: { email: email, senha: senha },
-            success: function(res) {
-                if (res == "sucesso") {
-                    window.location.href = "../views/dashboard.php";
-                } else {
-                    $("#msgErro").text(res);
-                }
-            }
-        });
-    });
-});
-</script>
+<!-- jQuery and Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/login/login.js"></script>
 </body>
 </html>
+
