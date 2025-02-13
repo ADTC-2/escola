@@ -53,20 +53,33 @@ if ($_POST['acao'] == 'buscar') {
 }
 
 if ($_POST['acao'] == 'editar') {
-    $id = $_POST['id'];
-    $nome = $_POST['nome'];
-    $data_nascimento = $_POST['data_nascimento'];
-    $telefone = $_POST['telefone'];
+    try {
+        $id = $_POST['id'];
+        $nome = $_POST['nome'];
 
-    // Aqui você pode usar a lógica de atualização no banco de dados
-    $query = "UPDATE alunos SET nome = ?, data_nascimento = ?, telefone = ? WHERE id = ?";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute([$nome, $data_nascimento, $telefone, $id]);
+        // Verifica se a congregação existe
+        $sqlVerifica = "SELECT id FROM congregacoes WHERE id = ?";
+        $stmtVerifica = $pdo->prepare($sqlVerifica);
+        $stmtVerifica->execute([$id]);
+        $congregacao = $stmtVerifica->fetch();
 
-    echo json_encode([
-        'sucesso' => true,
-        'mensagem' => 'Aluno atualizado com sucesso!'
-    ]);
+        if (!$congregacao) {
+            echo json_encode(['sucesso' => false, 'mensagem' => 'Congregação não encontrada']);
+            exit;
+        }
+
+        // Atualizar congregação
+        $query = "UPDATE congregacoes SET nome = ? WHERE id = ?";
+        $stmt = $pdo->prepare($query);
+        $stmt->execute([$nome, $id]);
+
+        echo json_encode([
+            'sucesso' => true,
+            'mensagem' => 'Congregação atualizada com sucesso!'
+        ]);
+    } catch (Exception $e) {
+        echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao editar congregação: ' . $e->getMessage()]);
+    }
 }
 
 ?>

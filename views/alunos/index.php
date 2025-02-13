@@ -72,7 +72,7 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
         <div class="container">
             <a class="navbar-brand" href="#">E.B.D - Painel</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -84,6 +84,7 @@
                     <li class="nav-item"><a class="nav-link" href="../alunos/index.php">Alunos</a></li>
                     <li class="nav-item"><a class="nav-link" href="../professores/index.php">Professores</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">Relatórios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../congregacao/index.php">Congregações</a></li>
                     <li class="nav-item">
                         <a class="nav-link" href="../../auth/logout.php">
                             <i class="fas fa-sign-out-alt"></i> Sair

@@ -15,27 +15,24 @@
     <!-- Ícones -->
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light">
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
         <div class="container">
             <a class="navbar-brand" href="#">E.B.D - Painel</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="dashboard.php">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./alunos/index.php">Alunos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./professores/index.php">Professores</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Relatórios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./congregacao/index.php">Congregações</a></li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="dashboard.php">Dashboard</a>
+                        <a class="nav-link" href="../../auth/logout.php">
+                            <i class="fas fa-sign-out-alt"></i> Sair
+                        </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="../views/alunos/index.php">Alunos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="../views/professores/index.php">Professores</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Relatórios</a>
-                    </li>
-                    <li class="nav-item"><a class="nav-link" href="../../auth/logout.php"><i class="fas fa-sign-out-alt"></i></a></li>
                 </ul>
             </div>
         </div>
