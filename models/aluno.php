@@ -1,11 +1,11 @@
 <?php
-require_once "config/config.php";
+require_once "../config/conexao.php";
 
 class Aluno {
     private $db;
 
     public function __construct() {
-        global $pdo;
+        global $pdo;  // Assumindo que você tenha um objeto de conexão global
         $this->db = $pdo;
     }
 
@@ -36,3 +36,5 @@ class Aluno {
         return $stmt->execute([$id]);
     }
 }
+?>
+

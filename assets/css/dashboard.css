@@ -44,6 +44,12 @@ body {
     background-color: #007bff;
     border-color: #007bff;
 }
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.25;
+    border-radius: 0.2rem;
+}
 .logout-btn {
     position: fixed;
     bottom: 30px;

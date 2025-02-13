@@ -1,59 +1,77 @@
 <?php
-require_once "../models/Aluno.php";
+// Garantir que a conexão esteja correta
+require_once "../config/conexao.php"; // Inclui a configuração de conexão
 
-$alunoModel = new Aluno();
-$acao = $_POST['acao'] ?? $_GET['acao'] ?? '';
-
-try {
-    switch ($acao) {
-        case "listar":
-            echo json_encode(["sucesso" => true, "data" => $alunoModel->listar()]);
-            break;
-
-        case "salvar":
-            $id = $_POST["id"] ?? null;
-            $dados = [
-                "nome" => $_POST["nome"] ?? '',
-                "data_nascimento" => $_POST["data_nascimento"] ?? '',
-                "telefone" => $_POST["telefone"] ?? ''
-            ];
-
-            if ($id) {
-                $dados["id"] = $id;
-                $sucesso = $alunoModel->editar($dados);
-                echo json_encode(["sucesso" => $sucesso, "mensagem" => "Aluno atualizado com sucesso"]);
-            } else {
-                $sucesso = $alunoModel->salvar($dados);
-                echo json_encode(["sucesso" => $sucesso, "mensagem" => "Aluno cadastrado com sucesso"]);
-            }
-            break;
-
-        case "editar":
-            $id = $_GET["id"] ?? null;
-            if ($id) {
-                echo json_encode(["sucesso" => true, "data" => $alunoModel->buscarPorId($id)]);
-            } else {
-                echo json_encode(["sucesso" => false, "mensagem" => "ID não informado"]);
-            }
-            break;
-
-        case "excluir":
-            $id = $_POST["id"] ?? null;
-            if ($id) {
-                $sucesso = $alunoModel->excluir($id);
-                echo json_encode(["sucesso" => $sucesso, "mensagem" => "Aluno excluído com sucesso"]);
-            } else {
-                echo json_encode(["sucesso" => false, "mensagem" => "ID não informado"]);
-            }
-            break;
-
-        default:
-            echo json_encode(["sucesso" => false, "mensagem" => "Ação inválida"]);
+// Exemplo: usando a conexão $pdo diretamente
+if ($_POST['acao'] == 'listar') {
+    try {
+        // Buscar todos os alunos
+        $sql = "SELECT * FROM alunos";
+        $stmt = $pdo->prepare($sql);  // Use $pdo aqui em vez de $conexao
+        $stmt->execute();
+        $alunos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode(['sucesso' => true, 'data' => $alunos]);
+    } catch (Exception $e) {
+        echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao buscar alunos: ' . $e->getMessage()]);
     }
-} catch (Exception $e) {
-    echo json_encode(["sucesso" => false, "mensagem" => "Erro: " . $e->getMessage()]);
 }
+
+if ($_POST['acao'] == 'salvar') {
+    // Salvar aluno
+    $nome = $_POST['nome'];
+    $data_nascimento = $_POST['data_nascimento'];
+    $telefone = $_POST['telefone'];
+    
+    $sql = "INSERT INTO alunos (nome, data_nascimento, telefone) VALUES (?, ?, ?)";
+    $stmt = $pdo->prepare($sql); // Use $pdo aqui
+    $stmt->execute([$nome, $data_nascimento, $telefone]);
+    echo json_encode(['sucesso' => true, 'mensagem' => 'Aluno cadastrado com sucesso']);
+}
+
+if ($_POST['acao'] == 'excluir') {
+    // Excluir aluno
+    $id = $_POST['id'];
+    $sql = "DELETE FROM alunos WHERE id = ?";
+    $stmt = $pdo->prepare($sql); // Use $pdo aqui
+    $stmt->execute([$id]);
+    echo json_encode(['sucesso' => true, 'mensagem' => 'Aluno excluído com sucesso']);
+}
+
+if ($_POST['acao'] == 'buscar') {
+    // Buscar dados do aluno para edição
+    $id = $_POST['id'];
+    $sql = "SELECT * FROM alunos WHERE id = ?";
+    $stmt = $pdo->prepare($sql); // Use $pdo aqui
+    $stmt->execute([$id]);
+    $aluno = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($aluno) {
+        echo json_encode(['sucesso' => true, 'aluno' => $aluno]);
+    } else {
+        echo json_encode(['sucesso' => false, 'mensagem' => 'Aluno não encontrado']);
+    }
+}
+
+if ($_POST['acao'] == 'editar') {
+    $id = $_POST['id'];
+    $nome = $_POST['nome'];
+    $data_nascimento = $_POST['data_nascimento'];
+    $telefone = $_POST['telefone'];
+
+    // Aqui você pode usar a lógica de atualização no banco de dados
+    $query = "UPDATE alunos SET nome = ?, data_nascimento = ?, telefone = ? WHERE id = ?";
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([$nome, $data_nascimento, $telefone, $id]);
+
+    echo json_encode([
+        'sucesso' => true,
+        'mensagem' => 'Aluno atualizado com sucesso!'
+    ]);
+}
+
 ?>
+
+
 
 
 
