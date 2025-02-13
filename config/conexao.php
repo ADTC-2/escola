@@ -1,4 +1,6 @@
 <?php
+define('ROOT_PATH', $_SERVER['DOCUMENT_ROOT'] . '/escola');
+
 $host = "localhost";
 $dbname = "escola";
 $username = "root";

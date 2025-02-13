@@ -1,18 +1,96 @@
-<?php  require_once '../auth/valida_sessao.php'?>
+<?php  
+    require_once '../config/conexao.php';
+    require_once '../auth/valida_sessao.php';
+?>
 
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Sistema E.B.D</title>
+    <title>Sistema E.B.D</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"> 
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <!-- Ícones -->
 </head>
 <body>
-    <div class="container mt-5">
-        <h2>Bem-vindo, <?= $_SESSION['usuario_email']; ?>!</h2>
-        <a href="../auth/logout.php" class="btn btn-danger">Sair</a>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">E.B.D - Painel</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="dashboard.php">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../views/alunos/index.php">Alunos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../views/professores/index.php">Professores</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Relatórios</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="../../auth/logout.php"><i class="fas fa-sign-out-alt"></i></a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2>Bem-vindo, <?= $_SESSION['usuario_perfil']; ?>!</h2>
+
+        <div class="row">
+            <!-- Card de Chamadas -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <img src="../assets/images/user_img.png" alt="User">
+                            <strong><?= $_SESSION['usuario_perfil']; ?></strong>
+                        </div>
+                        <div>
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Total de Chamadas:</strong> 23</p>
+                        <p><strong>Última Chamada:</strong> 10/02/2025</p>
+                        <a href="#" class="btn btn-primary">
+                            <i class="fas fa-plus-circle"></i> Adicionar Chamada
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card de Usuário -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <img src="../assets/images/user_img.png" alt="User">
+                            <strong>Seu Perfil</strong>
+                        </div>
+                        <div>
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Email:</strong> <?= $_SESSION['usuario_email']; ?></p>
+                        <p><strong>Função:</strong> <?= $_SESSION['usuario_perfil']; ?></p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+
+
 

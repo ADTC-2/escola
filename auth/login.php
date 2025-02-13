@@ -1,9 +1,12 @@
 <?php 
 session_start();
 
-// Captura mensagem de erro, se existir
+// Captura mensagem de erro ou sucesso, se existir
 $mensagem = isset($_SESSION['mensagem']) ? $_SESSION['mensagem'] : '';
 unset($_SESSION['mensagem']); // Remove a mensagem da sessão após exibição
+
+// Define a classe do alerta com base na mensagem
+$alertClass = (stripos($mensagem, 'sucesso') !== false) ? 'alert-success' : 'alert-danger';
 ?>
 
 <!DOCTYPE html>
@@ -33,7 +36,11 @@ unset($_SESSION['mensagem']); // Remove a mensagem da sessão após exibição
         </div>
         <div class="card-body">
             <?php if (!empty($mensagem)): ?>
-                <div class="alert alert-danger"><?= $mensagem; ?></div>
+                <div class="alert <?= $alertClass ?> alert-dismissible fade show" role="alert">
+                    <i class="fas <?= ($alertClass == 'alert-success') ? 'fa-check-circle' : 'fa-exclamation-circle' ?>"></i>
+                    <?= $mensagem; ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
             <?php endif; ?>
             
             <form method="POST" action="validar_login.php">
@@ -58,6 +65,7 @@ unset($_SESSION['mensagem']); // Remove a mensagem da sessão após exibição
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
 
 
 
