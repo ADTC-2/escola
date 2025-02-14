@@ -29,8 +29,8 @@ require_once '../../config/conexao.php';
                     <li class="nav-item"><a class="nav-link" href="../alunos/index.php">Alunos</a></li>
                     <li class="nav-item"><a class="nav-link" href="../classes/index.php">Classes</a></li>
                     <li class="nav-item"><a class="nav-link" href="../professores/index.php">Professores</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Relatórios</a></li>
-                    <li class="nav-item"><a class="nav-link" href="../congregacao/index.php">Congregações</a></li>                    
+                    <li class="nav-item"><a class="nav-link" href="../congregacao/index.php">Congregações</a></li> 
+                    <li class="nav-item"><a class="nav-link" href="#">Relatórios</a></li>                                       
                     <li class="nav-item"><a class="nav-link" href="../../auth/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
                 </ul>
             </div>
@@ -120,7 +120,6 @@ require_once '../../config/conexao.php';
 <script>
     $(document).ready(function() {
         var table = $('#tabelaClasses').DataTable({
-            "processing": true,
             "serverSide": false,
             "ajax": {
                 url: '../../controllers/classe.php',
@@ -145,7 +144,7 @@ require_once '../../config/conexao.php';
                 {
                     "data": "id",
                     "render": function(data) {
-                        return `
+                        return ` 
                             <button class='btn btn-warning btn-sm editar' data-id='${data}'>Editar</button>
                             <button class='btn btn-danger btn-sm excluir' data-id='${data}'>Excluir</button>`;
                     }
@@ -234,6 +233,7 @@ require_once '../../config/conexao.php';
         });
     });
 </script>
+
 
 
 

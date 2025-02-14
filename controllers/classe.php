@@ -22,7 +22,7 @@ if (isset($_POST['acao'])) {
         case 'salvar':
             if (isset($_POST['nome']) && isset($_POST['congregacao_id'])) {
                 try {
-                    $query = "INSERT INTO classe (nome, congregacao_id) VALUES (:nome, :congregacao_id)";
+                    $query = "INSERT INTO classes (nome, congregacao_id) VALUES (:nome, :congregacao_id)";
                     $stmt = $pdo->prepare($query);
                     $stmt->bindParam(':nome', $_POST['nome']);
                     $stmt->bindParam(':congregacao_id', $_POST['congregacao_id']);
@@ -39,7 +39,7 @@ if (isset($_POST['acao'])) {
         case 'editar':
             if (isset($_POST['id']) && isset($_POST['nome']) && isset($_POST['congregacao_id'])) {
                 try {
-                    $query = "UPDATE classe SET nome = :nome, congregacao_id = :congregacao_id WHERE id = :id";
+                    $query = "UPDATE classes SET nome = :nome, congregacao_id = :congregacao_id WHERE id = :id";
                     $stmt = $pdo->prepare($query);
                     $stmt->bindParam(':nome', $_POST['nome']);
                     $stmt->bindParam(':congregacao_id', $_POST['congregacao_id']);
@@ -57,7 +57,7 @@ if (isset($_POST['acao'])) {
         case 'excluir':
             if (isset($_POST['id'])) {
                 try {
-                    $query = "DELETE FROM classe WHERE id = :id";
+                    $query = "DELETE FROM classes WHERE id = :id";
                     $stmt = $pdo->prepare($query);
                     $stmt->bindParam(':id', $_POST['id']);
                     $stmt->execute();

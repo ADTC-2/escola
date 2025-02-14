@@ -84,8 +84,8 @@
                     <li class="nav-item"><a class="nav-link" href="../alunos/index.php">Alunos</a></li>
                     <li class="nav-item"><a class="nav-link" href="../classes/index.php">Classes</a></li>
                     <li class="nav-item"><a class="nav-link" href="../professores/index.php">Professores</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Relatórios</a></li>
                     <li class="nav-item"><a class="nav-link" href="../congregacao/index.php">Congregações</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Relatórios</a></li>                    
                     <li class="nav-item">
                         <a class="nav-link" href="../../auth/logout.php">
                             <i class="fas fa-sign-out-alt"></i> Sair
@@ -154,6 +154,7 @@
                 </div>
                 <div class="modal-body">
                     <form id="formEditarAluno">
+                        <input type="hidden" id="idEditar">  <!-- Campo oculto para o ID -->
                         <div class="mb-3">
                             <label for="nomeEditar" class="form-label">Nome</label>
                             <input type="text" class="form-control" id="nomeEditar" required>
@@ -173,104 +174,123 @@
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            let paginaAtual = 1;
-            const itensPorPagina = 6;
 
-            // Função para listar alunos
-            function listarAlunos(pagina = 1, filtro = '') {
-                $.ajax({
-                    url: "../../controllers/aluno.php",
-                    type: "POST",
-                    data: { acao: "listar", pagina: pagina, filtro: filtro },
-                    success: function(response) {
-                        const data = JSON.parse(response);
-                        if (!data.sucesso) {
-                            alert(data.mensagem);
-                            return;
-                        }
+<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+$(document).ready(function() {
+    let paginaAtual = 1;
+    const itensPorPagina = 6;
 
-                        const alunos = data.data || [];
-                        const totalAlunos = data.total || 0;
-                        const cardsContainer = $("#cardsAlunos");
-                        const paginationLinks = $("#paginationLinks");
-
-                        cardsContainer.empty();
-                        paginationLinks.empty();
-
-                        alunos.forEach(aluno => {
-                            const card = `
-                                <div class="card-aluno">
-                                    <h5 class="card-title">${aluno.nome}</h5>
-                                    <p class="card-text">Data de Nascimento: ${formatarData(aluno.data_nascimento)}</p>
-                                    <p class="card-text">Telefone: ${aluno.telefone}</p>
-                                    <button class="btn btn-warning btn-sm btnEditar" data-id="${aluno.id}" data-nome="${aluno.nome}" data-data_nascimento="${aluno.data_nascimento}" data-telefone="${aluno.telefone}">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-danger btn-sm btnExcluir" data-id="${aluno.id}">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </div>
-                            `;
-                            cardsContainer.append(card);
-                        });
-
-                        const totalPaginas = Math.ceil(totalAlunos / itensPorPagina);
-                        for (let i = 1; i <= totalPaginas; i++) {
-                            const link = `<li class="page-item ${i === pagina ? 'active' : ''}"><a class="page-link" href="#" data-pagina="${i}">${i}</a></li>`;
-                            paginationLinks.append(link);
-                        }
-                    },
-                    error: function(xhr, error, thrown) {
-                        alert("Erro ao carregar dados: " + thrown);
-                    }
-                });
-            }
-
-            // Função para formatar a data
-            function formatarData(data) {
-                const date = new Date(data);
-                const dia = ("0" + date.getDate()).slice(-2);
-                const mes = ("0" + (date.getMonth() + 1)).slice(-2);
-                const ano = date.getFullYear();
-                return `${dia}/${mes}/${ano}`;
-            }
-
-            // Máscara de telefone
-            function mascaraTelefone(input) {
-                const valor = input.value.replace(/\D/g, '');
-                if (valor.length <= 10) {
-                    input.value = valor.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-                } else {
-                    input.value = valor.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    // Função para listar alunos com paginação
+    function listarAlunos(pagina = 1, filtro = '') {
+        $.ajax({
+            url: "../../controllers/aluno.php",
+            type: "POST",
+            data: { acao: "listar", pagina: pagina, filtro: filtro },
+            success: function(response) {
+                const data = JSON.parse(response);
+                if (!data.sucesso) {
+                    alert(data.mensagem);
+                    return;
                 }
+
+                const alunos = data.data || [];
+                const totalAlunos = data.total || 0;
+                const cardsContainer = $("#cardsAlunos");
+                const paginationLinks = $("#paginationLinks");
+
+                cardsContainer.empty();
+                paginationLinks.empty();
+
+                alunos.forEach(aluno => {
+                    const card = `
+                        <div class="card-aluno">
+                            <h5 class="card-title">${aluno.nome}</h5>
+                            <p class="card-text">Data de Nascimento: ${formatarData(aluno.data_nascimento)}</p>
+                            <p class="card-text">Telefone: ${aluno.telefone}</p>
+                            <button class="btn btn-warning btn-sm btnEditar" data-id="${aluno.id}" data-nome="${aluno.nome}" data-data_nascimento="${aluno.data_nascimento}" data-telefone="${aluno.telefone}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm btnExcluir" data-id="${aluno.id}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    `;
+                    cardsContainer.append(card);
+                });
+
+                const totalPaginas = Math.ceil(totalAlunos / itensPorPagina);
+                for (let i = 1; i <= totalPaginas; i++) {
+                    const link = `<li class="page-item ${i === pagina ? 'active' : ''}"><a class="page-link" href="#" data-pagina="${i}">${i}</a></li>`;
+                    paginationLinks.append(link);
+                }
+            },
+            error: function(xhr, error, thrown) {
+                alert("Erro ao carregar dados: " + thrown);
             }
+        });
+    }
 
-            // Ação de busca
-            $('#busca').on('keyup', function() {
-                const filtro = $(this).val();
-                listarAlunos(1, filtro);
-            });
+    // Função para formatar a data
+    function formatarData(data) {
+        const date = new Date(data);
+        const dia = ("0" + date.getDate()).slice(-2);
+        const mes = ("0" + (date.getMonth() + 1)).slice(-2);
+        const ano = date.getFullYear();
+        return `${dia}/${mes}/${ano}`;
+    }
 
-            // Navegar na paginação
-            $(document).on('click', '.page-link', function(e) {
-                e.preventDefault();
-                const pagina = $(this).data('pagina');
-                listarAlunos(pagina);
-            });
+    // Editar aluno
+    $(document).on('click', '.btnEditar', function() {
+        const aluno = $(this).data();
+        $('#idEditar').val(aluno.id);
+        $('#nomeEditar').val(aluno.nome);
+        $('#data_nascimentoEditar').val(aluno.data_nascimento);
+        $('#telefoneEditar').val(aluno.telefone);
+        $('#modalEditarAluno').modal('show');
+    });
 
-            // Editar aluno
-            $(document).on('click', '.btnEditar', function() {
-                const aluno = $(this).data();
-                $('#nomeEditar').val(aluno.nome);
-                $('#data_nascimentoEditar').val(aluno.data_nascimento);
-                $('#telefoneEditar').val(aluno.telefone);
-                $('#modalEditarAluno').modal('show');
-            });
+    // Atualizar dados do aluno (no modal)
+    $("#formEditarAluno").on("submit", function(e) {
+        e.preventDefault();
+        
+        const id = $("#idEditar").val();  // Pega o ID do aluno
+        const nome = $("#nomeEditar").val();
+        const data_nascimento = $("#data_nascimentoEditar").val();
+        const telefone = $("#telefoneEditar").val();
 
+        // Verificar se todos os campos estão preenchidos
+        if (!nome || !data_nascimento || !telefone) {
+            alert("Todos os campos são obrigatórios!");
+            return;
+        }
+
+        // Envia os dados via AJAX para o controlador de edição
+        $.ajax({
+            url: '../../controllers/aluno.php',
+            type: 'POST',
+            data: {
+                acao: 'editar',  // Ação para editar o aluno
+                id: id,  // ID do aluno
+                nome: nome,  // Nome do aluno
+                data_nascimento: data_nascimento,  // Data de nascimento
+                telefone: telefone  // Telefone do aluno
+            },
+            success: function(response) {
+                const data = JSON.parse(response);
+                alert(data.mensagem);  // Exibe a mensagem retornada pelo servidor
+
+                if (data.sucesso) {
+                    listarAlunos(paginaAtual);  // Atualiza a lista de alunos
+                    $('#modalEditarAluno').modal('hide');  // Fecha o modal após o sucesso
+                }
+            },
+            error: function(xhr, status, error) {
+                alert("Erro ao editar aluno: " + error);
+            }
+        });
+    });
             // Excluir aluno
             $(document).on('click', '.btnExcluir', function() {
                 const id = $(this).data('id');
@@ -293,36 +313,19 @@
                 }
             });
 
-            // Cadastro de aluno
-            $("#formCadastrarAluno").on("submit", function(e) {
-                e.preventDefault();
-                $.ajax({
-                    url: '../../controllers/aluno.php',
-                    type: 'POST',
-                    data: {
-                        acao: 'salvar',
-                        nome: $("#nome").val(),
-                        data_nascimento: $("#data_nascimento").val(),
-                        telefone: $("#telefone").val()
-                    },
-                    success: function(response) {
-                        const data = JSON.parse(response);
-                        alert(data.mensagem);
-                        if (data.sucesso) {
-                            listarAlunos(1);
-                            $('#modalCadastrar').modal('hide');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        alert("Erro ao cadastrar aluno: " + error);
-                    }
-                });
-            });
 
-            // Inicializar a listagem de alunos
-            listarAlunos(paginaAtual);
-        });
-    </script>
+    // Função de paginação
+    $(document).on('click', '.page-link', function(e) {
+        e.preventDefault();
+        const pagina = $(this).data('pagina');
+        paginaAtual = pagina;
+        listarAlunos(pagina);  // Atualiza a lista de alunos com a nova página
+    });
+
+    // Inicializar a listagem de alunos
+    listarAlunos(paginaAtual);
+});
+</script>
 </body>
 
 </html>
