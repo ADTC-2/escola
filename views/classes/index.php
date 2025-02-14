@@ -40,7 +40,7 @@ require_once '../../config/conexao.php';
     <div class="container mt-5">
         <h2>Gerenciamento de Classes</h2>
         <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
-            <i class="fas fa-plus"></i> Adicionar Classe
+        <i class="fas fa-plus-circle"></i> <span><strong>Adicionar Nova Classe</strong></span>
         </button><br><br>
 
         <table class="table table-striped" id="tabelaClasses">
@@ -106,7 +106,7 @@ require_once '../../config/conexao.php';
                                 <!-- As opções serão carregadas dinamicamente -->
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary">Salvar alterações</button>
+                        <button type="submit" class="btn btn-primary">Alterar</button>
                     </form>
                 </div>
             </div>
@@ -145,8 +145,12 @@ require_once '../../config/conexao.php';
                     "data": "id",
                     "render": function(data) {
                         return ` 
-                            <button class='btn btn-warning btn-sm editar' data-id='${data}'>Editar</button>
-                            <button class='btn btn-danger btn-sm excluir' data-id='${data}'>Excluir</button>`;
+                            <button class='btn btn-warning btn-sm editar' data-id='${data}'>
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class='btn btn-danger btn-sm excluir' data-id='${data}'>
+                                <i class="fas fa-trash-alt"></i>
+                            </button>`;
                     }
                 }
             ]
@@ -234,9 +238,7 @@ require_once '../../config/conexao.php';
     });
 </script>
 
-
-
-
 </body>
 
 </html>
+
