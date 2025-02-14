@@ -28,6 +28,7 @@
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link active" href="../dashboard.php">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link" href="../alunos/index.php">Alunos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../classes/index.php">Classes</a></li>
                     <li class="nav-item"><a class="nav-link" href="../professores/index.php">Professores</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">Relatórios</a></li>
                     <li class="nav-item"><a class="nav-link" href="../congregacao/index.php">Congregações</a></li>
@@ -110,124 +111,149 @@
     <!-- Adicionando o script do DataTables -->
     <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
 
-    <script>
-        function carregarCongregacoes() {
+<script>
+    function carregarCongregacoes() {
+        $.ajax({
+            url: "../../controllers/congregacao.php",
+            type: "POST",
+            data: { acao: "listar" },
+            success: function(response) {
+                const tbody = $("#listaCongregacoes");
+                tbody.empty();
+                
+                if (response.sucesso && response.data.length > 0) {
+                    response.data.forEach(cong => {
+                        tbody.append(`
+                            <tr>
+                                <td>${cong.id}</td>
+                                <td>${cong.nome}</td>
+                                <td>
+                                    <button class="btn btn-warning btnEditar" data-id="${cong.id}" data-nome="${cong.nome}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-danger btnExcluir" data-id="${cong.id}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                } else {
+                    tbody.append('<tr><td colspan="3" class="text-center">Nenhuma congregação encontrada</td></tr>');
+                }
+
+                // Destruir qualquer instância do DataTable antes de inicializar uma nova
+                if ($.fn.DataTable.isDataTable('#tabelaCongregacoes')) {
+                    $('#tabelaCongregacoes').DataTable().clear().destroy();
+                }
+
+                // Inicializando o DataTable
+                $("#tabelaCongregacoes").DataTable({
+                    "language": {
+                        "url": "/caminho/para/o/arquivo/Portuguese.json"  // Altere para o caminho correto do arquivo JSON local
+                    }
+                });
+            },
+            error: function() {
+                alert("Erro ao carregar as congregações.");
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        carregarCongregacoes();
+
+        // Abrir o modal de edição e preencher os campos
+        $(document).on("click", ".btnEditar", function() {
+            const id = $(this).data("id");
+            const nome = $(this).data("nome");
+
+            // Preencher os campos do modal de edição
+            $("#idEditar").val(id);
+            $("#nomeEditar").val(nome);
+
+            // Abrir o modal de edição
+            $("#modalEditarCongregacao").modal("show");
+        });
+
+        // Salvar nova congregação
+        $("#formCadastrarCongregacao").submit(function(e) {
+            e.preventDefault();
+            const nome = $("#nome").val().trim();
+
+            if (nome === "") {
+                alert("O nome da congregação não pode estar vazio.");
+                return;
+            }
+
             $.ajax({
                 url: "../../controllers/congregacao.php",
                 type: "POST",
-                data: { acao: "listar" },
+                data: { acao: "salvar", nome: nome },
                 success: function(response) {
-                    const tbody = $("#listaCongregacoes");
-                    tbody.empty();
-                    
-                    if (response.length > 0) {
-                        response.forEach(cong => {
-                            tbody.append(`
-                                <tr>
-                                    <td>${cong.id}</td>
-                                    <td>${cong.nome}</td>
-                                    <td>
-                                        <button class="btn btn-warning btnEditar" data-id="${cong.id}" data-nome="${cong.nome}">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-danger btnExcluir" data-id="${cong.id}">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            `);
-                        });
-                    } else {
-                        tbody.append('<tr><td colspan="3" class="text-center">Nenhuma congregação encontrada</td></tr>');
-                    }
-
-                    // Inicializando o DataTable
-                    $("#tabelaCongregacoes").DataTable({
-                        "language": {
-                            "url": "https://cdn.datatables.net/plug-ins/1.12.1/i18n/Portuguese.json"
-                        }
-                    });
-                }
-            });
-        }
-
-        $(document).ready(function() {
-            carregarCongregacoes();
-
-            // Abrir o modal de edição e preencher os campos
-            $(document).on("click", ".btnEditar", function() {
-                const id = $(this).data("id");
-                const nome = $(this).data("nome");
-
-                // Preencher os campos do modal de edição
-                $("#idEditar").val(id);
-                $("#nomeEditar").val(nome);
-
-                // Abrir o modal de edição
-                $("#modalEditarCongregacao").modal("show");
-            });
-
-            // Salvar nova congregação
-            $("#formCadastrarCongregacao").submit(function(e) {
-                e.preventDefault();
-                const nome = $("#nome").val().trim();
-
-                if (nome === "") {
-                    alert("O nome da congregação não pode estar vazio.");
-                    return;
-                }
-
-                $.ajax({
-                    url: "../../controllers/congregacao.php",
-                    type: "POST",
-                    data: { acao: "salvar", nome: nome },
-                    success: function(response) {
-                        alert(response.mensagem);
+                    alert(response.mensagem);
+                    if (response.sucesso) {
                         $("#modalCadastrar").modal("hide");
                         carregarCongregacoes();
                     }
-                });
-            });
-
-            // Editar congregação
-            $("#formEditarCongregacao").submit(function(e) {
-                e.preventDefault();
-                const id = $("#idEditar").val();
-                const nome = $("#nomeEditar").val().trim();
-
-                if (nome === "") {
-                    alert("O nome da congregação não pode estar vazio.");
-                    return;
-                }
-
-                $.ajax({
-                    url: "../../controllers/congregacao.php",
-                    type: "POST",
-                    data: { acao: "editar", id: id, nome: nome },
-                    success: function(response) {
-                        alert(response.mensagem);
-                        $("#modalEditarCongregacao").modal("hide");
-                        carregarCongregacoes();
-                    }
-                });
-            });
-
-            // Excluir congregação
-            $(document).on("click", ".btnExcluir", function() {
-                if (confirm("Deseja excluir esta congregação?")) {
-                    $.ajax({
-                        url: "../../controllers/congregacao.php",
-                        type: "POST",
-                        data: { acao: "excluir", id: $(this).data("id") },
-                        success: function(response) {
-                            alert(response.mensagem);
-                            carregarCongregacoes();
-                        }
-                    });
+                },
+                error: function() {
+                    alert("Erro ao salvar a congregação.");
                 }
             });
         });
-    </script>
+
+        // Editar congregação
+        $("#formEditarCongregacao").submit(function(e) {
+            e.preventDefault();
+            const id = $("#idEditar").val();
+            const nome = $("#nomeEditar").val().trim();
+
+            if (nome === "") {
+                alert("O nome da congregação não pode estar vazio.");
+                return;
+            }
+
+            $.ajax({
+                url: "../../controllers/congregacao.php",
+                type: "POST",
+                data: { acao: "editar", id: id, nome: nome },
+                success: function(response) {
+                    alert(response.mensagem);
+                    if (response.sucesso) {
+                        $("#modalEditarCongregacao").modal("hide");
+                        carregarCongregacoes();
+                    }
+                },
+                error: function() {
+                    alert("Erro ao editar a congregação.");
+                }
+            });
+        });
+
+        // Excluir congregação
+        $(document).on("click", ".btnExcluir", function() {
+            if (confirm("Deseja excluir esta congregação?")) {
+                $.ajax({
+                    url: "../../controllers/congregacao.php",
+                    type: "POST",
+                    data: { acao: "excluir", id: $(this).data("id") },
+                    success: function(response) {
+                        alert(response.mensagem);
+                        if (response.sucesso) {
+                            carregarCongregacoes();
+                        }
+                    },
+                    error: function() {
+                        alert("Erro ao excluir a congregação.");
+                    }
+                });
+            }
+        });
+    });
+</script>
+
+
 
 </body>
 

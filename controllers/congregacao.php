@@ -12,10 +12,18 @@ $acao = $_POST['acao'];
 
 try {
     if ($acao == 'listar') {
-        $sql = "SELECT * FROM congregacoes";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute();
-        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+        try {
+            $sql = "SELECT id, nome FROM congregacoes";  // Pode incluir campos que você precisa
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $dados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+            // Respondendo com sucesso e os dados
+            echo json_encode(['sucesso' => true, 'data' => $dados]);
+        } catch (PDOException $e) {
+            // Caso haja algum erro, responder com erro
+            echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao listar congregações: ' . $e->getMessage()]);
+        }
     }
 
     elseif ($acao == 'salvar') {
