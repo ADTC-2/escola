@@ -291,28 +291,67 @@ $(document).ready(function() {
             }
         });
     });
-            // Excluir aluno
-            $(document).on('click', '.btnExcluir', function() {
-                const id = $(this).data('id');
-                if (confirm("Tem certeza que deseja excluir este aluno?")) {
-                    $.ajax({
-                        url: '../../controllers/aluno.php',
-                        type: 'POST',
-                        data: { acao: 'excluir', id: id },
-                        success: function(response) {
-                            const data = JSON.parse(response);
-                            alert(data.mensagem);
-                            if (data.sucesso) {
-                                listarAlunos(paginaAtual);
-                            }
-                        },
-                        error: function(xhr, status, error) {
-                            alert("Erro ao excluir aluno: " + error);
-                        }
-                    });
+
+    // Excluir aluno
+    $(document).on('click', '.btnExcluir', function() {
+        const id = $(this).data('id');
+        if (confirm("Tem certeza que deseja excluir este aluno?")) {
+            $.ajax({
+                url: '../../controllers/aluno.php',
+                type: 'POST',
+                data: { acao: 'excluir', id: id },
+                success: function(response) {
+                    const data = JSON.parse(response);
+                    alert(data.mensagem);
+                    if (data.sucesso) {
+                        listarAlunos(paginaAtual);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert("Erro ao excluir aluno: " + error);
                 }
             });
+        }
+    });
 
+    // Cadastrar aluno
+    $("#formCadastrarAluno").on("submit", function(e) {
+        e.preventDefault();
+
+        const nome = $("#nome").val();
+        const data_nascimento = $("#data_nascimento").val();
+        const telefone = $("#telefone").val();
+
+        // Verificar se todos os campos estão preenchidos
+        if (!nome || !data_nascimento || !telefone) {
+            alert("Todos os campos são obrigatórios!");
+            return;
+        }
+
+        // Envia os dados via AJAX para o controlador de cadastro
+        $.ajax({
+            url: '../../controllers/aluno.php',
+            type: 'POST',
+            data: {
+                acao: 'salvar',  // Ação para cadastrar o aluno
+                nome: nome,  // Nome do aluno
+                data_nascimento: data_nascimento,  // Data de nascimento
+                telefone: telefone  // Telefone do aluno
+            },
+            success: function(response) {
+                const data = JSON.parse(response);
+                alert(data.mensagem);  // Exibe a mensagem retornada pelo servidor
+
+                if (data.sucesso) {
+                    listarAlunos(paginaAtual);  // Atualiza a lista de alunos
+                    $('#modalCadastrar').modal('hide');  // Fecha o modal após o sucesso
+                }
+            },
+            error: function(xhr, status, error) {
+                alert("Erro ao cadastrar aluno: " + error);
+            }
+        });
+    });
 
     // Função de paginação
     $(document).on('click', '.page-link', function(e) {
@@ -325,6 +364,7 @@ $(document).ready(function() {
     // Inicializar a listagem de alunos
     listarAlunos(paginaAtual);
 });
+
 </script>
 </body>
 
