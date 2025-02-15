@@ -53,6 +53,7 @@ function salvarUsuario($usuario) {
         return;
     }
 
+    // Garantir que o valor de congregacao_id seja null se não for fornecido
     $resultado = $usuario->salvar($nome, $email, $senha, $perfil, $congregacao_id);
     if ($resultado) {
         echo json_encode(['sucesso' => true, 'mensagem' => 'Usuário cadastrado com sucesso']);
@@ -74,6 +75,7 @@ function editarUsuario($usuario) {
         return;
     }
 
+    // Garantir que o valor de congregacao_id seja null se não for fornecido
     $resultado = $usuario->editar($id, $nome, $email, $senha, $perfil, $congregacao_id);
     if ($resultado) {
         echo json_encode(['sucesso' => true, 'mensagem' => 'Usuário atualizado com sucesso']);
@@ -113,4 +115,5 @@ function buscarUsuario($usuario) {
         echo json_encode(['sucesso' => false, 'mensagem' => 'Usuário não encontrado']);
     }
 }
+?>
 

@@ -30,6 +30,7 @@ require_once '../../config/conexao.php';
                     <li class="nav-item"><a class="nav-link" href="../classes/index.php">Classes</a></li>
                     <li class="nav-item"><a class="nav-link active" href="../professores/index.php">Professores</a></li>
                     <li class="nav-item"><a class="nav-link" href="../congregacao/index.php">Congregações</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../usuario/index.php">Usuários</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">Relatórios</a></li>
                     <li class="nav-item"><a class="nav-link" href="../../auth/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
                 </ul>

@@ -28,6 +28,7 @@
                     <li class="nav-item"><a class="nav-link" href="../classes/index.php">Classes</a></li>
                     <li class="nav-item"><a class="nav-link" href="./professores/index.php">Professores</a></li>
                     <li class="nav-item"><a class="nav-link" href="./congregacao/index.php">Congregações</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./usuario/index.php">Usuários</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">Relatórios</a></li>
                     
                     <li class="nav-item">
@@ -57,8 +58,9 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <p><strong>Total de Chamadas:</strong> 23</p>
-                        <p><strong>Última Chamada:</strong> 10/02/2025</p>
+                        <p><strong>Total de Chamadas:</strong> 0</p>
+                        <?php date_default_timezone_set('America/Sao_Paulo'); ?>
+                        <p><strong>Última Chamada:</strong> <?php echo date('d/m/Y H:i:s'); ?></p>
                         <a href="#" class="btn btn-primary">
                             <i class="fas fa-plus-circle"></i> Adicionar Chamada
                         </a>
