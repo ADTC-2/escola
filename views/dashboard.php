@@ -31,7 +31,7 @@
                     <li class="nav-item"><a class="nav-link" href="#">Relatórios</a></li>
                     
                     <li class="nav-item">
-                        <a class="nav-link" href="../../auth/logout.php">
+                        <a class="nav-link" href="../auth/logout.php">
                             <i class="fas fa-sign-out-alt"></i> Sair
                         </a>
                     </li>

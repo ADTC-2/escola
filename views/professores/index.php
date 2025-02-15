@@ -178,7 +178,7 @@ require_once '../../config/conexao.php';
         }
 
         function carregarUsuarios(selectedId = '') {
-            $.post('../../controllers/usuario.php', { acao: 'buscar' }, function(response) {
+            $.post('../../controllers/usuario.php', { acao: 'listar' }, function(response) {
                 if (response.sucesso) {
                     let options = '<option value="">Selecione</option>';
                     response.data.forEach(u => {
