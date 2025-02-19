@@ -12,6 +12,9 @@
     <title>Sistema E.B.D - Matrículas</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <!-- Adicione esta linha no <head> para carregar o CSS do DataTables -->
+   <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css"> 
+
     <link rel="stylesheet" href="../../assets/css/dashboard.css">
 </head>
 
@@ -45,7 +48,7 @@
     <div class="container mt-5">
         <h2>Gerenciamento de Matrículas</h2>
         <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
-            <i class="fas fa-plus"></i> Nova Matrícula
+           <i class="fas fa-plus"></i> Nova Matrícula
         </button><br><br>
 
         <!-- Tabela de Matrículas com DataTable -->
@@ -133,7 +136,9 @@
                                 <option value="4">4º Trimestre</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary">Salvar alterações</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Salvar alterações
+                        </button>
                     </form>
                 </div>
             </div>
@@ -151,7 +156,7 @@
                 </div>
                 <div class="modal-body">
                     <p>Tem certeza que deseja excluir esta matrícula?</p>
-                    <button type="button" class="btn btn-danger" id="confirmarExcluir">Excluir</button>
+                    <button type="button" class="btn btn-danger" id="confirmarExcluir"><i class="fas fa-trash"></i></button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 </div>
             </div>
@@ -283,36 +288,36 @@ function carregarMatriculas() {
         data: { acao: "listarMatriculas" },
         dataType: "json",
         success: function(response) {
-            console.log(response); // Depuração da resposta
             if (response.sucesso) {
-                let rows = '';
+                let table = $('#tabelaMatriculas').DataTable();
+                table.clear(); // Limpa os dados antes de inserir novos
+                
                 response.matriculas.forEach(matricula => {
-                    rows += `
-                        <tr>
-                            <td>${matricula.id}</td>
-                            <td>${matricula.aluno_nome}</td>
-                            <td>${matricula.classe_nome}</td>
-                            <td>${matricula.data_matricula}</td>
-                            <td>${matricula.status}</td>
-                            <td>${matricula.trimestre}</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm" onclick="editarMatricula(${matricula.id})">Editar</button>
-                                <button class="btn btn-danger btn-sm" onclick="confirmarExcluir(${matricula.id})">Excluir</button>
-                            </td>
-                        </tr>
-                    `;
+                    table.row.add([
+                        matricula.id,
+                        matricula.aluno_nome,
+                        matricula.classe_nome,
+                        matricula.data_matricula,
+                        matricula.status,
+                        matricula.trimestre,
+                        `    <button class="btn btn-primary btn-sm" onclick="editarMatricula(${matricula.id})">
+                               <i class="fas fa-edit"></i>
+                             </button>
+                             <button class="btn btn-danger btn-sm" onclick="confirmarExcluir(${matricula.id})">
+                             <i class="fas fa-trash"></i>
+                             </button>`
+                    ]).draw();
                 });
-                $("#listaMatriculas").html(rows);
             } else {
                 alert('Erro ao carregar matrículas.');
             }
         },
-        error: function(jqXHR, textStatus, errorThrown) {
-            console.log(jqXHR, textStatus, errorThrown); // Exibe erro no console
+        error: function() {
             alert("Erro ao carregar matrículas.");
         }
     });
 }
+
 
 // Função para carregar os dados da matrícula no modal
 function editarMatricula(id) {
