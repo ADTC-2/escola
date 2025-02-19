@@ -100,7 +100,7 @@
             </div>
         </div>
     </div>
-
+    
     <!-- Modal Editar Matrícula -->
     <div class="modal" id="modalEditar" tabindex="-1">
         <div class="modal-dialog">
@@ -114,11 +114,15 @@
                         <input type="hidden" id="matricula_id">
                         <div class="mb-3">
                             <label for="aluno_editar" class="form-label">Aluno</label>
-                            <select class="form-control" id="aluno_editar" required></select>
+                            <select class="form-control" id="aluno_editar" required>
+                                <!-- Preencher com alunos via Ajax -->
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label for="classe_editar" class="form-label">Classe</label>
-                            <select class="form-control" id="classe_editar" required></select>
+                            <select class="form-control" id="classe_editar" required>
+                                <!-- Preencher com classes via Ajax -->
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label for="trimestre_editar" class="form-label">Trimestre</label>
@@ -135,6 +139,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- Modal Excluir Matrícula -->
     <div class="modal" id="modalExcluir" tabindex="-1">
@@ -156,7 +161,6 @@
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
-
 <script>
 $(document).ready(function() {
     // Carregar alunos e classes ao iniciar
@@ -164,7 +168,7 @@ $(document).ready(function() {
     carregarClasses();
     carregarMatriculas();
     let selectedId = null;
-    
+
         $.post('../../controllers/matriculas.php', { acao: 'listarAlunos' }, function(response) {
         if (response.sucesso) {
             let options = '<option value="">Selecione</option>';
@@ -310,19 +314,28 @@ function carregarMatriculas() {
     });
 }
 
+// Função para carregar os dados da matrícula no modal
 function editarMatricula(id) {
+    // Enviar a requisição para carregar os dados da matrícula
     $.ajax({
         url: "../../controllers/matriculas.php",
         type: "POST",
-        data: { acao: "editarMatricula", matricula_id: id },
+        data: { 
+            acao: "carregarMatricula", 
+            matricula_id: id
+        },
         dataType: "json",
         success: function(response) {
             if (response.sucesso) {
                 let matricula = response.matricula;
+                
+                // Preencher os campos do modal com os dados da matrícula
                 $("#matricula_id").val(matricula.id);
-                $("#aluno_editar").val(matricula.aluno_id);
-                $("#classe_editar").val(matricula.classe_id);
-                $("#trimestre_editar").val(matricula.trimestre);
+                $("#aluno_editar").val(matricula.aluno_id); // Aluno
+                $("#classe_editar").val(matricula.classe_id); // Classe
+                $("#trimestre_editar").val(matricula.trimestre); // Trimestre
+
+                // Exibir o modal de edição
                 $("#modalEditar").modal("show");
             } else {
                 alert("Erro ao carregar dados para edição.");
@@ -333,6 +346,48 @@ function editarMatricula(id) {
         }
     });
 }
+
+// Enviar dados para editar a matrícula
+$("#formEditarMatricula").submit(function(e) {
+    e.preventDefault();
+
+    let aluno_id = $("#aluno_editar").val();
+    let classe_id = $("#classe_editar").val();
+    let trimestre = $("#trimestre_editar").val();
+    let matricula_id = $("#matricula_id").val();
+
+    // Verifique se todos os campos obrigatórios estão preenchidos
+    if (!aluno_id || !classe_id || !trimestre || !matricula_id) {
+        alert("Todos os campos devem ser preenchidos!");
+        return;
+    }
+
+    // Enviar os dados para o backend para editar a matrícula
+    $.ajax({
+        url: "../../controllers/matriculas.php",
+        type: "POST",
+        data: { 
+            acao: "editarMatricula", 
+            matricula_id: matricula_id,
+            aluno_id: aluno_id,  // Passando o aluno_id
+            classe_id: classe_id,  // Passando o classe_id
+            trimestre: trimestre  // Passando o trimestre
+        },
+        dataType: "json",
+        success: function(response) {
+            if (response.sucesso) {
+                alert("Matrícula editada com sucesso!");
+                $("#modalEditar").modal("hide");
+                carregarMatriculas(); // Atualizar lista de matrículas
+            } else {
+                alert("Erro ao editar matrícula.");
+            }
+        },
+        error: function() {
+            alert("Erro ao tentar editar a matrícula.");
+        }
+    });
+});
 
 function confirmarExcluir(id) {
     $("#matricula_id").val(id);

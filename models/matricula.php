@@ -62,6 +62,23 @@ class Matricula {
             return false;
         }
     }
+
+    // Obter Matrícula por ID (Novo método)
+    public function obterMatriculaPorId($matricula_id) {
+        $query = "SELECT m.id, a.nome AS aluno_nome, c.nome AS classe_nome, m.trimestre, m.status
+                  FROM matriculas m
+                  JOIN alunos a ON m.aluno_id = a.id
+                  JOIN classes c ON m.classe_id = c.id
+                  WHERE m.id = :matricula_id";
+        try {
+            $stmt = $this->pdo->prepare($query);
+            $stmt->bindParam(':matricula_id', $matricula_id, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);  // Retorna os dados da matrícula
+        } catch (PDOException $e) {
+            return ['sucesso' => false, 'mensagem' => 'Erro ao obter matrícula: ' . $e->getMessage()];
+        }
+    }
 }
 ?>
 
