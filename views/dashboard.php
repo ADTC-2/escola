@@ -30,6 +30,7 @@
                     <li class="nav-item"><a class="nav-link" href="./congregacao/index.php">Congregações</a></li>
                     <li class="nav-item"><a class="nav-link" href="./matriculas/index.php">Matriculas</a></li>
                     <li class="nav-item"><a class="nav-link" href="./usuario/index.php">Usuários</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="./permissoes/index.php">Permissões</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">Relatórios</a></li>
                     
                     <li class="nav-item">
