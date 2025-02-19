@@ -5,11 +5,7 @@ class Chamada {
     public static function getClasses() {
         global $pdo;
         $stmt = $pdo->query("SELECT id, nome FROM classes");
-        $options = "<option value=''>Escolha uma classe...</option>";
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $options .= "<option value='{$row['id']}'>{$row['nome']}</option>";
-        }
-        return $options;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public static function getAlunos($classeId) {
@@ -20,26 +16,18 @@ class Chamada {
                                WHERE m.classe_id = :classeId");
         $stmt->bindParam(':classeId', $classeId, PDO::PARAM_INT);
         $stmt->execute();
-
-        $html = "<table class='table table-striped'><tr><th>Nome</th><th>Presente</th></tr>";
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $html .= "<tr>
-                        <td>{$row['nome']}</td>
-                        <td><input type='checkbox' class='aluno-presenca' data-id='{$row['id']}'></td>
-                      </tr>";
-        }
-        $html .= "</table>";
-        return $html;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public static function salvar($data) {
         global $pdo;
         try {
             $pdo->beginTransaction();
-            $stmt = $pdo->prepare("INSERT INTO chamadas (data, classe_id) VALUES (:data, :classe)");
+            $stmt = $pdo->prepare("INSERT INTO chamadas (data, classe_id, professor_id) VALUES (:data, :classe, :professor)");
             $stmt->execute([
                 ':data' => $data['data'],
-                ':classe' => $data['classe']
+                ':classe' => $data['classe'],
+                ':professor' => $data['professor']
             ]);
             $chamadaId = $pdo->lastInsertId();
 
@@ -61,4 +49,7 @@ class Chamada {
     }
 }
 ?>
+
+
+
 

@@ -1,17 +1,18 @@
 <?php
 require_once '../models/Chamada.php';
 
-header('Content-Type: text/html; charset=UTF-8');
-
 $action = $_GET['action'] ?? '';
 
-if ($action == 'getClasses') {
-    echo Chamada::getClasses();
-} elseif ($action == 'getAlunos') {
-    $classeId = $_GET['classe'] ?? 0;
-    echo Chamada::getAlunos($classeId);
-} elseif ($action == 'salvar') {
+if ($action === 'getClasses') {
+    echo json_encode(Chamada::getClasses());
+} elseif ($action === 'getAlunos' && isset($_GET['classe'])) {
+    echo json_encode(Chamada::getAlunos($_GET['classe']));
+} elseif ($action === 'salvar' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents("php://input"), true);
     echo Chamada::salvar($data);
 }
 ?>
+
+
+
+

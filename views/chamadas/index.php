@@ -62,26 +62,38 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Carregar classes no select
+            // Carregar classes
             $.get("../../controllers/chamada.php?action=getClasses", function(data) {
-                console.log(data); // Verifique no console do navegador se as classes estão vindo corretamente
-                $("#classe").html(data);
-            }).fail(function() {
-                alert("Erro ao carregar as classes.");
+                let classes = JSON.parse(data);
+                let options = "<option value=''>Escolha uma classe...</option>";
+                classes.forEach(classe => {
+                    options += `<option value="${classe.id}">${classe.nome}</option>`;
+                });
+                $("#classe").html(options);
             });
 
-            $("#classe, #data").change(function() {
-                let classeId = $("#classe").val();
+            // Carregar alunos ao selecionar classe
+            $("#classe").change(function() {
+                let classeId = $(this).val();
                 if (classeId) {
-                    $.get("../../controllers/chamada.php?action=getAlunos&classe=" + classeId, function(response) {
-                        $("#alunos-container").html(response);
+                    $.get(`../../controllers/chamada.php?action=getAlunos&classe=${classeId}`, function(response) {
+                        let alunos = JSON.parse(response);
+                        let table = `<table class='table table-striped'><tr><th>Nome</th><th>Presente</th></tr>`;
+                        alunos.forEach(aluno => {
+                            table += `<tr>
+                                        <td>${aluno.nome}</td>
+                                        <td><input type='checkbox' class='aluno-presenca' data-id='${aluno.id}'></td>
+                                      </tr>`;
+                        });
+                        table += `</table>`;
+                        $("#alunos-container").html(table);
                     });
                 }
             });
 
+            // Salvar chamada
             $("#salvarChamada").click(function() {
                 let chamadaData = {
                     classe: $("#classe").val(),
@@ -95,10 +107,8 @@
                     });
                 });
 
-                $.post("../../controllers/chamada.php?action=salvar", chamadaData, function(response) {
+                $.post("../../controllers/chamada.php?action=salvar", JSON.stringify(chamadaData), function(response) {
                     alert(response);
-                }).fail(function() {
-                    alert("Erro ao salvar a chamada.");
                 });
             });
         });
