@@ -162,7 +162,9 @@ $(document).ready(function() {
     // Carregar alunos e classes ao iniciar
     carregarAlunos();
     carregarClasses();
-
+    carregarMatriculas();
+    let selectedId = null;
+    
         $.post('../../controllers/matriculas.php', { acao: 'listarAlunos' }, function(response) {
         if (response.sucesso) {
             let options = '<option value="">Selecione</option>';
