@@ -210,6 +210,7 @@ $(document).ready(function() {
         });
     });
 
+
     // Excluir matrícula
 $("#confirmarExcluir").click(function() {
         let matricula_id = $("#matricula_id").val();
