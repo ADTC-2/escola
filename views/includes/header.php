@@ -11,7 +11,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema E.B.D</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <link rel="stylesheet" href="../../assets/css/dashboard.css">
     <link rel="stylesheet" href="../../assets/css/aluno.css">
 </head>
@@ -36,7 +39,7 @@
                     <li class="nav-item"><a class="nav-link" href="#">Relatórios</a></li>
                     <li class="nav-item">
                         <a class="nav-link" href="../../auth/logout.php">
-                            <i class="fas fa-sign-out-alt"></i> Sair
+                            <i class="fas fa-sign-out-alt"></i>
                         </a>
                     </li>
                 </ul>

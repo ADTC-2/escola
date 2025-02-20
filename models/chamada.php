@@ -12,7 +12,7 @@ class Chamada
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
+    
     public static function getClassesByCongregacao($congregacaoId)
     {
         global $pdo;

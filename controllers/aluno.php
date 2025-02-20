@@ -1,41 +1,74 @@
 <?php
-require_once "../config/conexao.php"; // Inclui a configuração de conexão
-require_once '../../models/chamada.php';
+require_once '../models/aluno.php';
+require_once '../config/conexao.php';
 
-$acao = isset($_GET['acao']) ? $_GET['acao'] : '';
+header('Content-Type: application/json'); // Garante que a resposta seja JSON
+
+$aluno = new Aluno($pdo);
+
+$acao = $_GET['acao'] ?? '';
 
 switch ($acao) {
-    case 'getCongregacoes':
-        $congregacoes = Chamada::getCongregacoes();
-        echo json_encode($congregacoes);
+    case 'listar':
+        $dados = $aluno->listar();
+
+        // Garante que retorna um JSON válido com a chave "data"
+        echo json_encode(["data" => $dados]);
         break;
 
-    case 'getClasses':
-        $congregacaoId = isset($_GET['congregacao']) ? $_GET['congregacao'] : 0;
-        $classes = Chamada::getClasses($congregacaoId);
-        echo json_encode($classes);
-        break;
-
-    case 'getProfessor':
-        $professorId = isset($_GET['professor_id']) ? $_GET['professor_id'] : 0;
-        $professor = Chamada::getProfessor($professorId);
-        echo json_encode($professor);
-        break;
-
-    case 'getAlunos':
-        $classeId = isset($_GET['classe']) ? $_GET['classe'] : 0;
-        $alunos = Chamada::getAlunos($classeId);
-        echo json_encode($alunos);
+    case 'buscar':
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        if ($id) {
+            echo json_encode($aluno->buscar($id));
+        } else {
+            echo json_encode(["status" => "error", "message" => "ID inválido"]);
+        }
         break;
 
     case 'salvar':
-        $data = json_decode(file_get_contents('php://input'), true);
-        $result = Chamada::salvarChamada($data);
-        echo json_encode($result);
+        $nome = htmlspecialchars($_POST['nome'] ?? '', ENT_QUOTES, 'UTF-8');
+        $data_nascimento = htmlspecialchars($_POST['data_nascimento'] ?? '', ENT_QUOTES, 'UTF-8');
+        $telefone = htmlspecialchars($_POST['telefone'] ?? '', ENT_QUOTES, 'UTF-8');
+
+        if ($nome && $data_nascimento && $telefone) {
+            $resultado = $aluno->salvar($nome, $data_nascimento, $telefone);
+            echo json_encode(["status" => "success"]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "Dados inválidos"]);
+        }
+        break;
+
+    case 'editar':
+        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        $nome = htmlspecialchars($_POST['nome'] ?? '', ENT_QUOTES, 'UTF-8');
+        $data_nascimento = htmlspecialchars($_POST['data_nascimento'] ?? '', ENT_QUOTES, 'UTF-8');
+        $telefone = htmlspecialchars($_POST['telefone'] ?? '', ENT_QUOTES, 'UTF-8');
+
+        if ($id && $nome && $data_nascimento && $telefone) {
+            $resultado = $aluno->editar($id, $nome, $data_nascimento, $telefone);
+            echo json_encode(["status" => "success"]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "Dados inválidos"]);
+        }
+        break;
+
+    case 'excluir':
+        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        
+        if ($id) {
+            $resultado = $aluno->excluir($id);
+            echo json_encode(["status" => "success"]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "ID inválido"]);
+        }
         break;
 
     default:
-        echo json_encode(['status' => 'error', 'message' => 'Ação não encontrada.']);
+        echo json_encode(["status" => "error", "message" => "Requisição inválida"]);
         break;
 }
 ?>
+
+
+
+

@@ -96,7 +96,7 @@ class MatriculaController {
     
 
     public function listarAlunos() {
-        $result = $this->aluno->listarAlunos();
+        $result = $this->aluno->listar();
         echo json_encode(['sucesso' => true, 'data' => $result]);
     }
 

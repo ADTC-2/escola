@@ -3,7 +3,7 @@
 <div class="container mt-5">
         <h2>Gerenciamento de Matrículas</h2>
         <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
-           <i class="fas fa-plus"></i> Nova Matrícula
+           <i class="fas fa-plus"></i>
         </button><br><br>
 
         <!-- Tabela de Matrículas com DataTable -->
@@ -118,9 +118,10 @@
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.js"></script>
 <script>
 $(document).ready(function() {
     // Carregar alunos e classes ao iniciar
@@ -210,7 +211,7 @@ $(document).ready(function() {
     });
 
     // Excluir matrícula
-    $("#confirmarExcluir").click(function() {
+$("#confirmarExcluir").click(function() {
         let matricula_id = $("#matricula_id").val();
         $.ajax({
             url: "../../controllers/matriculas.php",
@@ -248,11 +249,20 @@ function carregarMatriculas() {
                 table.clear(); // Limpa os dados antes de inserir novos
                 
                 response.matriculas.forEach(matricula => {
+                    // Criar objeto de data a partir da string recebida
+                    let dataMatricula = new Date(matricula.data_matricula);
+                    
+                    // Ajustar a data para o fuso horário local
+                    dataMatricula.setHours(dataMatricula.getHours() + dataMatricula.getTimezoneOffset() / 60);
+                    
+                    // Formatar a data no formato brasileiro (dd/mm/yyyy)
+                    let dataFormatada = `${("0" + dataMatricula.getDate()).slice(-2)}/${("0" + (dataMatricula.getMonth() + 1)).slice(-2)}/${dataMatricula.getFullYear()}`;
+                    
                     table.row.add([
                         matricula.id,
                         matricula.aluno_nome,
                         matricula.classe_nome,
-                        matricula.data_matricula,
+                        dataFormatada, // Exibe a data formatada
                         matricula.status,
                         matricula.trimestre,
                         `    <button class="btn btn-primary btn-sm" onclick="editarMatricula(${matricula.id})">
@@ -272,6 +282,8 @@ function carregarMatriculas() {
         }
     });
 }
+
+
 
 
 // Função para carregar os dados da matrícula no modal

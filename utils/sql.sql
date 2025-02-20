@@ -47,7 +47,16 @@ CREATE TABLE classes (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (congregacao_id) REFERENCES congregacoes(id) ON DELETE CASCADE
 );
-
+-- Tabela intermediária para o relacionamento N:N entre professores e classes
+CREATE TABLE professor_classes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    professor_id INT NOT NULL,
+    classe_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (professor_id) REFERENCES professores(id) ON DELETE CASCADE,
+    FOREIGN KEY (classe_id) REFERENCES classes(id) ON DELETE CASCADE,
+    UNIQUE (professor_id, classe_id) -- Evita duplicidade de registros
+);
 -- Tabela de matrículas (vincula alunos às classes)
 CREATE TABLE matriculas (
     id INT AUTO_INCREMENT PRIMARY KEY,
