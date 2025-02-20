@@ -1,104 +1,41 @@
 <?php
 require_once "../config/conexao.php"; // Inclui a configuração de conexão
+require_once '../../models/chamada.php';
 
-// Listar alunos com paginação
-if ($_POST['acao'] == 'listar') {
-    try {
-        $pagina = isset($_POST['pagina']) ? (int) $_POST['pagina'] : 1;
-        $itensPorPagina = 6;
-        $offset = ($pagina - 1) * $itensPorPagina;
+$acao = isset($_GET['acao']) ? $_GET['acao'] : '';
 
-        // Atualizar a consulta SQL para adicionar o limite de página
-        $sql = "SELECT * FROM alunos LIMIT :limit OFFSET :offset";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':limit', $itensPorPagina, PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
-        $alunos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+switch ($acao) {
+    case 'getCongregacoes':
+        $congregacoes = Chamada::getCongregacoes();
+        echo json_encode($congregacoes);
+        break;
 
-        // Obter o total de alunos
-        $sqlTotal = "SELECT COUNT(*) as total FROM alunos";
-        $stmtTotal = $pdo->prepare($sqlTotal);
-        $stmtTotal->execute();
-        $total = $stmtTotal->fetch(PDO::FETCH_ASSOC)['total'];
+    case 'getClasses':
+        $congregacaoId = isset($_GET['congregacao']) ? $_GET['congregacao'] : 0;
+        $classes = Chamada::getClasses($congregacaoId);
+        echo json_encode($classes);
+        break;
 
-        echo json_encode(['sucesso' => true, 'data' => $alunos, 'total' => $total]);
-    } catch (Exception $e) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao buscar alunos: ' . $e->getMessage()]);
-    }
-}
+    case 'getProfessor':
+        $professorId = isset($_GET['professor_id']) ? $_GET['professor_id'] : 0;
+        $professor = Chamada::getProfessor($professorId);
+        echo json_encode($professor);
+        break;
 
-// Salvar aluno
-if ($_POST['acao'] == 'salvar') {
-    $nome = $_POST['nome'];
-    $data_nascimento = $_POST['data_nascimento'];
-    $telefone = $_POST['telefone'];
+    case 'getAlunos':
+        $classeId = isset($_GET['classe']) ? $_GET['classe'] : 0;
+        $alunos = Chamada::getAlunos($classeId);
+        echo json_encode($alunos);
+        break;
 
-    if (empty($nome) || empty($data_nascimento) || empty($telefone)) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Campos obrigatórios não preenchidos']);
-        exit;
-    }
+    case 'salvar':
+        $data = json_decode(file_get_contents('php://input'), true);
+        $result = Chamada::salvarChamada($data);
+        echo json_encode($result);
+        break;
 
-    $sql = "INSERT INTO alunos (nome, data_nascimento, telefone) VALUES (?, ?, ?)";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$nome, $data_nascimento, $telefone]);
-    echo json_encode(['sucesso' => true, 'mensagem' => 'Aluno cadastrado com sucesso']);
-}
-
-// Excluir aluno
-if ($_POST['acao'] == 'excluir') {
-    $id = $_POST['id'];
-    if (empty($id)) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'ID do aluno não encontrado']);
-        exit;
-    }
-
-    $sql = "DELETE FROM alunos WHERE id = ?";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$id]);
-    echo json_encode(['sucesso' => true, 'mensagem' => 'Aluno excluído com sucesso']);
-}
-
-// Buscar aluno para editar
-if ($_POST['acao'] == 'buscar') {
-    $id = $_POST['id'];
-    $sql = "SELECT * FROM alunos WHERE id = ?";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$id]);
-    $aluno = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($aluno) {
-        echo json_encode(['sucesso' => true, 'aluno' => $aluno]);
-    } else {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Aluno não encontrado']);
-    }
-}
-
-// Editar aluno
-if ($_POST['acao'] == 'editar') {
-    try {
-        $id = $_POST['id'];
-        $nome = $_POST['nome'];
-        $data_nascimento = $_POST['data_nascimento'];
-        $telefone = $_POST['telefone'];
-
-        if (empty($id) || empty($nome) || empty($data_nascimento) || empty($telefone)) {
-            echo json_encode(['sucesso' => false, 'mensagem' => 'Campos obrigatórios não preenchidos']);
-            exit;
-        }
-
-        // Atualizar aluno
-        $sql = "UPDATE alunos SET nome = ?, data_nascimento = ?, telefone = ? WHERE id = ?";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$nome, $data_nascimento, $telefone, $id]);
-
-        echo json_encode(['sucesso' => true, 'mensagem' => 'Aluno atualizado com sucesso!']);
-    } catch (Exception $e) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao editar aluno: ' . $e->getMessage()]);
-    }
+    default:
+        echo json_encode(['status' => 'error', 'message' => 'Ação não encontrada.']);
+        break;
 }
 ?>
-
-
-
-
