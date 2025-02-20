@@ -1,107 +1,99 @@
 <?php
-require_once '../config/conexao.php';
+// Inclua o arquivo de configuração e conexão com o banco de dados
+include_once('../config/conexao.php');
 
-class Chamada
-{
-    // Função para obter todas as congregações
-    public static function getCongregacoes()
-    {
+class Chamada {
+
+    // Método para buscar todas as congregações
+    public function getCongregacoes() {
         global $pdo;
-        $sql = "SELECT * FROM congregacoes";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $query = "SELECT * FROM congregacoes";
+        $stmt = $pdo->query($query);
+        $congregacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $congregacoes;
     }
-    
-    public static function getClassesByCongregacao($congregacaoId)
-    {
+
+    // Método para buscar as classes por congregação
+    public function getClassesByCongregacao($congregacao_id) {
         global $pdo;
-    
-        // SQL para obter as classes de uma congregação específica
-        $sql = "SELECT * FROM classes WHERE congregacao_id = :congregacao_id";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':congregacao_id', $congregacaoId, PDO::PARAM_INT);
-        
-        // Executa a consulta
+        $query = "SELECT * FROM classes WHERE congregacao_id = ?";
+        $stmt = $pdo->prepare($query);
+        $stmt->bindValue(1, $congregacao_id, PDO::PARAM_INT);
         $stmt->execute();
-    
-        // Recupera as classes
         $classes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-        // Verifica se foram encontradas classes
-        if (count($classes) > 0) {
-            return $classes;  // Retorna as classes
-        } else {
-            return ["status" => "error", "message" => "Nenhuma classe encontrada para essa congregação."];
-        }
+        return $classes;
     }
-    
-    
-    
-    
 
-
-
-    // Função para obter um professor
-    public static function getProfessor($professorId)
-    {
+    // Método para buscar os alunos por classe
+    public function getAlunosByClasse($classe_id) {
         global $pdo;
-        $sql = "SELECT * FROM professores WHERE id = :professor_id";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':professor_id', $professorId, PDO::PARAM_INT);
+        $query = "SELECT * FROM alunos WHERE classe_id = ?";
+        $stmt = $pdo->prepare($query);
+        $stmt->bindValue(1, $classe_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $alunos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $alunos;
+    }
+
+    // Método para buscar o professor por ID
+    public function getProfessorById($professor_id) {
+        global $pdo;
+        $query = "SELECT * FROM professores WHERE id = ?";
+        $stmt = $pdo->prepare($query);
+        $stmt->bindValue(1, $professor_id, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Função para obter os alunos de uma classe
-    public static function getAlunosByClasse($classeId)
-    {
+    // Método para salvar a chamada
+    public function salvarChamada($dados) {
         global $pdo;
-        $sql = "SELECT a.id, a.nome
-                FROM alunos a
-                WHERE a.classe_id = :classe_id";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':classe_id', $classeId, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+        $congregacao = $dados['congregacao'];
+        $classe = $dados['classe'];
+        $professor = $dados['professor'];
+        $data = $dados['data'];
+        $alunos = $dados['alunos'];
 
-    // Função para salvar a chamada (presença)
-    public static function registrarChamada($classeId, $professorId, $dataChamada, $alunos)
-    {
-        global $pdo;
+        // Começar a transação
         $pdo->beginTransaction();
-        
+
         try {
-            $sql = "INSERT INTO chamadas (data, classe_id, professor_id)
-                    VALUES (:data, :classe_id, :professor_id)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':data', $dataChamada, PDO::PARAM_STR);
-            $stmt->bindParam(':classe_id', $classeId, PDO::PARAM_INT);
-            $stmt->bindParam(':professor_id', $professorId, PDO::PARAM_INT);
+            // Salvar chamada
+            $query = "INSERT INTO chamadas (congregacao_id, classe_id, professor_id, data) VALUES (?, ?, ?, ?)";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(1, $congregacao, PDO::PARAM_INT);
+            $stmt->bindValue(2, $classe, PDO::PARAM_INT);
+            $stmt->bindValue(3, $professor, PDO::PARAM_INT);
+            $stmt->bindValue(4, $data, PDO::PARAM_STR);
             $stmt->execute();
+            $chamada_id = $pdo->lastInsertId(); // Obtendo o ID da última inserção
 
-            $chamadaId = $pdo->lastInsertId();
-
+            // Salvar presença dos alunos
             foreach ($alunos as $aluno) {
-                $sql = "INSERT INTO chamada_alunos (chamada_id, aluno_id, presente)
-                        VALUES (:chamada_id, :aluno_id, :presente)";
-                $stmt = $pdo->prepare($sql);
-                $stmt->bindParam(':chamada_id', $chamadaId, PDO::PARAM_INT);
-                $stmt->bindParam(':aluno_id', $aluno['id'], PDO::PARAM_INT);
-                $stmt->bindParam(':presente', $aluno['presente'], PDO::PARAM_INT);
+                $query = "INSERT INTO presencas (chamada_id, aluno_id, presente) VALUES (?, ?, ?)";
+                $stmt = $pdo->prepare($query);
+                $stmt->bindValue(1, $chamada_id, PDO::PARAM_INT);
+                $stmt->bindValue(2, $aluno['id'], PDO::PARAM_INT);
+                $stmt->bindValue(3, $aluno['presente'], PDO::PARAM_INT);
                 $stmt->execute();
             }
 
+            // Commit da transação
             $pdo->commit();
-            return ['status' => 'success', 'message' => 'Chamada registrada com sucesso!'];
+            return ['status' => 'success', 'message' => 'Chamada salva com sucesso.'];
+
         } catch (Exception $e) {
+            // Rollback em caso de erro
             $pdo->rollBack();
-            return ['status' => 'error', 'message' => 'Erro ao registrar a chamada: ' . $e->getMessage()];
+            return ['status' => 'error', 'message' => 'Erro ao salvar a chamada: ' . $e->getMessage()];
         }
     }
 }
+
 ?>
+
+
+
 
 
 

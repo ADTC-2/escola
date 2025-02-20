@@ -2,7 +2,7 @@
 require_once '../models/professorclasse.php';
 require_once '../config/conexao.php';
 
-class ProfessorClasseController {
+class ProfessorClasse {
     private $model;
 
     public function __construct() {
