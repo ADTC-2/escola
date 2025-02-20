@@ -3,7 +3,7 @@
     <div class="container mt-5">
         <h2>Gerenciamento de Usuários</h2>
         <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
-            Adicionar Novo Usuário
+            +
         </button><br><br>
 
         <table class="table table-striped" id="tabelaUsuarios">
@@ -148,8 +148,12 @@
                                     <td>${usuario.perfil}</td>
                                     <td>${usuario.congregacao_nome}</td>
                                     <td>
-                                        <button class="btn btn-warning btn-sm editar" data-id="${usuario.id}">Editar</button>
-                                        <button class="btn btn-danger btn-sm excluir" data-id="${usuario.id}">Excluir</button>
+                                        <button class="btn btn-warning btn-sm editar" data-id="${usuario.id}">
+                                            <i class="fas fa-edit"></i> 
+                                        </button>
+                                        <button class="btn btn-danger btn-sm excluir" data-id="${usuario.id}">
+                                            <i class="fas fa-trash-alt"></i> 
+                                        </button>
                                     </td>
                                 </tr>`;
                     });
