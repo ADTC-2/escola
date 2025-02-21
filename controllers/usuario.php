@@ -46,14 +46,14 @@ function salvarUsuario($usuario) {
     $email = isset($_POST['email']) ? $_POST['email'] : '';
     $senha = isset($_POST['senha']) ? $_POST['senha'] : '';
     $perfil = isset($_POST['perfil']) ? $_POST['perfil'] : '';
-    $congregacao_id = isset($_POST['congregacao_id']) ? $_POST['congregacao_id'] : null;
+    // Verificando se o valor de congregacao_id está presente ou é nulo
+    $congregacao_id = isset($_POST['congregacao_id']) && !empty($_POST['congregacao_id']) ? $_POST['congregacao_id'] : null;
 
     if (empty($nome) || empty($email) || empty($senha) || empty($perfil)) {
         echo json_encode(['sucesso' => false, 'mensagem' => 'Campos obrigatórios não preenchidos']);
         return;
     }
 
-    // Garantir que o valor de congregacao_id seja null se não for fornecido
     $resultado = $usuario->salvar($nome, $email, $senha, $perfil, $congregacao_id);
     if ($resultado) {
         echo json_encode(['sucesso' => true, 'mensagem' => 'Usuário cadastrado com sucesso']);
@@ -68,15 +68,15 @@ function editarUsuario($usuario) {
     $email = isset($_POST['email']) ? $_POST['email'] : '';
     $senha = isset($_POST['senha']) ? $_POST['senha'] : '';
     $perfil = isset($_POST['perfil']) ? $_POST['perfil'] : '';
-    $congregacao_id = isset($_POST['congregacao_id']) ? $_POST['congregacao_id'] : null;
+    // Verificando se o valor de congregacao_id está presente ou é nulo
+    $congregacao_id = isset($_POST['congregacao_id']) && !empty($_POST['congregacao_id']) ? $_POST['congregacao_id'] : null;
 
     if (empty($id) || empty($nome) || empty($email) || empty($perfil)) {
         echo json_encode(['sucesso' => false, 'mensagem' => 'Campos obrigatórios não preenchidos']);
         return;
     }
 
-    // Garantir que o valor de congregacao_id seja null se não for fornecido
-    $resultado = $usuario->editar($id, $nome, $email, $senha, $perfil, $congregacao_id);
+    $resultado = $usuario->editar($id, $nome, $email, $perfil, $congregacao_id, $senha);
     if ($resultado) {
         echo json_encode(['sucesso' => true, 'mensagem' => 'Usuário atualizado com sucesso']);
     } else {
@@ -116,4 +116,6 @@ function buscarUsuario($usuario) {
     }
 }
 ?>
+
+
 

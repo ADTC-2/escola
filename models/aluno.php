@@ -10,16 +10,23 @@ class Aluno {
 
     public function listar() {
         try {
-            $stmt = $this->db->query("SELECT * FROM alunos ORDER BY nome");
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt = $this->db->prepare("SELECT a.id, a.nome, a.data_nascimento, a.telefone, c.nome AS classe FROM alunos a JOIN classes c ON a.classe_id = c.id ORDER BY a.nome ASC");
+            $stmt->execute();
+            
+            $dados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if (empty($dados)) {
+                return ["status" => "error", "message" => "Nenhum aluno encontrado"];
+            }
+            
+            return $dados;
         } catch (PDOException $e) {
-            return ["status" => "error", "message" => $e->getMessage()];
+            return ["status" => "error", "message" => "Erro ao consultar alunos: " . $e->getMessage()];
         }
     }
 
     public function buscar($id) {
         try {
-            $stmt = $this->db->prepare("SELECT * FROM alunos WHERE id = :id");
+            $stmt = $this->db->prepare("SELECT a.*, c.nome AS classe FROM alunos a JOIN classes c ON a.classe_id = c.id WHERE a.id = :id");
             $stmt->bindValue(":id", $id, PDO::PARAM_INT);
             $stmt->execute();
             $aluno = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -29,12 +36,13 @@ class Aluno {
         }
     }
 
-    public function salvar($nome, $data_nascimento, $telefone) {
+    public function salvar($nome, $data_nascimento, $telefone, $classe_id) {
         try {
-            $stmt = $this->db->prepare("INSERT INTO alunos (nome, data_nascimento, telefone) VALUES (:nome, :data_nascimento, :telefone)");
+            $stmt = $this->db->prepare("INSERT INTO alunos (nome, data_nascimento, telefone, classe_id) VALUES (:nome, :data_nascimento, :telefone, :classe_id)");
             $stmt->bindValue(":nome", $nome);
             $stmt->bindValue(":data_nascimento", $data_nascimento);
             $stmt->bindValue(":telefone", $telefone);
+            $stmt->bindValue(":classe_id", $classe_id, PDO::PARAM_INT);
             $stmt->execute();
             return ["status" => "success", "message" => "Aluno cadastrado com sucesso"];
         } catch (PDOException $e) {
@@ -42,13 +50,14 @@ class Aluno {
         }
     }
 
-    public function editar($id, $nome, $data_nascimento, $telefone) {
+    public function editar($id, $nome, $data_nascimento, $telefone, $classe_id) {
         try {
-            $stmt = $this->db->prepare("UPDATE alunos SET nome = :nome, data_nascimento = :data_nascimento, telefone = :telefone WHERE id = :id");
+            $stmt = $this->db->prepare("UPDATE alunos SET nome = :nome, data_nascimento = :data_nascimento, telefone = :telefone, classe_id = :classe_id WHERE id = :id");
             $stmt->bindValue(":id", $id, PDO::PARAM_INT);
             $stmt->bindValue(":nome", $nome);
             $stmt->bindValue(":data_nascimento", $data_nascimento);
             $stmt->bindValue(":telefone", $telefone);
+            $stmt->bindValue(":classe_id", $classe_id, PDO::PARAM_INT);
             $stmt->execute();
 
             if ($stmt->rowCount() > 0) {
@@ -78,6 +87,9 @@ class Aluno {
     }
 }
 ?>
+
+
+
 
 
 

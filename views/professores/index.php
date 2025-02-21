@@ -1,84 +1,71 @@
 <?php require_once '../includes/header.php'; ?>
 
-    <div class="container mt-5">
-        <h2>Gerenciamento de Professores</h2>
-        <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
-        <i class="fas fa-plus-circle"></i> <span><strong>Adicionar Novo Professor</strong></span>
-        </button><br><br>
+<div class="container mt-5">
+    <h2>Gerenciamento de Professores</h2>
+    <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
+        <i class="fas fa-plus-circle"></i> <span><strong>Cadastrar</strong></span>
+    </button><br><br>
 
-        <table class="table table-striped" id="tabelaProfessores">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>Congregação</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="listaProfessores">
-                <!-- Professores serão carregados aqui -->
-            </tbody>
-        </table>
-    </div>
+    <table class="table table-striped" id="tabelaProfessores">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="listaProfessores">
+            <!-- Professores serão carregados aqui -->
+        </tbody>
+    </table>
+</div>
 
-    <!-- Modal Cadastrar -->
-    <div class="modal" id="modalCadastrar" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Cadastrar Professor</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formCadastrarProfessor">
-                        <div class="mb-3">
-                            <label for="usuario_id" class="form-label">Usuário</label>
-                            <select class="form-control" id="usuario_id" required>
-                                <!-- As opções serão carregadas dinamicamente -->
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="congregacao_id" class="form-label">Congregação</label>
-                            <select class="form-control" id="congregacao_id" required>
-                                <!-- As opções serão carregadas dinamicamente -->
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Cadastrar</button>
-                    </form>
-                </div>
+<!-- Modal Cadastrar -->
+<div class="modal" id="modalCadastrar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cadastrar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formCadastrarProfessor">
+                    <div class="mb-3">
+                        <label for="usuario_id" class="form-label">Usuário</label>
+                        <select class="form-control" id="usuario_id" required>
+                            <!-- As opções serão carregadas dinamicamente -->
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Cadastrar</button>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Modal Editar -->
-    <div class="modal" id="modalEditarProfessor" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Editar Professor</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formEditarProfessor">
-                        <input type="hidden" id="idEditar">
-                        <div class="mb-3">
-                            <label for="usuario_idEditar" class="form-label">Usuário</label>
-                            <select class="form-control" id="usuario_idEditar" required>
-                                <!-- As opções serão carregadas dinamicamente -->
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="congregacao_idEditar" class="form-label">Congregação</label>
-                            <select class="form-control" id="congregacao_idEditar" required>
-                                <!-- As opções serão carregadas dinamicamente -->
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Alterar</button>
-                    </form>
-                </div>
+<!-- Modal Editar -->
+<div class="modal" id="modalEditarProfessor" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Professor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarProfessor">
+                    <input type="hidden" id="idEditar">
+                    <div class="mb-3">
+                        <label for="usuario_idEditar" class="form-label">Usuário</label>
+                        <select class="form-control" id="usuario_idEditar" required>
+                            <!-- As opções serão carregadas dinamicamente -->
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Alterar</button>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
@@ -108,7 +95,6 @@
             "columns": [
                 { "data": "id" },
                 { "data": "usuario_nome" },
-                { "data": "congregacao_nome" },
                 {
                     "data": "id",
                     "render": function(data) {
@@ -123,23 +109,6 @@
                 }
             ]
         });
-
-        function carregarCongregacoes(selectedId = '') {
-            $.post('../../controllers/congregacao.php', { acao: 'listar' }, function(response) {
-                if (response.sucesso) {
-                    let options = '<option value="">Selecione</option>';
-                    response.data.forEach(c => {
-                        options += `<option value="${c.id}" ${c.id == selectedId ? 'selected' : ''}>${c.nome}</option>`;
-                    });
-                    $('#congregacao_id').html(options);
-                    $('#congregacao_idEditar').html(options);
-                } else {
-                    console.error("Erro ao carregar congregações:", response.mensagem);
-                }
-            }, 'json').fail(function(jqXHR, textStatus, errorThrown) {
-                console.error("Erro na requisição das congregações:", textStatus, errorThrown);
-            });
-        }
 
         function carregarUsuarios(selectedId = '') {
             $.post('../../controllers/usuario.php', { acao: 'listar' }, function(response) {
@@ -158,8 +127,6 @@
             });
         }
 
-
-        carregarCongregacoes();
         carregarUsuarios();
 
         // Cadastro de Professor
@@ -167,28 +134,12 @@
             e.preventDefault();
             $.post('../../controllers/professores.php', {
                 acao: 'salvar',
-                usuario_id: $('#usuario_id').val(),
-                congregacao_id: $('#congregacao_id').val()
+                usuario_id: $('#usuario_id').val()
             }, function(response) {
                 alert(response.mensagem);
                 if (response.sucesso) {
                     $('#modalCadastrar').modal('hide');
                     table.ajax.reload();
-                }
-            }, 'json');
-        });
-
-        // Abrir modal de edição
-        $('#tabelaProfessores').on('click', '.editar', function() {
-            let id = $(this).data('id');
-            $.post('../../controllers/professores.php', { acao: 'buscar', id: id }, function(response) {
-                if (response.sucesso) {
-                    $('#idEditar').val(response.data.id);
-                    $('#usuario_idEditar').val(response.data.usuario_id);
-                    $('#congregacao_idEditar').val(response.data.congregacao_id);
-                    $('#modalEditarProfessor').modal('show');
-                } else {
-                    alert(response.mensagem);
                 }
             }, 'json');
         });
@@ -199,8 +150,7 @@
             $.post('../../controllers/professores.php', {
                 acao: 'editar',
                 id: $('#idEditar').val(),
-                usuario_id: $('#usuario_idEditar').val(),
-                congregacao_id: $('#congregacao_idEditar').val()
+                usuario_id: $('#usuario_idEditar').val()
             }, function(response) {
                 alert(response.mensagem);
                 if (response.sucesso) {
@@ -228,3 +178,5 @@
 </body>
 
 </html>
+
+

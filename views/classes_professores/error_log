@@ -1,0 +1,6 @@
+[20-Feb-2025 13:09:45 America/Fortaleza] PHP Warning:  require_once(../config/conexao.php): Failed to open stream: No such file or directory in /home1/adtc2m99/public_html/sistemas/escola/models/professorclasse.php on line 2
+[20-Feb-2025 13:09:45 America/Fortaleza] PHP Fatal error:  Uncaught Error: Failed opening required '../config/conexao.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home1/adtc2m99/public_html/sistemas/escola/models/professorclasse.php:2
+Stack trace:
+#0 /home1/adtc2m99/public_html/sistemas/escola/views/classes_professores/index.php(3): require_once()
+#1 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/models/professorclasse.php on line 2

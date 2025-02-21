@@ -1,8 +1,8 @@
 <?php
 include_once '../config/conexao.php';
-include_once '../models/Matricula.php';
-include_once '../models/Aluno.php';
-include_once '../models/Classe.php';
+include_once '../models/matricula.php';
+include_once '../models/aluno.php';
+include_once '../models/classe.php';
 
 class MatriculaController {
     private $matricula;

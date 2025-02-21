@@ -24,7 +24,7 @@ class Usuario {
         $stmt->bindParam(':email', $email);
         $stmt->bindParam(':senha', $senha_hash);
         $stmt->bindParam(':perfil', $perfil);
-        $stmt->bindParam(':congregacao_id', $congregacao_id);
+        $stmt->bindParam(':congregacao_id', $congregacao_id, PDO::PARAM_INT);  // Garantir que o tipo de dado seja INT
         return $stmt->execute();
     }
 
@@ -45,7 +45,7 @@ class Usuario {
         $stmt->bindParam(':nome', $nome);
         $stmt->bindParam(':email', $email);
         $stmt->bindParam(':perfil', $perfil);
-        $stmt->bindParam(':congregacao_id', $congregacao_id);
+        $stmt->bindParam(':congregacao_id', $congregacao_id, PDO::PARAM_INT);  // Garantir que o tipo de dado seja INT
         
         return $stmt->execute();
     }
@@ -66,6 +66,7 @@ class Usuario {
     }
 }
 ?>
+
 
 
 

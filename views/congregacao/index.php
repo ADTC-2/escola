@@ -3,7 +3,7 @@
 <div class="container mt-5">
     <h2>Gerenciamento de Congregações</h2>
     <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
-        <i class="fas fa-plus-circle"></i> <span><strong>Adicionar Nova Congregação</strong></span>
+         <i class="fas fa-plus-circle"></i> <span><strong>Cadastrar</strong></span>
     </button>
     <br><br>
 

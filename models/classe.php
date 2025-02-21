@@ -14,18 +14,10 @@ class Classe {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     public function listar() {
-        try {
-            $query = "SELECT c.id, c.nome, co.nome AS congregacao_nome, c.congregacao_id
-                      FROM classes c
-                      JOIN congregacoes co ON c.congregacao_id = co.id";
-            $stmt = $this->pdo->prepare($query);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            return ['erro' => 'Erro ao listar classes: ' . $e->getMessage()];
-        }
+        $stmt = $this->pdo->prepare("SELECT * FROM classes");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
     public function buscarPorId($id) {
         try {
             $query = "SELECT * FROM classes WHERE id = ?";

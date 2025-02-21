@@ -3,7 +3,7 @@
 <div class="container mt-5">
     <h2>Gerenciamento de Classes</h2>
     <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
-        <i class="fas fa-plus-circle"></i> <span><strong>Adicionar Nova Classe</strong></span>
+    <i class="fas fa-plus-circle"></i> <span><strong>Cadastrar</strong></span>
     </button><br><br>
 
     <table class="table table-striped" id="tabelaClasses">
@@ -11,7 +11,6 @@
             <tr>
                 <th>ID</th>
                 <th>Nome</th>
-                <th>Congregação</th>
                 <th>Ações</th>
             </tr>
         </thead>
@@ -35,12 +34,6 @@
                         <label for="nome" class="form-label">Nome</label>
                         <input type="text" class="form-control" id="nome" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="congregacao_id" class="form-label">Congregação</label>
-                        <select class="form-control" id="congregacao_id" required>
-                            <!-- Opções serão carregadas dinamicamente -->
-                        </select>
-                    </div>
                     <button type="submit" class="btn btn-primary">Cadastrar</button>
                 </form>
             </div>
@@ -62,12 +55,6 @@
                     <div class="mb-3">
                         <label for="nomeEditar" class="form-label">Nome</label>
                         <input type="text" class="form-control" id="nomeEditar" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="congregacao_idEditar" class="form-label">Congregação</label>
-                        <select class="form-control" id="congregacao_idEditar" required>
-                            <!-- Opções serão carregadas dinamicamente -->
-                        </select>
                     </div>
                     <button type="submit" class="btn btn-primary">Alterar</button>
                 </form>
@@ -104,7 +91,6 @@
             "columns": [
                 { "data": "id" },
                 { "data": "nome" },
-                { "data": "congregacao_nome" },
                 {
                     "data": "id",
                     "render": function(data) {
@@ -114,40 +100,17 @@
                             </button>
                             <button class='btn btn-danger btn-sm excluir' data-id='${data}'>
                                 <i class="fas fa-trash-alt"></i>
-                            </button>
-                            <a href="../../views/classes_professores/index.php" class='btn btn-info btn-sm'>
-                                <i class="fas fa-chalkboard-teacher"></i>
-                            </a>`;
+                            </button>`;
                     }
                 }
             ]
         });
 
-        function carregarCongregacoes(selectedId = '') {
-            $.post('../../controllers/congregacao.php', { acao: 'listar' }, function(response) {
-                if (response.sucesso) {
-                    let options = '<option value="">Selecione</option>';
-                    response.data.forEach(c => {
-                        options += `<option value="${c.id}" ${c.id == selectedId ? 'selected' : ''}>${c.nome}</option>`;
-                    });
-                    $('#congregacao_id').html(options);
-                    $('#congregacao_idEditar').html(options);
-                } else {
-                    console.error("Erro ao carregar congregações:", response.mensagem);
-                }
-            }, 'json').fail(function(jqXHR, textStatus, errorThrown) {
-                console.error("Erro na requisição das congregações:", textStatus, errorThrown);
-            });
-        }
-
-        carregarCongregacoes();
-
         $(document).on('submit', '#formCadastrarClasse', function(e) {
             e.preventDefault();
             $.post('../../controllers/classe.php', {
                 acao: 'salvar',
-                nome: $('#nome').val(),
-                congregacao_id: $('#congregacao_id').val()
+                nome: $('#nome').val()
             }, function(response) {
                 alert(response.mensagem);
                 if (response.sucesso) {
@@ -163,7 +126,6 @@
                 if (response.sucesso) {
                     $('#idEditar').val(response.data.id);
                     $('#nomeEditar').val(response.data.nome);
-                    carregarCongregacoes(response.data.congregacao_id);
                     $('#modalEditarClasse').modal('show');
                 } else {
                     alert(response.mensagem);
