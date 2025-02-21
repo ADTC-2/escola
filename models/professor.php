@@ -11,11 +11,10 @@ class Professor {
 
     // Listar todos os professores
     public function listar() {
-        $query = "SELECT p.id, u.nome AS usuario_nome, c.nome AS congregacao_nome 
-                  FROM professores p
-                  LEFT JOIN usuarios u ON p.usuario_id = u.id
-                  LEFT JOIN congregacoes c ON p.congregacao_id = c.id";
-        $stmt = $this->db->prepare($query);
+        $sql = "SELECT u.id, u.nome, u.email, u.perfil 
+                FROM usuarios u 
+                WHERE u.perfil = 'professor'"; // Filtra apenas usuários com perfil de professor
+        $stmt = $this->db->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
