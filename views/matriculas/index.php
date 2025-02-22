@@ -262,7 +262,7 @@ $(document).ready(function() {
 
     // Enviar dados para cadastrar a matrícula
     $("#formCadastrarMatricula").submit(function(e) {
-        e.preventDefault();
+    e.preventDefault();
 
         let aluno_id = $("#aluno").val();
         let classe_id = $("#classe").val();
@@ -288,41 +288,90 @@ $(document).ready(function() {
             },
             dataType: "json",
             success: function(response) {
+                console.log(response); // Depuração
                 if (response.sucesso) {
                     alert("Matrícula cadastrada com sucesso!");
                     $("#modalCadastrar").modal("hide");
                     carregarMatriculas(); 
                 } else {
-                    alert("Erro ao cadastrar matrícula.");
+                    alert("Erro ao cadastrar matrícula: " + response.mensagem);
                 }
             },
-            error: function() {
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error("Erro na requisição:", textStatus, errorThrown); // Depuração
                 alert("Erro ao tentar cadastrar matrícula.");
             }
         });
     });
 
-    // Excluir matrícula
-    $("#confirmarExcluir").click(function() {
+    // Enviar dados para editar a matrícula
+    $("#formEditarMatricula").submit(function(e) {
+        e.preventDefault();
+
         let matricula_id = $("#matricula_id").val();
+        let aluno_id = $("#aluno_editar").val();
+        let classe_id = $("#classe_editar").val();
+        let congregacao_id = $("#congregacao_editar").val();
+        let professor_id = $("#professor_editar").val();
+        let trimestre = $("#trimestre_editar").val();
+
+        if (!matricula_id || !aluno_id || !classe_id || !congregacao_id || !professor_id || !trimestre) {
+            alert("Todos os campos devem ser preenchidos!");
+            return;
+        }
+
         $.ajax({
             url: "../../controllers/matriculas.php",
             type: "POST",
             data: { 
-                acao: "excluirMatricula", 
-                matricula_id: matricula_id
+                acao: "editarMatricula", 
+                matricula_id: matricula_id,
+                aluno_id: aluno_id,  
+                classe_id: classe_id,  
+                congregacao_id: congregacao_id,
+                professor_id: professor_id,
+                trimestre: trimestre  
             },
             dataType: "json",
             success: function(response) {
+                console.log(response); // Depuração
                 if (response.sucesso) {
-                    alert("Matrícula excluída com sucesso!");
-                    $("#modalExcluir").modal("hide");
-                    carregarMatriculas();
+                    alert("Matrícula editada com sucesso!");
+                    $("#modalEditar").modal("hide");
+                    carregarMatriculas(); 
                 } else {
-                    alert("Erro ao excluir matrícula.");
+                    alert("Erro ao editar matrícula: " + response.mensagem);
                 }
             },
-            error: function() {
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error("Erro na requisição:", textStatus, errorThrown); // Depuração
+                alert("Erro ao tentar editar matrícula.");
+            }
+        });
+    });
+    // Excluir matrícula
+    $("#confirmarExcluir").click(function() {
+    let matricula_id = $("#matricula_id").val();
+    $.ajax({
+        url: "../../controllers/matriculas.php",
+        type: "POST",
+        data: { 
+            acao: "excluirMatricula", 
+            matricula_id: matricula_id
+        },
+        dataType: "json",
+        success: function(response) {
+            console.log(response); // Depuração
+            if (response.sucesso) {
+                alert("Matrícula excluída com sucesso!");
+                $("#modalExcluir").modal("hide");
+                carregarMatriculas();
+            } else {
+                alert("Erro ao excluir matrícula: " + response.mensagem);
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error("Erro na requisição:", textStatus, errorThrown); // Depuração
                 alert("Erro ao tentar excluir matrícula.");
             }
         });

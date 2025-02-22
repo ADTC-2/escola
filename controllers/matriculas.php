@@ -37,25 +37,32 @@ class MatriculaController {
             $congregacao_id = $_POST['congregacao_id'];
             $professor_id = $_POST['professor_id'];
             $trimestre = $_POST['trimestre'];
-
-            // Verificação simples dos tipos dos dados
+    
             if (!is_numeric($aluno_id) || !is_numeric($classe_id) || !is_numeric($congregacao_id) || !is_numeric($professor_id) || !is_numeric($trimestre)) {
                 echo json_encode(['sucesso' => false, 'mensagem' => 'Dados inválidos']);
                 return;
             }
-
+    
             $result = $this->matricula->cadastrarMatricula($aluno_id, $classe_id, $congregacao_id, $professor_id, $trimestre);
-            echo json_encode(['sucesso' => $result]);
+            if ($result['sucesso']) {
+                echo json_encode(['sucesso' => true]);
+            } else {
+                echo json_encode(['sucesso' => false, 'mensagem' => $result['mensagem']]);
+            }
         } else {
             echo json_encode(['sucesso' => false, 'mensagem' => 'Dados faltando']);
         }
     }
-
+    
     public function excluir() {
         if (isset($_POST['matricula_id']) && is_numeric($_POST['matricula_id'])) {
             $matricula_id = $_POST['matricula_id'];
             $result = $this->matricula->excluirMatricula($matricula_id);
-            echo json_encode(['sucesso' => $result]);
+            if ($result['sucesso']) {
+                echo json_encode(['sucesso' => true]);
+            } else {
+                echo json_encode(['sucesso' => false, 'mensagem' => $result['mensagem']]);
+            }
         } else {
             echo json_encode(['sucesso' => false, 'mensagem' => 'ID da matrícula inválido']);
         }
@@ -75,21 +82,16 @@ class MatriculaController {
                 return;
             }
     
-            // Chama o método de edição da matrícula no model
             $result = $this->matricula->editarMatricula($matricula_id, $aluno_id, $classe_id, $congregacao_id, $professor_id, $trimestre);
-    
-            if ($result) {
-                // Obter a matrícula editada para retornar os dados completos
-                $matricula = $this->matricula->obterMatriculaPorId($matricula_id);
-                echo json_encode(['sucesso' => true, 'matricula' => $matricula]);
+            if ($result['sucesso']) {
+                echo json_encode(['sucesso' => true]);
             } else {
-                echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao editar matrícula']);
+                echo json_encode(['sucesso' => false, 'mensagem' => $result['mensagem']]);
             }
         } else {
             echo json_encode(['sucesso' => false, 'mensagem' => 'Dados faltando']);
         }
     }
-    
     public function carregarMatricula() {
         if (isset($_POST['matricula_id']) && is_numeric($_POST['matricula_id'])) {
             $matricula_id = $_POST['matricula_id'];
