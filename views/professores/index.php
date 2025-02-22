@@ -20,60 +20,67 @@
     </table>
 </div>
 
-<!-- Modal Cadastrar -->
-<div class="modal" id="modalCadastrar" tabindex="-1">
+<!-- Modal para Cadastro -->
+<div class="modal fade" id="modalCadastrar" tabindex="-1" aria-labelledby="modalCadastrarLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Cadastrar</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formCadastrarProfessor">
-                    <div class="mb-3">
-                        <label for="usuario_id" class="form-label">Usuário</label>
-                        <select class="form-control" id="usuario_id" required>
-                            <!-- As opções serão carregadas dinamicamente -->
+            <form id="formCadastrarProfessor">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCadastrarLabel">Cadastrar Professor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="usuario_id">Usuário</label>
+                        <select id="usuario_id" name="usuario_id" class="form-control">
+                            <option value="">Selecione</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary">Cadastrar</button>
-                </form>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<!-- Modal Editar -->
-<div class="modal" id="modalEditarProfessor" tabindex="-1">
+<!-- Modal para Edição -->
+<div class="modal fade" id="modalEditarProfessor" tabindex="-1" aria-labelledby="modalEditarProfessorLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Editar Professor</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formEditarProfessor">
-                    <input type="hidden" id="idEditar">
-                    <div class="mb-3">
-                        <label for="usuario_idEditar" class="form-label">Usuário</label>
-                        <select class="form-control" id="usuario_idEditar" required>
-                            <!-- As opções serão carregadas dinamicamente -->
+            <form id="formEditarProfessor">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEditarProfessorLabel">Editar Professor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="idEditar" name="idEditar">
+                    <div class="form-group">
+                        <label for="usuario_idEditar">Usuário</label>
+                        <select id="usuario_idEditar" name="usuario_idEditar" class="form-control">
+                            <option value="">Selecione</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary">Alterar</button>
-                </form>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Atualizar</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
 
 <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
 <script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.js"></script>
-
 <script>
     $(document).ready(function() {
+        // Inicializando o DataTable
         var table = $('#tabelaProfessores').DataTable({
             "serverSide": false,
             "ajax": {
@@ -85,7 +92,7 @@
                     if (response.sucesso) {
                         table.clear().rows.add(response.data).draw();
                     } else {
-                        console.error("Erro ao carregar dados:", response.mensagem);
+                        alert(response.mensagem);
                     }
                 },
                 error: function(xhr, error, thrown) {
@@ -98,7 +105,7 @@
                 {
                     "data": "id",
                     "render": function(data) {
-                        return ` 
+                        return `
                             <button class='btn btn-warning btn-sm editar' data-id='${data}'>
                                 <i class="fas fa-edit"></i>
                             </button>
@@ -109,7 +116,8 @@
                 }
             ]
         });
-
+        
+        // Função para carregar os usuários no select (Cadastro e Edição)
         function carregarUsuarios(selectedId = '') {
             $.post('../../controllers/usuario.php', { acao: 'listar' }, function(response) {
                 if (response.sucesso) {
@@ -120,13 +128,12 @@
                     $('#usuario_id').html(options);
                     $('#usuario_idEditar').html(options);
                 } else {
-                    console.error("Erro ao carregar usuários:", response.mensagem);
+                    alert(response.mensagem);
                 }
-            }, 'json').fail(function(jqXHR, textStatus, errorThrown) {
-                console.error("Erro na requisição dos usuários:", textStatus, errorThrown);
-            });
+            }, 'json');
         }
 
+        // Carregar os usuários na página inicial
         carregarUsuarios();
 
         // Cadastro de Professor
@@ -160,7 +167,7 @@
             }, 'json');
         });
 
-        // Exclusão de Professor
+        // Excluir Professor
         $('#tabelaProfessores').on('click', '.excluir', function() {
             let id = $(this).data('id');
             if (confirm("Tem certeza que deseja excluir este professor?")) {
@@ -172,11 +179,28 @@
                 }, 'json');
             }
         });
+
+        // Editar um professor
+        $('#tabelaProfessores').on('click', '.editar', function() {
+            let id = $(this).data('id');
+            $.post('../../controllers/professores.php', { acao: 'listar', id: id }, function(response) {
+                if (response.sucesso) {
+                    let professor = response.data[0];
+                    $('#idEditar').val(professor.id);
+                    $('#usuario_idEditar').val(professor.usuario_id);
+                    $('#modalEditarProfessor').modal('show');
+                } else {
+                    alert(response.mensagem);
+                }
+            }, 'json');
+        });
     });
 </script>
 
-</body>
 
+</body>
 </html>
+
+
 
 

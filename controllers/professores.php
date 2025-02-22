@@ -2,7 +2,7 @@
 require_once '../models/professor.php';
 require_once '../config/conexao.php';
 
-$acao = isset($_POST['acao']) ? $_POST['acao'] : '';
+$acao = $_POST['acao'] ?? '';  // Usando o operador null coalescing para evitar erros
 
 $professor = new Professor();
 
@@ -23,10 +23,6 @@ switch ($acao) {
         excluirProfessor($professor);
         break;
 
-    case 'buscar':
-        buscarProfessor($professor);
-        break;
-
     default:
         echo json_encode(['sucesso' => false, 'mensagem' => 'Ação não definida']);
         break;
@@ -42,16 +38,14 @@ function listarProfessores($professor) {
 }
 
 function salvarProfessor($professor) {
-    $usuario_id = isset($_POST['usuario_id']) ? $_POST['usuario_id'] : '';
-    $congregacao_id = isset($_POST['congregacao_id']) ? $_POST['congregacao_id'] : '';
+    $usuario_id = $_POST['usuario_id'] ?? '';
 
-    if (empty($usuario_id) || empty($congregacao_id)) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Campos obrigatórios não preenchidos']);
+    if (empty($usuario_id)) {
+        echo json_encode(['sucesso' => false, 'mensagem' => 'Usuário não selecionado']);
         return;
     }
 
-    $resultado = $professor->salvar($usuario_id, $congregacao_id);
-    if ($resultado) {
+    if ($professor->salvar($usuario_id)) {
         echo json_encode(['sucesso' => true, 'mensagem' => 'Professor cadastrado com sucesso']);
     } else {
         echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao cadastrar professor']);
@@ -59,54 +53,38 @@ function salvarProfessor($professor) {
 }
 
 function editarProfessor($professor) {
-    $id = isset($_POST['id']) ? $_POST['id'] : '';
-    $usuario_id = isset($_POST['usuario_id']) ? $_POST['usuario_id'] : '';
-    $congregacao_id = isset($_POST['congregacao_id']) ? $_POST['congregacao_id'] : '';
+    $id = $_POST['id'] ?? '';
+    $usuario_id = $_POST['usuario_id'] ?? '';
 
-    if (empty($id) || empty($usuario_id) || empty($congregacao_id)) {
+    if (empty($id) || empty($usuario_id)) {
         echo json_encode(['sucesso' => false, 'mensagem' => 'Campos obrigatórios não preenchidos']);
         return;
     }
 
-    $resultado = $professor->editar($id, $usuario_id, $congregacao_id);
-    if ($resultado) {
+    if ($professor->editar($id, $usuario_id)) {
         echo json_encode(['sucesso' => true, 'mensagem' => 'Professor atualizado com sucesso']);
     } else {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao editar professor']);
+        echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao atualizar professor']);
     }
 }
 
 function excluirProfessor($professor) {
-    $id = isset($_POST['id']) ? $_POST['id'] : '';
+    $id = $_POST['id'] ?? '';
 
     if (empty($id)) {
         echo json_encode(['sucesso' => false, 'mensagem' => 'ID não fornecido']);
         return;
     }
 
-    $resultado = $professor->excluir($id);
-    if ($resultado) {
+    if ($professor->excluir($id)) {
         echo json_encode(['sucesso' => true, 'mensagem' => 'Professor excluído com sucesso']);
     } else {
         echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao excluir professor']);
     }
 }
-
-function buscarProfessor($professor) {
-    $id = isset($_POST['id']) ? $_POST['id'] : '';
-
-    if (empty($id)) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'ID não fornecido']);
-        return;
-    }
-
-    $dadosProfessor = $professor->buscar($id);
-    if ($dadosProfessor) {
-        echo json_encode(['sucesso' => true, 'data' => $dadosProfessor]);
-    } else {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Professor não encontrado']);
-    }
-}
 ?>
+
+
+
 
 

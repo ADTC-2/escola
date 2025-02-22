@@ -58,27 +58,20 @@ try {
 
     elseif ($acao == 'excluir') {
         $id = $_POST['id'];
-
+    
         if (empty($id) || !is_numeric($id)) {
             echo json_encode(['sucesso' => false, 'mensagem' => 'ID inválido']);
             exit;
         }
-
-        // Verificar se há dependências antes de excluir
-        $verifica = $pdo->prepare("SELECT COUNT(*) FROM alunos WHERE id = ?");
-        $verifica->execute([$id]);
-
-        if ($verifica->fetchColumn() > 0) {
-            echo json_encode(['sucesso' => false, 'mensagem' => 'Não é possível excluir, existem alunos vinculados.']);
-            exit;
-        }
-
+    
+        // Excluir a congregação diretamente, já que não há dependências
         $sql = "DELETE FROM congregacoes WHERE id = ?";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$id]);
-
+    
         echo json_encode(['sucesso' => true, 'mensagem' => 'Congregação excluída com sucesso']);
     }
+    
 
     elseif ($acao == 'buscar') {
         $id = $_POST['id'];
