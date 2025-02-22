@@ -37,13 +37,11 @@ class Aluno {
             $aluno = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($aluno) {
-                // Se o aluno for encontrado, retornamos os dados
                 return [
                     "status" => "success",
                     "data" => $aluno
                 ];
             } else {
-                // Se o aluno não for encontrado
                 return [
                     "status" => "error",
                     "message" => "Aluno não encontrado"
@@ -56,7 +54,6 @@ class Aluno {
             ];
         }
     }
-    
 
     public function salvar($dados) {
         try {
@@ -65,7 +62,7 @@ class Aluno {
             $telefone = trim(htmlspecialchars($dados['telefone'], ENT_QUOTES, 'UTF-8'));
             $classe_id = filter_var($dados['classe_id'], FILTER_VALIDATE_INT);
 
-            if (!$nome || !$data_nascimento || !$telefone || !$classe_id || !$this->validarTelefone($telefone)) {
+            if (!$nome || !$data_nascimento || !$telefone || !$classe_id) {
                 return ["status" => "error", "message" => "Dados inválidos"];
             }
 
@@ -93,11 +90,11 @@ class Aluno {
             $data_nascimento = $dados['data_nascimento'];
             $telefone = trim(htmlspecialchars($dados['telefone'], ENT_QUOTES, 'UTF-8'));
             $classe_id = filter_var($dados['classe_id'], FILTER_VALIDATE_INT);
-
-            if (!$id || !$nome || !$data_nascimento || !$telefone || !$classe_id || !$this->validarTelefone($telefone)) {
+    
+            if (!$id || !$nome || !$data_nascimento || !$telefone || !$classe_id) {
                 return ["status" => "error", "message" => "Dados inválidos"];
             }
-
+    
             $stmt = $this->db->prepare("
                 UPDATE alunos SET nome = :nome, data_nascimento = :data_nascimento, telefone = :telefone, classe_id = :classe_id
                 WHERE id = :id
@@ -109,7 +106,7 @@ class Aluno {
                 ':telefone' => $telefone,
                 ':classe_id' => $classe_id
             ]);
-
+    
             return ["status" => "success", "message" => "Aluno atualizado com sucesso"];
         } catch (PDOException $e) {
             return ["status" => "error", "message" => "Erro ao editar aluno: " . $e->getMessage()];
@@ -125,12 +122,10 @@ class Aluno {
             return ["status" => "error", "message" => "Erro ao excluir aluno: " . $e->getMessage()];
         }
     }
-
-    private function validarTelefone($telefone) {
-        return preg_match('/^\(\d{2}\)\s\d{4,5}-\d{4}$/', $telefone);
-    }
 }
 ?>
+
+
 
 
 

@@ -2,7 +2,7 @@
 
 <div class="container mt-5">
     <h2>Cadastro de Alunos</h2>
-    <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
+    <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastroEdicao">
        <i class="fas fa-plus-circle"></i> <span><strong>Cadastrar</strong></span>
     </button>
     <br><br>
@@ -23,17 +23,16 @@
         </table>
     </div>
 
-    <!-- Modal de Cadastro -->
-    <div id="modalCadastrar" class="modal fade" tabindex="-1" role="dialog">
+    <!-- Modal de Cadastro e Edição -->
+    <div id="modalCadastroEdicao" class="modal fade" tabindex="-1" aria-labelledby="modalCadastroEdicaoLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Cadastrar Aluno</h5>
+                    <h5 class="modal-title" id="modalCadastroEdicaoLabel">Cadastrar/Editar Aluno</h5>
                 </div>
                 <div class="modal-body">
-                    <form id="formCadastrar">
+                    <form id="formCadastroEdicao">
                         <input type="hidden" id="id" name="id">
-                        
                         <label for="nome">Nome</label>
                         <input type="text" id="nome" name="nome" class="form-control" required>
                         
@@ -50,38 +49,6 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
                     <button type="button" class="btn btn-primary" id="btnSalvar">Gravar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Edição -->
-    <div id="modalEditar" class="modal fade" tabindex="-1" role="dialog">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Atualizar Aluno</h5>
-                </div>
-                <div class="modal-body">
-                    <form id="formEditar">
-                        <input type="hidden" id="id_editar" name="id">
-                        
-                        <label for="nome_editar">Nome</label>
-                        <input type="text" id="nome_editar" name="nome_editar" class="form-control" required>
-                        
-                        <label for="telefone_editar">Telefone</label>
-                        <input type="text" id="telefone_editar" name="telefone_editar" class="form-control" required>
-                        
-                        <label for="data_nascimento_editar">Data de Nascimento</label>
-                        <input type="date" id="data_nascimento_editar" name="data_nascimento_editar" class="form-control" required>
-                        
-                        <label for="classe_id_editar">Classe</label>
-                        <select id="classe_id_editar" name="classe_id_editar" class="form-control" required></select>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="button" class="btn btn-primary" id="btnEditar">Atualizar</button>
                 </div>
             </div>
         </div>
@@ -103,20 +70,11 @@ function carregarClasses() {
         dataType: 'json',
         success: function(response) {
             if (response.status === 'success') {
-                var selectClassesCadastro = $('#classe_id');
-                var selectClassesEditar = $('#classe_id_editar');
-                
-                selectClassesCadastro.empty(); // Limpa o select no modal de cadastro
-                selectClassesEditar.empty(); // Limpa o select no modal de edição
-
-                // Adiciona a opção "Selecione" no início
-                selectClassesCadastro.append('<option value="">Selecione uma classe</option>');
-                selectClassesEditar.append('<option value="">Selecione uma classe</option>');
-
-                // Adiciona as classes ao select
+                var selectClasses = $('#classe_id');
+                selectClasses.empty(); // Limpa o select
+                selectClasses.append('<option value="">Selecione uma classe</option>');
                 response.data.forEach(function(classe) {
-                    selectClassesCadastro.append('<option value="' + classe.id + '">' + classe.nome + '</option>');
-                    selectClassesEditar.append('<option value="' + classe.id + '">' + classe.nome + '</option>');
+                    selectClasses.append('<option value="' + classe.id + '">' + classe.nome + '</option>');
                 });
             } else {
                 alert('Erro ao carregar classes: ' + response.message);
@@ -128,82 +86,74 @@ function carregarClasses() {
     });
 }
 
-// Chama a função de carregar classes ao abrir o modal de cadastro
-$('#modalCadastrar').on('show.bs.modal', function () {
-    $('#formCadastrar')[0].reset();  // Limpa o formulário
-    carregarClasses();  // Carrega as classes para o modal de cadastro
-});
+// Chama a função de carregar classes ao abrir o modal de cadastro ou edição
+$('#modalCadastroEdicao').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget); // O botão que abriu o modal
+    var alunoId = button.data('id'); // Obtém o ID do aluno se for uma edição
 
-// Função para editar aluno
-$('#tabelaAlunos').on('click', '.btnEditar', function() {
-    var alunoId = $(this).data('id'); // Obtém o ID do aluno para buscar os dados
-    $('#modalEditar').data('aluno-id', alunoId).modal('show'); // Passa o ID para o modal de edição
-});
-
-// Função para carregar os dados do aluno no modal de edição
-$('#modalEditar').on('show.bs.modal', function () {
-    var alunoId = $(this).data('aluno-id'); // Obtém o ID do aluno que será editado
-
-    // Faz uma requisição AJAX para buscar os dados do aluno
-    $.ajax({
-        url: '../../controllers/aluno.php?acao=buscar',
-        method: 'GET',
-        data: { id: alunoId },
-        dataType: 'json',
-        success: function(response) {
-            if (response.status === 'success') {
-                // Preenche os campos do formulário de edição com os dados recebidos
-                $('#id_editar').val(response.data.id);
-                $('#nome_editar').val(response.data.nome);
-                $('#telefone_editar').val(response.data.telefone);
-                $('#data_nascimento_editar').val(response.data.data_nascimento);
-                $('#classe_id_editar').val(response.data.classe_id); // Seleciona a classe correta
-            } else {
-                alert('Erro ao carregar os dados do aluno: ' + response.message);
+    if (alunoId) {
+        // Editar aluno
+        $('#modalCadastroEdicaoLabel').text('Editar Aluno');
+        $.ajax({
+            url: '../../controllers/aluno.php?acao=buscar',
+            method: 'GET',
+            data: { id: alunoId },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#id').val(response.data.id);
+                    $('#nome').val(response.data.nome);
+                    $('#telefone').val(response.data.telefone);
+                    $('#data_nascimento').val(response.data.data_nascimento);
+                    $('#classe_id').val(response.data.classe_id);
+                } else {
+                    alert('Erro ao carregar dados do aluno: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Erro ao carregar os dados do aluno.');
             }
-        },
-        error: function() {
-            alert('Erro ao carregar os dados do aluno.');
-        }
-    });
+        });
+    } else {
+        // Cadastro de aluno
+        $('#modalCadastroEdicaoLabel').text('Cadastrar Aluno');
+        $('#formCadastroEdicao')[0].reset(); // Limpa o formulário
+    }
 
-    carregarClasses(); // Carrega as classes no select para o modal de edição
+    carregarClasses(); // Carrega as classes para o modal
 });
 
-// Função para editar o aluno
-$('#btnEditar').on('click', function() {
+// Função para salvar ou editar aluno
+$('#btnSalvar').on('click', function() {
+    var url = $('#id').val() ? '../../controllers/aluno.php?acao=editar' : '../../controllers/aluno.php?acao=salvar';
+    
     $.ajax({
-        url: '../../controllers/aluno.php?acao=editar',
+        url: url,
         method: 'POST',
-        data: $('#formEditar').serialize(),
+        data: $('#formCadastroEdicao').serialize(),
         dataType: 'json',
         success: function(response) {
             if (response.status === "success") {
-                $('#modalEditar').modal('hide');  // Fecha o modal
-                tabela.ajax.reload(null, false); // Atualiza a tabela sem resetar a paginação
-                exibirMensagem('sucesso', 'Aluno atualizado com sucesso');
+                $('#modalCadastroEdicao').modal('hide');
+                tabela.ajax.reload(null, false);
+                exibirMensagem('sucesso', response.message);
             } else {
                 exibirMensagem('erro', response.message);
             }
         },
         error: function(xhr, status, error) {
-            console.error("Erro ao atualizar aluno:", error);
-            exibirMensagem('erro', 'Erro ao atualizar aluno. Verifique o console para mais detalhes.');
+            console.error("Erro ao salvar aluno:", error);
+            exibirMensagem('erro', 'Erro ao salvar aluno.');
         }
     });
 });
 
-
-// Funções de tabela com DataTables
+// Funções para DataTable e exibição
 let tabela = $('#tabelaAlunos').DataTable({
     ajax: {
         url: '../../controllers/aluno.php?acao=listar',
-        dataSrc: 'data',
-        error: function(xhr, error, code) {
-            console.log("Erro ao carregar os dados da tabela:", error, code);
-        }
+        dataSrc: 'data'
     },
-    responsive: true,
     columns: [
         { data: 'nome' },
         { 
@@ -218,7 +168,7 @@ let tabela = $('#tabelaAlunos').DataTable({
             data: 'id',
             render: function(data) {
                 return `
-                    <button class="btn btn-warning btn-sm btnEditar" data-id="${data}">
+                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalCadastroEdicao" data-id="${data}">
                         <i class="fas fa-edit"></i> 
                     </button>
                     <button class="btn btn-danger btn-sm btnExcluir" data-id="${data}">
@@ -226,46 +176,38 @@ let tabela = $('#tabelaAlunos').DataTable({
                     </button>`;
             }
         }
-    ],
-    language: {
-        url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json"
-    },
-    initComplete: function() {
-        atualizarExibicao();
-        atribuirEventos();
+    ]
+});
+// Função para excluir aluno
+$('#tabelaAlunos').on('click', '.btnExcluir', function() {
+    var alunoId = $(this).data('id');  // Obtém o ID do aluno a ser excluído
+
+    // Confirmação antes de excluir
+    if (confirm('Você tem certeza que deseja excluir este aluno?')) {
+        $.ajax({
+            url: '../../controllers/aluno.php?acao=excluir',
+            method: 'POST',
+            data: { id: alunoId },  // Envia o ID do aluno para exclusão
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === "success") {
+                    // Exibe uma mensagem de sucesso e recarrega a tabela
+                    tabela.ajax.reload(null, false);  // Recarrega a tabela sem resetar o estado
+                    exibirMensagem('sucesso', response.message);
+                } else {
+                    // Exibe uma mensagem de erro
+                    exibirMensagem('erro', response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Erro ao excluir aluno:", error);
+                exibirMensagem('erro', 'Erro ao excluir aluno.');
+            }
+        });
     }
 });
 
-// Funções para atualizar a exibição
-function atualizarExibicao() {
-    if ($(window).width() < 768) {
-        $('#tabelaContainer').hide();
-        $('#cardsContainer').removeClass('d-none').html('');
-        tabela.ajax.json().data.forEach(aluno => {
-            let card = `
-                <div class="card mb-2 shadow-sm p-3">
-                    <div class="card-body">
-                        <h5 class="card-title">${aluno.nome}</h5>
-                        <p><strong>Data de Nascimento:</strong> ${aluno.data_nascimento ? new Date(aluno.data_nascimento).toLocaleDateString('pt-BR') : '-'}</p>
-                        <p><strong>Telefone:</strong> ${aluno.telefone}</p>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-warning btn-sm btnEditar" data-id="${aluno.id}">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                            <button class="btn btn-danger btn-sm btnExcluir" data-id="${aluno.id}">
-                                <i class="fas fa-trash-alt"></i> Excluir
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            $('#cardsContainer').append(card);
-        });
-    } else {
-        $('#cardsContainer').addClass('d-none');
-        $('#tabelaContainer').show();
-    }
-}
+// Função para exibir mensagens
 function exibirMensagem(tipo, mensagem) {
     let classe = tipo === 'sucesso' ? 'alert-success' : 'alert-danger';
     let alerta = `<div class="alert ${classe} alert-dismissible fade show" role="alert">
@@ -273,21 +215,13 @@ function exibirMensagem(tipo, mensagem) {
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                   </div>`;
     
-    // Adiciona a mensagem no topo da página
     $('.container').prepend(alerta);
-    
-    // Remove a mensagem após 5 segundos
     setTimeout(() => { $('.alert').alert('close'); }, 5000);
-}
-
-function atribuirEventos() {
-    $('#tabelaAlunos').on('click', '.btnEditar', function() {
-        var alunoId = $(this).data('id');
-        $('#modalEditar').data('aluno-id', alunoId).modal('show');
-    });
 }
 </script>
 
 </body>
 </html>
+
+
 
