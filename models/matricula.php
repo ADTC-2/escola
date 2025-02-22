@@ -62,7 +62,16 @@ class Matricula {
             return false;
         }
     }
-
+    public function listarClasses() {
+        $query = "SELECT id, nome FROM classes";
+        try {
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute();
+            return ['status' => 'success', 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+        } catch (PDOException $e) {
+            return ['status' => 'error', 'message' => 'Erro ao listar classes: ' . $e->getMessage()];
+        }
+    }
     // Obter Matrícula por ID (Novo método)
     public function obterMatriculaPorId($matricula_id) {
         $query = "SELECT m.id, a.nome AS aluno_nome, c.nome AS classe_nome, m.trimestre, m.status

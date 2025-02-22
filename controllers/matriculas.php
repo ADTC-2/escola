@@ -18,7 +18,7 @@ class MatriculaController {
         $this->aluno = new Aluno($pdo);
         $this->classe = new Classe($pdo);
     }
-
+    
     public function listar() {
         $result = $this->matricula->listarMatriculas();
         echo json_encode(['sucesso' => true, 'matriculas' => $result]);
