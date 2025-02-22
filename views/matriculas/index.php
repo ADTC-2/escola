@@ -5,131 +5,118 @@
     <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
         <i class="fas fa-plus-circle"></i> <span><strong>Cadastrar</strong></span>
     </button><br><br>
+        <!-- Tabela de Matrículas -->
+        <table id="tabelaMatriculas" class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Aluno</th>
+                    <th>Classe</th>
+                    <th>Congregação</th>
+                    <th>Professor</th>
+                    <th>Data Matrícula</th>
+                    <th>Trimestre</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
-    <!-- Tabela de Matrículas com DataTable -->
-    <table class="table table-striped" id="tabelaMatriculas">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Aluno</th>
-                <th>Classe</th>
-                <th>Congregação</th>
-                <th>Professor</th>
-                <th>Data Matrícula</th>
-                <th>Trimestre</th>
-                <th>Status</th>                
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody id="listaMatriculas">
-            <!-- Matrículas serão carregadas aqui -->
-        </tbody>
-    </table>
-</div>
-
-<!-- Modal Cadastrar Matrícula -->
-<div class="modal" id="modalCadastrar" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Nova Matrícula</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formCadastrarMatricula">
-                    <div class="mb-3">
-                        <label for="aluno" class="form-label">Aluno</label>
-                        <select class="form-control" id="aluno" required></select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="classe" class="form-label">Classe</label>
-                        <select class="form-control" id="classe" required></select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="congregacao" class="form-label">Congregação</label>
-                        <select class="form-control" id="congregacao" required></select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="professor" class="form-label">Professor</label>
-                        <select class="form-control" id="professor" required></select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="trimestre" class="form-label">Trimestre</label>
-                        <select class="form-control" id="trimestre" required>
-                            <option value="1">1º Trimestre</option>
-                            <option value="2">2º Trimestre</option>
-                            <option value="3">3º Trimestre</option>
-                            <option value="4">4º Trimestre</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Cadastrar Matrícula</button>
-                </form>
+    <!-- Modal de Cadastro de Matrícula -->
+    <div id="modalCadastrar" class="modal fade" tabindex="-1" aria-labelledby="modalCadastrarLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCadastrarLabel">Cadastrar Matrícula</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formCadastrarMatricula">
+                        <div class="mb-3">
+                            <label for="aluno" class="form-label">Aluno</label>
+                            <select id="aluno" class="form-select" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="classe" class="form-label">Classe</label>
+                            <select id="classe" class="form-select" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="congregacao" class="form-label">Congregação</label>
+                            <select id="congregacao" class="form-select" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="professor" class="form-label">Professor</label>
+                            <select id="professor" class="form-select" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="trimestre" class="form-label">Trimestre</label>
+                            <input type="number" id="trimestre" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Cadastrar</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal Editar Matrícula -->
-<div class="modal" id="modalEditar" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Editar Matrícula</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formEditarMatricula">
-                    <input type="hidden" id="matricula_id">
-                    <div class="mb-3">
-                        <label for="aluno_editar" class="form-label">Aluno</label>
-                        <select class="form-control" id="aluno_editar" required></select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="classe_editar" class="form-label">Classe</label>
-                        <select class="form-control" id="classe_editar" required></select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="congregacao_editar" class="form-label">Congregação</label>
-                        <select class="form-control" id="congregacao_editar" required></select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="professor_editar" class="form-label">Professor</label>
-                        <select class="form-control" id="professor_editar" required></select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="trimestre_editar" class="form-label">Trimestre</label>
-                        <select class="form-control" id="trimestre_editar" required>
-                            <option value="1">1º Trimestre</option>
-                            <option value="2">2º Trimestre</option>
-                            <option value="3">3º Trimestre</option>
-                            <option value="4">4º Trimestre</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Salvar alterações
-                    </button>
-                </form>
+    <!-- Modal de Edição de Matrícula -->
+    <div id="modalEditar" class="modal fade" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEditarLabel">Editar Matrícula</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarMatricula">
+                        <input type="hidden" id="matricula_id">
+                        <div class="mb-3">
+                            <label for="aluno_editar" class="form-label">Aluno</label>
+                            <select id="aluno_editar" class="form-select" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="classe_editar" class="form-label">Classe</label>
+                            <select id="classe_editar" class="form-select" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="congregacao_editar" class="form-label">Congregação</label>
+                            <select id="congregacao_editar" class="form-select" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="professor_editar" class="form-label">Professor</label>
+                            <select id="professor_editar" class="form-select" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="trimestre_editar" class="form-label">Trimestre</label>
+                            <input type="number" id="trimestre_editar" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal Excluir Matrícula -->
-<div class="modal" id="modalExcluir" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Excluir Matrícula</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Tem certeza que deseja excluir esta matrícula?</p>
-                <button type="button" class="btn btn-danger" id="confirmarExcluir"><i class="fas fa-trash"></i> Excluir</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+    <!-- Modal de Confirmação de Exclusão -->
+    <div id="modalExcluir" class="modal fade" tabindex="-1" aria-labelledby="modalExcluirLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalExcluirLabel">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Você tem certeza que deseja excluir esta matrícula?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmarExcluir">Excluir</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
@@ -137,12 +124,15 @@
 <script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.js"></script>
 <script>
 $(document).ready(function() {
-    // Carregar alunos, classes e congregações ao iniciar
+    // Inicializar a tabela
+    $('#tabelaMatriculas').DataTable();
+
+    // Carregar alunos, classes, congregações, professores e matrículas ao iniciar
     carregarAlunos();
     carregarClasses();
     carregarCongregacoes();
     carregarProfessores();
-    carregarMatriculas();    
+    carregarMatriculas();
 
     // Função para carregar alunos
     function carregarAlunos(selectedId = '') {
@@ -233,7 +223,7 @@ $(document).ready(function() {
                         dataMatricula.setHours(dataMatricula.getHours() + dataMatricula.getTimezoneOffset() / 60);
                         let dataFormatada = `${("0" + dataMatricula.getDate()).slice(-2)}/${("0" + (dataMatricula.getMonth() + 1)).slice(-2)}/${dataMatricula.getFullYear()}`;
                         
-                        table.row.add([
+                        table.row.add([ 
                             matricula.id,
                             matricula.aluno_nome,
                             matricula.classe_nome,
@@ -242,10 +232,10 @@ $(document).ready(function() {
                             dataFormatada,
                             matricula.trimestre,
                             matricula.status,
-                            `<button class="btn btn-primary btn-sm" onclick="editarMatricula(${matricula.id})">
+                            `<button class="btn btn-primary btn-sm" data-id="${matricula.id}">
                                 <i class="fas fa-edit"></i>
                              </button>
-                             <button class="btn btn-danger btn-sm" onclick="confirmarExcluir(${matricula.id})">
+                             <button class="btn btn-danger btn-sm" data-id="${matricula.id}">
                                 <i class="fas fa-trash"></i>
                              </button>`
                         ]).draw();
@@ -262,7 +252,7 @@ $(document).ready(function() {
 
     // Enviar dados para cadastrar a matrícula
     $("#formCadastrarMatricula").submit(function(e) {
-    e.preventDefault();
+        e.preventDefault();
 
         let aluno_id = $("#aluno").val();
         let classe_id = $("#classe").val();
@@ -288,7 +278,6 @@ $(document).ready(function() {
             },
             dataType: "json",
             success: function(response) {
-                console.log(response); // Depuração
                 if (response.sucesso) {
                     alert("Matrícula cadastrada com sucesso!");
                     $("#modalCadastrar").modal("hide");
@@ -298,11 +287,41 @@ $(document).ready(function() {
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                console.error("Erro na requisição:", textStatus, errorThrown); // Depuração
+                console.error("Erro na requisição:", textStatus, errorThrown);
                 alert("Erro ao tentar cadastrar matrícula.");
             }
         });
     });
+
+    // Função para editar a matrícula
+    function editarMatricula(id) {
+        $.ajax({
+            url: "../../controllers/matriculas.php",
+            type: "POST",
+            data: { acao: "buscarMatricula", matricula_id: id },
+            dataType: "json",
+            success: function(response) {
+                if (response.sucesso) {
+                    // Preencher os campos do modal de edição com as informações da matrícula
+                    $("#matricula_id").val(response.matricula.id);
+                    $("#aluno_editar").val(response.matricula.aluno_id);
+                    $("#classe_editar").val(response.matricula.classe_id);
+                    $("#congregacao_editar").val(response.matricula.congregacao_id);
+                    $("#professor_editar").val(response.matricula.professor_id);
+                    $("#trimestre_editar").val(response.matricula.trimestre);
+
+                    // Exibir o modal de edição
+                    $("#modalEditar").modal("show");
+                } else {
+                    alert("Erro ao carregar as informações da matrícula.");
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error("Erro na requisição:", textStatus, errorThrown);
+                alert("Erro ao tentar carregar as informações da matrícula.");
+            }
+        });
+    }
 
     // Enviar dados para editar a matrícula
     $("#formEditarMatricula").submit(function(e) {
@@ -315,7 +334,7 @@ $(document).ready(function() {
         let professor_id = $("#professor_editar").val();
         let trimestre = $("#trimestre_editar").val();
 
-        if (!matricula_id || !aluno_id || !classe_id || !congregacao_id || !professor_id || !trimestre) {
+        if (!aluno_id || !classe_id || !congregacao_id || !professor_id || !trimestre) {
             alert("Todos os campos devem ser preenchidos!");
             return;
         }
@@ -334,45 +353,17 @@ $(document).ready(function() {
             },
             dataType: "json",
             success: function(response) {
-                console.log(response); // Depuração
                 if (response.sucesso) {
-                    alert("Matrícula editada com sucesso!");
+                    alert("Matrícula atualizada com sucesso!");
                     $("#modalEditar").modal("hide");
                     carregarMatriculas(); 
                 } else {
-                    alert("Erro ao editar matrícula: " + response.mensagem);
+                    alert("Erro ao atualizar matrícula: " + response.mensagem);
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                console.error("Erro na requisição:", textStatus, errorThrown); // Depuração
-                alert("Erro ao tentar editar matrícula.");
-            }
-        });
-    });
-    // Excluir matrícula
-    $("#confirmarExcluir").click(function() {
-    let matricula_id = $("#matricula_id").val();
-    $.ajax({
-        url: "../../controllers/matriculas.php",
-        type: "POST",
-        data: { 
-            acao: "excluirMatricula", 
-            matricula_id: matricula_id
-        },
-        dataType: "json",
-        success: function(response) {
-            console.log(response); // Depuração
-            if (response.sucesso) {
-                alert("Matrícula excluída com sucesso!");
-                $("#modalExcluir").modal("hide");
-                carregarMatriculas();
-            } else {
-                alert("Erro ao excluir matrícula: " + response.mensagem);
-            }
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            console.error("Erro na requisição:", textStatus, errorThrown); // Depuração
-                alert("Erro ao tentar excluir matrícula.");
+                console.error("Erro na requisição:", textStatus, errorThrown);
+                alert("Erro ao tentar atualizar matrícula.");
             }
         });
     });
@@ -382,6 +373,44 @@ $(document).ready(function() {
         $("#matricula_id").val(id);
         $("#modalExcluir").modal("show");
     }
+
+    // Excluir matrícula
+    $("#confirmarExcluir").click(function() {
+        let matricula_id = $("#matricula_id").val();
+        $.ajax({
+            url: "../../controllers/matriculas.php",
+            type: "POST",
+            data: { 
+                acao: "excluirMatricula", 
+                matricula_id: matricula_id
+            },
+            dataType: "json",
+            success: function(response) {
+                if (response.sucesso) {
+                    alert("Matrícula excluída com sucesso!");
+                    $("#modalExcluir").modal("hide");
+                    carregarMatriculas();
+                } else {
+                    alert("Erro ao excluir matrícula: " + response.mensagem);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error("Erro na requisição:", textStatus, errorThrown);
+                alert("Erro ao tentar excluir matrícula.");
+            }
+        });
+    });
+
+    // Vincular eventos de clique aos botões de editar e excluir
+    $(document).on('click', '.btn-primary', function() {
+        let matricula_id = $(this).data('id');
+        editarMatricula(matricula_id);
+    });
+
+    $(document).on('click', '.btn-danger', function() {
+        let matricula_id = $(this).data('id');
+        confirmarExcluir(matricula_id);
+    });
 });
 </script>
 
