@@ -85,7 +85,18 @@ class Matricula {
                 return ['sucesso' => false, 'mensagem' => 'Professor não encontrado ou o usuário não tem perfil de professor.'];
             }
     
-            // Se o professor_id for válido, realizar o UPDATE
+            // Verificar se a matrícula existe
+            $queryCheckMatricula = "SELECT COUNT(*) FROM matriculas WHERE id = :matricula_id";
+            $stmt = $this->pdo->prepare($queryCheckMatricula);
+            $stmt->bindParam(':matricula_id', $matricula_id, PDO::PARAM_INT);
+            $stmt->execute();
+            $matriculaCount = $stmt->fetchColumn();
+    
+            if ($matriculaCount == 0) {
+                return ['sucesso' => false, 'mensagem' => 'Matrícula não encontrada.'];
+            }
+    
+            // Se o professor_id e a matrícula forem válidos, realizar o UPDATE
             $query = "UPDATE matriculas 
                       SET aluno_id = :aluno_id, classe_id = :classe_id, congregacao_id = :congregacao_id, 
                           professor_id = :professor_id, trimestre = :trimestre 
@@ -115,13 +126,19 @@ class Matricula {
                   JOIN alunos a ON m.aluno_id = a.id
                   JOIN classes c ON m.classe_id = c.id
                   JOIN congregacoes co ON m.congregacao_id = co.id
-                  JOIN usuarios u ON m.professor_id = u.id AND u.perfil = 'professor'  -- Alterado para usuários e perfil 'professor'
+                  JOIN usuarios u ON m.professor_id = u.id AND u.perfil = 'professor'
                   WHERE m.id = :matricula_id";
         try {
             $stmt = $this->pdo->prepare($query);
             $stmt->bindParam(':matricula_id', $matricula_id, PDO::PARAM_INT);
             $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);  // Retorna os dados da matrícula
+            $matricula = $stmt->fetch(PDO::FETCH_ASSOC);  // Retorna os dados da matrícula
+            
+            if ($matricula) {
+                return ['sucesso' => true, 'matricula' => $matricula];
+            } else {
+                return ['sucesso' => false, 'mensagem' => 'Matrícula não encontrada'];
+            }
         } catch (PDOException $e) {
             return ['sucesso' => false, 'mensagem' => 'Erro ao obter matrícula: ' . $e->getMessage()];
         }

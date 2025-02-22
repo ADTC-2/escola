@@ -77,11 +77,20 @@ class MatriculaController {
             $professor_id = $_POST['professor_id'];
             $trimestre = $_POST['trimestre'];
     
+            // Validação básica dos dados
             if (!is_numeric($matricula_id) || !is_numeric($aluno_id) || !is_numeric($classe_id) || !is_numeric($congregacao_id) || !is_numeric($professor_id) || !is_numeric($trimestre)) {
                 echo json_encode(['sucesso' => false, 'mensagem' => 'Dados inválidos']);
                 return;
             }
     
+            // Verificar se a matrícula existe antes de editar
+            $matriculaExistente = $this->matricula->obterMatriculaPorId($matricula_id);
+            if (!$matriculaExistente) {
+                echo json_encode(['sucesso' => false, 'mensagem' => 'Matrícula não encontrada']);
+                return;
+            }
+    
+            // Editar a matrícula
             $result = $this->matricula->editarMatricula($matricula_id, $aluno_id, $classe_id, $congregacao_id, $professor_id, $trimestre);
             if ($result['sucesso']) {
                 echo json_encode(['sucesso' => true]);
@@ -95,11 +104,11 @@ class MatriculaController {
     public function carregarMatricula() {
         if (isset($_POST['matricula_id']) && is_numeric($_POST['matricula_id'])) {
             $matricula_id = $_POST['matricula_id'];
-            $matricula = $this->matricula->obterMatriculaPorId($matricula_id);
-            if ($matricula) {
-                echo json_encode(['sucesso' => true, 'matricula' => $matricula]);
+            $result = $this->matricula->obterMatriculaPorId($matricula_id);
+            if ($result['sucesso']) {
+                echo json_encode(['sucesso' => true, 'matricula' => $result['matricula']]);
             } else {
-                echo json_encode(['sucesso' => false, 'mensagem' => 'Matrícula não encontrada']);
+                echo json_encode(['sucesso' => false, 'mensagem' => $result['mensagem']]);
             }
         } else {
             echo json_encode(['sucesso' => false, 'mensagem' => 'ID da matrícula inválido']);
@@ -109,11 +118,6 @@ class MatriculaController {
 
     public function listarAlunos() {
         $result = $this->aluno->listar();
-        echo json_encode(['sucesso' => true, 'data' => $result]);
-    }
-
-    public function listarClasses() {
-        $result = $this->classe->listarClasses();
         echo json_encode(['sucesso' => true, 'data' => $result]);
     }
 
@@ -152,15 +156,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao'])) {
         case 'listarAlunos':
             $controller->listarAlunos();
             break;
-        case 'listarClasses':
-            $controller->listarClasses();
-            break;
         case 'listarCongregacoes':
             $controller->listarCongregacoes();
             break;
         case 'listarProfessores':
             $controller->listarProfessores();
             break;
+        case 'buscarMatricula':
+            $controller->carregarMatricula();
+            break;    
         default:
             echo json_encode(['sucesso' => false, 'mensagem' => 'Ação inválida']);
             break;
