@@ -3,7 +3,7 @@
 <div class="container mt-5">
     <h2>Gerenciamento de Matrículas</h2>
     <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
-       <i class="fas fa-plus"></i>
+       <i class="fas fa-plus"></i> Nova Matrícula
     </button><br><br>
 
     <!-- Tabela de Matrículas com DataTable -->
@@ -69,7 +69,6 @@
     </div>
 </div>
 
-
 <!-- Modal Editar Matrícula -->
 <div class="modal" id="modalEditar" tabindex="-1">
     <div class="modal-dialog">
@@ -115,7 +114,6 @@
     </div>
 </div>
 
-
 <!-- Modal Excluir Matrícula -->
 <div class="modal" id="modalExcluir" tabindex="-1">
     <div class="modal-dialog">
@@ -126,7 +124,7 @@
             </div>
             <div class="modal-body">
                 <p>Tem certeza que deseja excluir esta matrícula?</p>
-                <button type="button" class="btn btn-danger" id="confirmarExcluir"><i class="fas fa-trash"></i></button>
+                <button type="button" class="btn btn-danger" id="confirmarExcluir"><i class="fas fa-trash"></i> Excluir</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
             </div>
         </div>
@@ -143,7 +141,7 @@ $(document).ready(function() {
     carregarAlunos();
     carregarClasses();
     carregarCongregacoes();
-    carregarProfessores(); // Nova função para carregar professores
+    carregarProfessores();
     carregarMatriculas();    
 
     // Função para carregar alunos
@@ -166,7 +164,7 @@ $(document).ready(function() {
 
     // Função para carregar classes
     function carregarClasses(selectedId = '') {
-        $.post('../../controllers/matriculas.php', { acao: 'listarClasses' }, function(response) {
+        $.post('../../controllers/classe.php', { acao: 'listar' }, function(response) {
             if (response.sucesso) {
                 let options = '<option value="">Selecione</option>';
                 response.data.forEach(c => {
@@ -199,9 +197,10 @@ $(document).ready(function() {
             console.error("Erro na requisição das congregações:", textStatus, errorThrown);
         });
     }
-// Função para carregar professores
-   function carregarProfessores(selectedId = '') {
-        $.post('../../controllers/professores.php', { acao: 'listar' }, function(response) {
+
+    // Função para carregar professores
+    function carregarProfessores(selectedId = '') {
+        $.post('../../controllers/usuario.php', { acao: 'listar' }, function(response) {
             if (response.sucesso) {
                 let options = '<option value="">Selecione</option>';
                 response.data.forEach(p => {
@@ -238,16 +237,17 @@ $(document).ready(function() {
                             matricula.id,
                             matricula.aluno_nome,
                             matricula.classe_nome,
-                            matricula.congregacao_nome, // Exibe Congregação
+                            matricula.congregacao_nome,
+                            matricula.professor_nome,
                             dataFormatada,
-                            matricula.status,
                             matricula.trimestre,
-                            `    <button class="btn btn-primary btn-sm" onclick="editarMatricula(${matricula.id})">
-                                   <i class="fas fa-edit"></i>
-                                 </button>
-                                 <button class="btn btn-danger btn-sm" onclick="confirmarExcluir(${matricula.id})">
-                                 <i class="fas fa-trash"></i>
-                                 </button>`
+                            matricula.status,
+                            `<button class="btn btn-primary btn-sm" onclick="editarMatricula(${matricula.id})">
+                                <i class="fas fa-edit"></i>
+                             </button>
+                             <button class="btn btn-danger btn-sm" onclick="confirmarExcluir(${matricula.id})">
+                                <i class="fas fa-trash"></i>
+                             </button>`
                         ]).draw();
                     });
                 } else {
@@ -267,9 +267,10 @@ $(document).ready(function() {
         let aluno_id = $("#aluno").val();
         let classe_id = $("#classe").val();
         let congregacao_id = $("#congregacao").val();
+        let professor_id = $("#professor").val();
         let trimestre = $("#trimestre").val();
 
-        if (!aluno_id || !classe_id || !congregacao_id || !trimestre) {
+        if (!aluno_id || !classe_id || !congregacao_id || !professor_id || !trimestre) {
             alert("Todos os campos devem ser preenchidos!");
             return;
         }
@@ -282,6 +283,7 @@ $(document).ready(function() {
                 aluno_id: aluno_id,  
                 classe_id: classe_id,  
                 congregacao_id: congregacao_id,
+                professor_id: professor_id,
                 trimestre: trimestre  
             },
             dataType: "json",

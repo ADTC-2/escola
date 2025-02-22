@@ -3,11 +3,15 @@ include_once '../config/conexao.php';
 include_once '../models/matricula.php';
 include_once '../models/aluno.php';
 include_once '../models/classe.php';
+include_once '../models/congregacao.php';
+include_once '../models/professor.php';
 
 class MatriculaController {
     private $matricula;
     private $aluno;
     private $classe;
+    private $congregacao;
+    private $professor;
 
     public function __construct($pdo) {
         if (!$pdo) {
@@ -17,6 +21,8 @@ class MatriculaController {
         $this->matricula = new Matricula($pdo);
         $this->aluno = new Aluno($pdo);
         $this->classe = new Classe($pdo);
+        $this->congregacao = new Congregacao($pdo);
+        $this->professor = new Professor($pdo);
     }
     
     public function listar() {
@@ -25,18 +31,20 @@ class MatriculaController {
     }
 
     public function cadastrar() {
-        if (isset($_POST['aluno_id'], $_POST['classe_id'], $_POST['trimestre'])) {
+        if (isset($_POST['aluno_id'], $_POST['classe_id'], $_POST['congregacao_id'], $_POST['professor_id'], $_POST['trimestre'])) {
             $aluno_id = $_POST['aluno_id'];
             $classe_id = $_POST['classe_id'];
+            $congregacao_id = $_POST['congregacao_id'];
+            $professor_id = $_POST['professor_id'];
             $trimestre = $_POST['trimestre'];
 
             // Verificação simples dos tipos dos dados
-            if (!is_numeric($aluno_id) || !is_numeric($classe_id) || !is_numeric($trimestre)) {
+            if (!is_numeric($aluno_id) || !is_numeric($classe_id) || !is_numeric($congregacao_id) || !is_numeric($professor_id) || !is_numeric($trimestre)) {
                 echo json_encode(['sucesso' => false, 'mensagem' => 'Dados inválidos']);
                 return;
             }
 
-            $result = $this->matricula->cadastrarMatricula($aluno_id, $classe_id, $trimestre);
+            $result = $this->matricula->cadastrarMatricula($aluno_id, $classe_id, $congregacao_id, $professor_id, $trimestre);
             echo json_encode(['sucesso' => $result]);
         } else {
             echo json_encode(['sucesso' => false, 'mensagem' => 'Dados faltando']);
@@ -54,19 +62,21 @@ class MatriculaController {
     }
 
     public function editarMatricula() {
-        if (isset($_POST['matricula_id'], $_POST['aluno_id'], $_POST['classe_id'], $_POST['trimestre'])) {
+        if (isset($_POST['matricula_id'], $_POST['aluno_id'], $_POST['classe_id'], $_POST['congregacao_id'], $_POST['professor_id'], $_POST['trimestre'])) {
             $matricula_id = $_POST['matricula_id'];
             $aluno_id = $_POST['aluno_id'];
             $classe_id = $_POST['classe_id'];
+            $congregacao_id = $_POST['congregacao_id'];
+            $professor_id = $_POST['professor_id'];
             $trimestre = $_POST['trimestre'];
     
-            if (!is_numeric($matricula_id) || !is_numeric($aluno_id) || !is_numeric($classe_id) || !is_numeric($trimestre)) {
+            if (!is_numeric($matricula_id) || !is_numeric($aluno_id) || !is_numeric($classe_id) || !is_numeric($congregacao_id) || !is_numeric($professor_id) || !is_numeric($trimestre)) {
                 echo json_encode(['sucesso' => false, 'mensagem' => 'Dados inválidos']);
                 return;
             }
     
             // Chama o método de edição da matrícula no model
-            $result = $this->matricula->editarMatricula($matricula_id, $aluno_id, $classe_id, $trimestre);
+            $result = $this->matricula->editarMatricula($matricula_id, $aluno_id, $classe_id, $congregacao_id, $professor_id, $trimestre);
     
             if ($result) {
                 // Obter a matrícula editada para retornar os dados completos
@@ -104,6 +114,16 @@ class MatriculaController {
         $result = $this->classe->listarClasses();
         echo json_encode(['sucesso' => true, 'data' => $result]);
     }
+
+    public function listarCongregacoes() {
+        $result = $this->congregacao->listar();
+        echo json_encode(['sucesso' => true, 'data' => $result]);
+    }
+
+    public function listarProfessores() {
+        $result = $this->professor->listar();
+        echo json_encode(['sucesso' => true, 'data' => $result]);
+    }
 }
 
 // Criar instância do controller com a conexão existente
@@ -115,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao'])) {
         case 'listarMatriculas':
             $controller->listar();
             break;
-        case 'matricular':
+        case 'cadastrarMatricula':
             $controller->cadastrar();
             break;
         case 'excluirMatricula':
@@ -133,13 +153,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao'])) {
         case 'listarClasses':
             $controller->listarClasses();
             break;
+        case 'listarCongregacoes':
+            $controller->listarCongregacoes();
+            break;
+        case 'listarProfessores':
+            $controller->listarProfessores();
+            break;
         default:
             echo json_encode(['sucesso' => false, 'mensagem' => 'Ação inválida']);
             break;
     }
 }
 ?>
-
 
 
 

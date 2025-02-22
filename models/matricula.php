@@ -8,10 +8,12 @@ class Matricula {
 
     // Listar Matrículas
     public function listarMatriculas() {
-        $query = "SELECT m.id, a.nome AS aluno_nome, c.nome AS classe_nome, m.data_matricula, m.status, m.trimestre
+        $query = "SELECT m.id, a.nome AS aluno_nome, c.nome AS classe_nome, co.nome AS congregacao_nome, p.nome AS professor_nome, m.data_matricula, m.status, m.trimestre
                   FROM matriculas m
                   JOIN alunos a ON m.aluno_id = a.id
-                  JOIN classes c ON m.classe_id = c.id";
+                  JOIN classes c ON m.classe_id = c.id
+                  JOIN congregacoes co ON m.congregacao_id = co.id
+                  JOIN professores p ON m.professor_id = p.id";
         try {
             $stmt = $this->pdo->prepare($query);
             $stmt->execute();
@@ -22,13 +24,15 @@ class Matricula {
     }
 
     // Cadastrar Matrícula
-    public function cadastrarMatricula($aluno_id, $classe_id, $trimestre) {
-        $query = "INSERT INTO matriculas (aluno_id, classe_id, trimestre, data_matricula, status) 
-                  VALUES (:aluno_id, :classe_id, :trimestre, NOW(), 'Ativo')";
+    public function cadastrarMatricula($aluno_id, $classe_id, $congregacao_id, $professor_id, $trimestre) {
+        $query = "INSERT INTO matriculas (aluno_id, classe_id, congregacao_id, professor_id, trimestre, data_matricula, status) 
+                  VALUES (:aluno_id, :classe_id, :congregacao_id, :professor_id, :trimestre, NOW(), 'Ativo')";
         try {
             $stmt = $this->pdo->prepare($query);
             $stmt->bindParam(':aluno_id', $aluno_id, PDO::PARAM_INT);
             $stmt->bindParam(':classe_id', $classe_id, PDO::PARAM_INT);
+            $stmt->bindParam(':congregacao_id', $congregacao_id, PDO::PARAM_INT);
+            $stmt->bindParam(':professor_id', $professor_id, PDO::PARAM_INT);
             $stmt->bindParam(':trimestre', $trimestre, PDO::PARAM_INT);
             return $stmt->execute();
         } catch (PDOException $e) {
@@ -49,12 +53,14 @@ class Matricula {
     }
 
     // Editar Matrícula
-    public function editarMatricula($matricula_id, $aluno_id, $classe_id, $trimestre) {
-        $query = "UPDATE matriculas SET aluno_id = :aluno_id, classe_id = :classe_id, trimestre = :trimestre WHERE id = :matricula_id";
+    public function editarMatricula($matricula_id, $aluno_id, $classe_id, $congregacao_id, $professor_id, $trimestre) {
+        $query = "UPDATE matriculas SET aluno_id = :aluno_id, classe_id = :classe_id, congregacao_id = :congregacao_id, professor_id = :professor_id, trimestre = :trimestre WHERE id = :matricula_id";
         try {
             $stmt = $this->pdo->prepare($query);
             $stmt->bindParam(':aluno_id', $aluno_id, PDO::PARAM_INT);
             $stmt->bindParam(':classe_id', $classe_id, PDO::PARAM_INT);
+            $stmt->bindParam(':congregacao_id', $congregacao_id, PDO::PARAM_INT);
+            $stmt->bindParam(':professor_id', $professor_id, PDO::PARAM_INT);
             $stmt->bindParam(':trimestre', $trimestre, PDO::PARAM_INT);
             $stmt->bindParam(':matricula_id', $matricula_id, PDO::PARAM_INT);
             return $stmt->execute();
@@ -62,22 +68,15 @@ class Matricula {
             return false;
         }
     }
-    public function listarClasses() {
-        $query = "SELECT id, nome FROM classes";
-        try {
-            $stmt = $this->pdo->prepare($query);
-            $stmt->execute();
-            return ['status' => 'success', 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
-        } catch (PDOException $e) {
-            return ['status' => 'error', 'message' => 'Erro ao listar classes: ' . $e->getMessage()];
-        }
-    }
-    // Obter Matrícula por ID (Novo método)
+
+    // Obter Matrícula por ID
     public function obterMatriculaPorId($matricula_id) {
-        $query = "SELECT m.id, a.nome AS aluno_nome, c.nome AS classe_nome, m.trimestre, m.status
+        $query = "SELECT m.id, a.nome AS aluno_nome, c.nome AS classe_nome, co.nome AS congregacao_nome, p.nome AS professor_nome, m.trimestre, m.status
                   FROM matriculas m
                   JOIN alunos a ON m.aluno_id = a.id
                   JOIN classes c ON m.classe_id = c.id
+                  JOIN congregacoes co ON m.congregacao_id = co.id
+                  JOIN professores p ON m.professor_id = p.id
                   WHERE m.id = :matricula_id";
         try {
             $stmt = $this->pdo->prepare($query);
