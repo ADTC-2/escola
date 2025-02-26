@@ -47,4 +47,6 @@ class Classe {
         $stmt->execute();
         return ['sucesso' => true, 'mensagem' => 'Classe excluída com sucesso!'];
     }
+    
 }
+

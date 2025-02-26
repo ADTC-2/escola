@@ -101,6 +101,7 @@ class MatriculaController {
             echo json_encode(['sucesso' => false, 'mensagem' => 'Dados faltando']);
         }
     }
+    
     public function carregarMatricula() {
         if (isset($_POST['matricula_id']) && is_numeric($_POST['matricula_id'])) {
             $matricula_id = $_POST['matricula_id'];
@@ -114,7 +115,26 @@ class MatriculaController {
             echo json_encode(['sucesso' => false, 'mensagem' => 'ID da matrícula inválido']);
         }
     }
-    
+    public function listarClassesPorCongregacao() {
+        // Verifica se o 'congregacao_id' foi enviado via POST e é válido
+        if (isset($_POST['congregacao_id']) && is_numeric($_POST['congregacao_id'])) {
+            $congregacao_id = $_POST['congregacao_id'];
+            
+            // Chama o método da classe 'Classe' para listar as classes da congregação
+            $result = $this->classe->listarClassesPorCongregacao($congregacao_id);
+            
+            if ($result['sucesso']) {
+                // Retorna as classes como JSON
+                echo json_encode(['sucesso' => true, 'data' => $result['classes']]);  // Usar 'data' para consistência
+            } else {
+                // Caso ocorra erro, retorna a mensagem de erro
+                echo json_encode(['sucesso' => false, 'mensagem' => $result['mensagem']]);
+            }
+        } else {
+            // Caso o ID da congregação não seja válido
+            echo json_encode(['sucesso' => false, 'mensagem' => 'ID da congregação inválido']);
+        }
+    }
 
     public function listarAlunos() {
         $result = $this->aluno->listar();
@@ -162,14 +182,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao'])) {
         case 'listarProfessores':
             $controller->listarProfessores();
             break;
+        case 'listarClassesPorCongregacao':  // Nova ação
+            $controller->listarClassesPorCongregacao();
+            break;
         case 'buscarMatricula':
             $controller->carregarMatricula();
-            break;    
+            break;
         default:
             echo json_encode(['sucesso' => false, 'mensagem' => 'Ação inválida']);
             break;
     }
 }
+
 ?>
 
 

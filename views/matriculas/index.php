@@ -133,70 +133,13 @@
 
 <script>
 $(document).ready(function() {
-    // Inicializar a tabela
-    $('#tabelaMatriculas').DataTable({
-        responsive: true
-    });
-
-    // Carregar alunos, classes, congregações, professores e matrículas ao iniciar
-    carregarAlunos();
-    carregarClasses();
-    carregarCongregacoes();
-    carregarProfessores();
-    carregarMatriculas();
-
-    // Função para carregar alunos
-    function carregarAlunos(selectedId = '') {
-        $.post('../../controllers/matriculas.php', {
-            acao: 'listarAlunos'
-        }, function(response) {
-            if (response.sucesso) {
-                let options = '<option value="">Selecione</option>';
-                response.data.forEach(a => {
-                    options +=
-                        `<option value="${a.id}" ${a.id == selectedId ? 'selected' : ''}>${a.nome}</option>`;
-                });
-                $('#aluno').html(options);
-                $('#aluno_editar').html(options);
-            } else {
-                console.error("Erro ao carregar alunos:", response.mensagem);
-            }
-        }, 'json').fail(function(jqXHR, textStatus, errorThrown) {
-            console.error("Erro na requisição dos alunos:", textStatus, errorThrown);
-        });
-    }
-
-    // Função para carregar classes
-    function carregarClasses(selectedId = '') {
-        $.post('../../controllers/classe.php', {
-            acao: 'listar'
-        }, function(response) {
-            if (response.sucesso) {
-                let options = '<option value="">Selecione</option>';
-                response.data.forEach(c => {
-                    options +=
-                        `<option value="${c.id}" ${c.id == selectedId ? 'selected' : ''}>${c.nome}</option>`;
-                });
-                $('#classe').html(options);
-                $('#classe_editar').html(options);
-            } else {
-                console.error("Erro ao carregar classes:", response.mensagem);
-            }
-        }, 'json').fail(function(jqXHR, textStatus, errorThrown) {
-            console.error("Erro na requisição das classes:", textStatus, errorThrown);
-        });
-    }
-
     // Função para carregar congregações
     function carregarCongregacoes(selectedId = '') {
-        $.post('../../controllers/congregacao.php', {
-            acao: 'listar'
-        }, function(response) {
+        $.post('../../controllers/congregacao.php', { acao: 'listar' }, function(response) {
             if (response.sucesso) {
                 let options = '<option value="">Selecione</option>';
                 response.data.forEach(c => {
-                    options +=
-                        `<option value="${c.id}" ${c.id == selectedId ? 'selected' : ''}>${c.nome}</option>`;
+                    options += `<option value="${c.id}" ${c.id == selectedId ? 'selected' : ''}>${c.nome}</option>`;
                 });
                 $('#congregacao').html(options);
                 $('#congregacao_editar').html(options);
@@ -208,241 +151,121 @@ $(document).ready(function() {
         });
     }
 
-    // Função para carregar professores
-    function carregarProfessores(selectedId = '') {
-        $.post('../../controllers/usuario.php', {
-            acao: 'listar'
-        }, function(response) {
-            if (response.sucesso) {
-                let options = '<option value="">Selecione</option>';
-                response.data.forEach(p => {
-                    options +=
-                        `<option value="${p.id}" ${p.id == selectedId ? 'selected' : ''}>${p.nome}</option>`;
-                });
-                $('#professor').html(options);
-                $('#professor_editar').html(options);
-            } else {
-                console.error("Erro ao carregar professores:", response.mensagem);
-            }
-        }, 'json').fail(function(jqXHR, textStatus, errorThrown) {
-            console.error("Erro na requisição dos professores:", textStatus, errorThrown);
-        });
-    }
+    // Carregar as classes ao selecionar a congregação
+    $('#congregacao').change(function() {
+        let congregacaoId = $(this).val();
+        if (congregacaoId) {
+            $.ajax({
+                url: '../../controllers/matriculas.php',
+                type: 'POST',
+                data: { congregacao_id: congregacaoId },
+                success: function(response) {
+                    if (response.sucesso && response.data) {
+                        let options = '<option value="">Selecione a Classe</option>';
+                        response.data.forEach(function(classe) {
+                            options += `<option value="${classe.id}">${classe.nome}</option>`;
+                        });
+                        $("#classe").html(options).prop('disabled', false);
+                    } else {
+                        console.error("Nenhuma classe encontrada ou erro na resposta:", response);
+                        $("#classe").html('<option value="">Nenhuma classe disponível</option>').prop('disabled', true);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    let errorMsg = "Erro ao carregar classes";
+                    if (jqXHR.responseJSON && jqXHR.responseJSON.mensagem) {
+                        errorMsg = jqXHR.responseJSON.mensagem;
+                    }
+                    console.error(errorMsg, textStatus, errorThrown);
+                    $("#classe").html('<option value="">' + errorMsg + '</option>').prop('disabled', true);
+                }
+            });
+        } else {
+            $("#classe").prop('disabled', true).html('<option value="">Selecione a Classe</option>');
+        }
+    });
 
-    // Função para carregar matrículas
-    function carregarMatriculas() {
+    // Carregar alunos ao selecionar a classe
+    $('#classe').change(function() {
+        let classeId = $(this).val();
+        if (classeId) {
+            $.ajax({
+                url: `../../controllers/classe.php/${classeId}`,
+                type: 'GET',
+                success: function(response) {
+                    if (response.sucesso) {
+                        let table = `<table class="table table-striped">
+                                        <thead><tr><th>Nome</th><th>Presente</th></tr></thead><tbody>`;
+                        response.data.forEach(function(aluno) {
+                            table += `<tr><td>${aluno.nome}</td><td><input type="checkbox" class="aluno-presenca" data-id="${aluno.id}"></td></tr>`;
+                        });
+                        table += `</tbody></table>`;
+                        $("#alunos-container").html(table);
+                    } else {
+                        console.error("Erro ao carregar alunos:", response.mensagem);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error("Erro na requisição dos alunos:", textStatus, errorThrown);
+                }
+            });
+        } else {
+            $("#alunos-container").empty();
+        }
+    });
+
+    // Salvar chamada
+    $('#formChamada').submit(function(e) {
+        e.preventDefault();
+
+        let congregacaoId = $('#congregacao').val();
+        let classeId = $('#classe').val();
+        let dataChamada = $('#data_chamada').val();
+        let professorId = $('#professor_id').val();
+        let presencas = [];
+
+        // Validação de campos obrigatórios
+        if (!congregacaoId || !classeId || !dataChamada || !professorId) {
+            alert('Por favor, preencha todos os campos!');
+            return;
+        }
+
+        $(".aluno-presenca:checked").each(function() {
+            presencas.push({
+                aluno_id: $(this).data('id'),
+                presente: true
+            });
+        });
+
+        // Enviar dados para salvar a chamada
         $.ajax({
-            url: "../../controllers/matriculas.php",
-            type: "POST",
+            url: '../../controllers/chamada.php',
+            type: 'POST',
             data: {
-                acao: "listarMatriculas"
+                congregacao_id: congregacaoId,
+                classe_id: classeId,
+                data_chamada: dataChamada,
+                professor_id: professorId,
+                presencas: presencas
             },
-            dataType: "json",
             success: function(response) {
                 if (response.sucesso) {
-                    let table = $('#tabelaMatriculas').DataTable();
-                    table.clear(); // Limpa os dados antes de inserir novos
-
-                    response.matriculas.forEach(matricula => {
-                        let dataMatricula = new Date(matricula.data_matricula);
-                        dataMatricula.setHours(dataMatricula.getHours() + dataMatricula
-                            .getTimezoneOffset() / 60);
-                        let dataFormatada =
-                            `${("0" + dataMatricula.getDate()).slice(-2)}/${("0" + (dataMatricula.getMonth() + 1)).slice(-2)}/${dataMatricula.getFullYear()}`;
-
-                        table.row.add([
-                            matricula.id,
-                            matricula.aluno_nome,
-                            matricula.classe_nome,
-                            matricula.congregacao_nome,
-                            matricula.professor_nome,
-                            dataFormatada,
-                            matricula.trimestre,
-                            matricula.status,
-                            `
-                             <button class="btn btn-danger btn-sm" data-id="${matricula.id}">
-                                <i class="fas fa-trash"></i>
-                             </button>`
-                        ]).draw();
-                    });
+                    alert('Chamada salva com sucesso!');
+                    window.location.href = "/dashboard";
                 } else {
-                    alert('Erro ao carregar matrículas.');
+                    alert('Erro ao salvar a chamada.');
+                    console.error("Erro ao salvar a chamada:", response.mensagem);
                 }
             },
             error: function() {
-                alert("Erro ao carregar matrículas.");
-            }
-        });
-    }
-
-    // Enviar dados para cadastrar a matrícula
-    $("#formCadastrarMatricula").submit(function(e) {
-        e.preventDefault();
-
-        let aluno_id = $("#aluno").val();
-        let classe_id = $("#classe").val();
-        let congregacao_id = $("#congregacao").val();
-        let professor_id = $("#professor").val();
-        let trimestre = $("#trimestre").val();
-
-        if (!aluno_id || !classe_id || !congregacao_id || !professor_id || !trimestre) {
-            alert("Todos os campos devem ser preenchidos!");
-            return;
-        }
-
-        $.ajax({
-            url: "../../controllers/matriculas.php",
-            type: "POST",
-            data: {
-                acao: "cadastrarMatricula",
-                aluno_id: aluno_id,
-                classe_id: classe_id,
-                congregacao_id: congregacao_id,
-                professor_id: professor_id,
-                trimestre: trimestre
-            },
-            dataType: "json",
-            success: function(response) {
-                if (response.sucesso) {
-                    alert("Matrícula cadastrada com sucesso!");
-                    $("#modalCadastrar").modal("hide");
-                    carregarMatriculas();
-                } else {
-                    alert("Erro ao cadastrar matrícula: " + response.mensagem);
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error("Erro na requisição:", textStatus, errorThrown);
-                alert("Erro ao tentar cadastrar matrícula.");
+                alert('Erro ao salvar a chamada.');
             }
         });
     });
 
-    // Função para editar a matrícula
-    function editarMatricula(id) {
-        $.ajax({
-            url: "../../controllers/matriculas.php",
-            type: "POST",
-            data: {
-                acao: "buscarMatricula",
-                matricula_id: id
-            },
-            dataType: "json",
-            success: function(response) {
-                if (response.sucesso) {
-                    // Preencher os campos do modal de edição com as informações da matrícula
-                    $("#matricula_id").val(response.matricula.id);
-                    $("#aluno_editar").val(response.matricula.aluno_id);
-                    $("#classe_editar").val(response.matricula.classe_id);
-                    $("#congregacao_editar").val(response.matricula.congregacao_id);
-                    $("#professor_editar").val(response.matricula.professor_id);
-                    $("#trimestre_editar").val(response.matricula.trimestre);
-
-                    // Exibir o modal de edição
-                    $("#modalEditar").modal("show");
-                } else {
-                    alert("Erro ao carregar as informações da matrícula.");
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error("Erro na requisição:", textStatus, errorThrown);
-                alert("Erro ao tentar carregar as informações da matrícula.");
-            }
-        });
-    }
-
-    // Enviar dados para editar a matrícula
-    $("#formEditarMatricula").submit(function(e) {
-        e.preventDefault();
-
-        let matricula_id = $("#matricula_id").val();
-        let aluno_id = $("#aluno_editar").val();
-        let classe_id = $("#classe_editar").val();
-        let congregacao_id = $("#congregacao_editar").val();
-        let professor_id = $("#professor_editar").val();
-        let trimestre = $("#trimestre_editar").val();
-
-        // Validação básica dos campos
-        if (!aluno_id || !classe_id || !congregacao_id || !professor_id || !trimestre) {
-            alert("Todos os campos devem ser preenchidos!");
-            return;
-        }
-
-        $.ajax({
-            url: "../../controllers/matriculas.php",
-            type: "POST",
-            data: {
-                acao: "editarMatricula",
-                matricula_id: matricula_id,
-                aluno_id: aluno_id,
-                classe_id: classe_id,
-                congregacao_id: congregacao_id,
-                professor_id: professor_id,
-                trimestre: trimestre
-            },
-            dataType: "json",
-            success: function(response) {
-                if (response.sucesso) {
-                    alert("Matrícula atualizada com sucesso!");
-                    $("#modalEditar").modal("hide");
-                    carregarMatriculas();
-                } else {
-                    alert("Erro ao atualizar matrícula: " + response.mensagem);
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error("Erro na requisição:", textStatus, errorThrown);
-                alert("Erro ao tentar atualizar matrícula.");
-            }
-        });
-    });
-
-    // Confirmar exclusão
-    function confirmarExcluir(id) {
-        $("#matricula_id").val(id);
-        $("#modalExcluir").modal("show");
-    }
-
-    // Excluir matrícula
-    $("#confirmarExcluir").click(function() {
-        let matricula_id = $("#matricula_id").val();
-        $.ajax({
-            url: "../../controllers/matriculas.php",
-            type: "POST",
-            data: {
-                acao: "excluirMatricula",
-                matricula_id: matricula_id
-            },
-            dataType: "json",
-            success: function(response) {
-                if (response.sucesso) {
-                    alert("Matrícula excluída com sucesso!");
-                    $("#modalExcluir").modal("hide");
-                    carregarMatriculas();
-                } else {
-                    alert("Erro ao excluir matrícula: " + response.mensagem);
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error("Erro na requisição:", textStatus, errorThrown);
-                alert("Erro ao tentar excluir matrícula.");
-            }
-        });
-    });
-
-    // Vincular eventos de clique aos botões de editar e excluir
-    $(document).on('click', '.btn-primary', function() {
-        let matricula_id = $(this).data('id');
-        editarMatricula(matricula_id);
-    });
-    
-    $(document).on('click', '.btn-danger', function() {
-        let matricula_id = $(this).data('id');
-        confirmarExcluir(matricula_id);
-    });
+    // Inicializar carregando as congregações
+    carregarCongregacoes();
 });
 </script>
-
 </body>
-
 </html>
