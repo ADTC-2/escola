@@ -10,6 +10,7 @@ error_reporting(E_ALL);
 // Garantir que a resposta seja JSON
 header('Content-Type: application/json');
 
+// Criar a instância do objeto Chamada
 $chamada = new Chamada($pdo);
 
 // Capturar erros inesperados e sempre retornar JSON
@@ -37,7 +38,12 @@ if (!$pdo) {
 try {
     switch ($acao) {
         case 'getCongregacoes':
-            echo json_encode(['status' => 'success', 'data' => $chamada->getCongregacoes()]);
+            $congregacoes = $chamada->getCongregacoes();
+            if ($congregacoes) {
+                echo json_encode(['status' => 'success', 'data' => $congregacoes]);
+            } else {
+                sendErrorResponse('Nenhuma congregação encontrada.');
+            }
             break;
 
         case 'getClassesByCongregacao':
@@ -45,15 +51,12 @@ try {
             if (!$congregacao_id) {
                 sendErrorResponse('ID da congregação inválido.');
             }
-            echo json_encode(['status' => 'success', 'data' => $chamada->getClassesByCongregacao($congregacao_id)]);
-            break;
-
-        case 'getProfessor':
-            $professor_id = $_POST['professor_id'] ?? 0;
-            if (!$professor_id) {
-                sendErrorResponse('ID do professor inválido.');
+            $classes = $chamada->getClassesByCongregacao($congregacao_id);
+            if ($classes) {
+                echo json_encode(['status' => 'success', 'data' => $classes]);
+            } else {
+                sendErrorResponse('Nenhuma classe encontrada para esta congregação.');
             }
-            echo json_encode($chamada->getProfessor($professor_id));
             break;
 
         case 'getAlunosByClasse':
@@ -61,21 +64,30 @@ try {
             if (!$classe_id) {
                 sendErrorResponse('ID da classe inválido.');
             }
-            echo json_encode(['status' => 'success', 'data' => $chamada->getAlunosByClasse($classe_id)]);
+            
+            // Chama a função que foi adicionada na classe Chamada
+            $alunos = $chamada->getAlunosByClasse($classe_id);
+            
+            // Verifica se alunos foram encontrados
+            if ($alunos) {
+                echo json_encode(['status' => 'success', 'data' => $alunos]);
+            } else {
+                sendErrorResponse('Nenhum aluno encontrado para esta classe.');
+            }
             break;
 
         case 'salvarChamada':
-            // Captura o JSON enviado
             $input = json_decode(file_get_contents('php://input'), true);
-            
-            // Validar entrada
             if (!isset($input['data'], $input['classe'], $input['professor'], $input['alunos'])) {
                 sendErrorResponse('Dados inválidos para salvar chamada.');
             }
 
-            // Registrar chamada
             $resultado = $chamada->registrarChamada($input['data'], $input['classe'], $input['professor'], $input['alunos']);
-            echo json_encode($resultado);
+            if ($resultado['sucesso']) {
+                echo json_encode(['status' => 'success', 'message' => 'Chamada registrada com sucesso.']);
+            } else {
+                sendErrorResponse($resultado['mensagem']);
+            }
             break;
 
         default:
@@ -86,34 +98,5 @@ try {
     sendErrorResponse('Erro interno: ' . $e->getMessage());
 }
 ?>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

@@ -24,6 +24,28 @@ class Matricula {
         }
     }
 
+    // Listar Alunos por Classe
+    public function listarAlunosPorClasse($classe_id) {
+        $query = "SELECT a.id, a.nome 
+                FROM alunos a
+                JOIN matriculas m ON m.aluno_id = a.id
+                WHERE m.classe_id = :classe_id";
+        
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindParam(':classe_id', $classe_id, PDO::PARAM_INT);
+        
+        try {
+            $stmt->execute();
+            return [
+                'sucesso' => true,
+                'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
+            ];
+        } catch (PDOException $e) {
+            return ['sucesso' => false, 'mensagem' => 'Erro ao listar alunos: ' . $e->getMessage()];
+        }
+    }
+
+
     // Listar Classes por Congregação
     public function listarClassesPorCongregacao($congregacao_id) {
         $query = "SELECT DISTINCT c.id, c.nome 

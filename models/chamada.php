@@ -20,35 +20,63 @@ class Chamada {
         return $congregacoes;
     }
 
-    public function getClassesByCongregacao($congregacao_id) {
-        global $pdo;
+// Método para buscar as classes de uma congregação
+public function getClassesByCongregacao($congregacao_id) {
+    global $pdo;
     
-        // Atualizando a consulta para buscar classes da tabela matriculas
-        $query = "SELECT DISTINCT c.* 
-                  FROM classes c
-                  INNER JOIN matriculas m ON m.classe_id = c.id
-                  WHERE m.congregacao_id = ?";
-        
-        $stmt = $pdo->prepare($query);
-        $stmt->bindValue(1, $congregacao_id, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        $classes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return $classes;
-    }
+    // Atualizando a consulta para buscar classes da tabela matriculas
+    $query = "SELECT DISTINCT c.* 
+              FROM classes c
+              INNER JOIN matriculas m ON m.classe_id = c.id
+              WHERE m.congregacao_id = ?";
     
-
-    // Método para buscar os alunos por classe
-    public function getAlunosByClasse($classe_id) {
-        global $pdo;
-        $query = "SELECT * FROM alunos WHERE classe_id = ?";
-        $stmt = $pdo->prepare($query);
-        $stmt->bindValue(1, $classe_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $alunos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return $alunos;
+    $stmt = $pdo->prepare($query);
+    $stmt->bindValue(1, $congregacao_id, PDO::PARAM_INT);
+    $stmt->execute();
+    
+    $classes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    if (empty($classes)) {
+        // Se não houver classes, enviar erro
+        $this->sendErrorResponse('Nenhuma classe encontrada.');
     }
 
+    // Retornar classes em formato JSON
+    return $classes;
+}
+
+
+    
+// Método getAlunosByClasse
+public function getAlunosByClasse($classeId) {
+    // Preparar a consulta SQL
+    $query = "SELECT a.id, a.nome 
+              FROM alunos a
+              JOIN matriculas m ON m.aluno_id = a.id
+              WHERE m.classe_id = :classe_id";
+    
+    // Preparar a execução
+    $stmt = $this->pdo->prepare($query);
+    $stmt->bindParam(':classe_id', $classeId, PDO::PARAM_INT);
+    $stmt->execute();
+
+    // Recuperar os dados
+    $alunos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if (empty($alunos)) {
+        // Caso não haja alunos, retorna um erro
+        $this->sendErrorResponse('Nenhum aluno encontrado para esta classe.');
+    }
+
+    // Retornar os alunos como resposta
+    return $alunos;
+}
+
+// Método sendErrorResponse (para enviar a resposta de erro)
+private function sendErrorResponse($mensagem) {
+    echo json_encode(['sucesso' => false, 'mensagem' => $mensagem]);
+    exit();
+}
     // Método para buscar o professor por ID
     public function getProfessorById($professor_id) {
         global $pdo;
