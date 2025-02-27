@@ -1,70 +1,115 @@
 <?php
 require_once '../config/conexao.php';
-class Matricula {
+
+class MatriculaModel {
     private $pdo;
 
-    public function __construct($db) {
-        $this->pdo = $db;
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
     }
 
-    // Listar Matrículas
-    public function listarMatriculas() {
-        $query = "SELECT m.id, a.nome AS aluno_nome, c.nome AS classe_nome, co.nome AS congregacao_nome, u.nome AS professor_nome, m.data_matricula, m.status, m.trimestre
-                  FROM matriculas m
-                  JOIN alunos a ON m.aluno_id = a.id
-                  JOIN classes c ON m.classe_id = c.id
-                  JOIN congregacoes co ON m.congregacao_id = co.id
-                  JOIN usuarios u ON m.professor_id = u.id AND u.perfil = 'professor'";
-        try {
-            $stmt = $this->pdo->prepare($query);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            return ['sucesso' => false, 'mensagem' => 'Erro ao listar matrículas: ' . $e->getMessage()];
-        }
+    // Função para listar todas as matrículas
+    public function listar() {
+        $sql = "SELECT m.id, a.nome as aluno_nome, c.nome as classe_nome, 
+        co.nome as congregacao_nome, p.usuario_id as professor_usuario_id, 
+        u.nome as professor_nome, m.trimestre, m.status 
+        FROM matriculas m
+        JOIN alunos a ON m.aluno_id = a.id
+        JOIN classes c ON m.classe_id = c.id
+        JOIN congregacoes co ON m.congregacao_id = co.id
+        JOIN professores p ON m.professor_id = p.id
+        JOIN usuarios u ON p.usuario_id = u.id";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Listar Alunos por Classe
-    public function listarAlunosPorClasse($classe_id) {
-        $query = "SELECT a.id, a.nome 
-                FROM alunos a
-                JOIN matriculas m ON m.aluno_id = a.id
-                WHERE m.classe_id = :classe_id";
-        
-        $stmt = $this->pdo->prepare($query);
-        $stmt->bindParam(':classe_id', $classe_id, PDO::PARAM_INT);
-        
-        try {
-            $stmt->execute();
-            return [
-                'sucesso' => true,
-                'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
-            ];
-        } catch (PDOException $e) {
-            return ['sucesso' => false, 'mensagem' => 'Erro ao listar alunos: ' . $e->getMessage()];
-        }
+    // Função para cadastrar uma nova matrícula
+    public function cadastrar($aluno_id, $classe_id, $congregacao_id, $professor_id, $trimestre) {
+        $sql = "INSERT INTO matriculas (aluno_id, classe_id, congregacao_id, professor_id, trimestre, status, data_matricula)
+                VALUES (:aluno_id, :classe_id, :congregacao_id, :professor_id, :trimestre, 'Ativo', NOW())";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindParam(':aluno_id', $aluno_id);
+        $stmt->bindParam(':classe_id', $classe_id);
+        $stmt->bindParam(':congregacao_id', $congregacao_id);
+        $stmt->bindParam(':professor_id', $professor_id);
+        $stmt->bindParam(':trimestre', $trimestre);
+
+        return $stmt->execute();
     }
 
+    // Função para editar uma matrícula
+    public function editar($id, $aluno_id, $classe_id, $congregacao_id, $professor_id, $trimestre) {
+        $sql = "UPDATE matriculas SET aluno_id = :aluno_id, classe_id = :classe_id, 
+                congregacao_id = :congregacao_id, professor_id = :professor_id, trimestre = :trimestre 
+                WHERE id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        $stmt->bindParam(':aluno_id', $aluno_id);
+        $stmt->bindParam(':classe_id', $classe_id);
+        $stmt->bindParam(':congregacao_id', $congregacao_id);
+        $stmt->bindParam(':professor_id', $professor_id);
+        $stmt->bindParam(':trimestre', $trimestre);
 
-    // Listar Classes por Congregação
-    public function listarClassesPorCongregacao($congregacao_id) {
-        $query = "SELECT DISTINCT c.id, c.nome 
-                  FROM classes c
-                  JOIN matriculas m ON m.classe_id = c.id
-                  WHERE m.congregacao_id = :congregacao_id";
-        
-        $stmt = $this->pdo->prepare($query);
-        $stmt->bindParam(':congregacao_id', $congregacao_id, PDO::PARAM_INT);
-    
-        if ($stmt->execute()) {
-            return [
-                'sucesso' => true,
-                'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
-            ];
-        } else {
-            return ['sucesso' => false, 'mensagem' => 'Erro ao buscar classes'];
-        }
+        return $stmt->execute();
+    }
+
+    // Função para excluir uma matrícula
+    public function excluir($id) {
+        $sql = "DELETE FROM matriculas WHERE id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute();
+    }
+
+    // Função para buscar uma matrícula específica para edição
+    public function buscar($id) {
+        $sql = "SELECT * FROM matriculas WHERE id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Função para carregar os dados dos selects
+    public function listarAlunos() {
+        $sql = "SELECT id, nome FROM alunos ORDER BY nome";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function listarClasses() {
+        $sql = "SELECT id, nome FROM classes ORDER BY nome";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function listarCongregacoes() {
+        $sql = "SELECT id, nome FROM congregacoes ORDER BY nome";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function listarProfessores() {
+        $sql = "SELECT p.id, u.nome as professor_nome 
+                FROM professores p 
+                JOIN usuarios u ON p.usuario_id = u.id 
+                ORDER BY u.nome";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function listarUsuarios() {
+        $sql = "SELECT id, nome FROM usuarios ORDER BY nome";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
-
+?>
 

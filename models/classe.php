@@ -1,4 +1,4 @@
-<?php
+<?php 
 require_once '../config/conexao.php';
 
 class Classe {
@@ -47,6 +47,27 @@ class Classe {
         $stmt->execute();
         return ['sucesso' => true, 'mensagem' => 'Classe excluída com sucesso!'];
     }
+
+    public function listarClassesPorCongregacao($congregacao_id) {
+        // Consulta SQL para buscar as classes ativas associadas à congregação
+        $stmt = $this->pdo->prepare("
+            SELECT DISTINCT c.id, c.nome
+            FROM classes c
+            JOIN matriculas m ON m.classe_id = c.id
+            WHERE m.congregacao_id = :congregacao_id
+            AND m.status = 'ativo'
+        ");
+        $stmt->bindParam(':congregacao_id', $congregacao_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $classes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+        if ($classes) {
+            return ['sucesso' => true, 'classes' => $classes];
+        } else {
+            return ['sucesso' => false, 'mensagem' => 'Nenhuma classe encontrada para a congregação'];
+        }
+    }
+    
     
 }
 

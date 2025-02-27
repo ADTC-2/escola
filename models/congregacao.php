@@ -1,4 +1,5 @@
 <?php
+require_once '../config/conexao.php';
 class Congregacao {
     private $pdo;
 

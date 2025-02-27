@@ -1,5 +1,4 @@
-<?php
-require_once '../config/conexao.php';
+<?php require_once '../config/conexao.php';
 
 class Aluno {
     private $db;

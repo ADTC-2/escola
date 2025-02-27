@@ -15,9 +15,10 @@ CREATE TABLE alunos (
     data_nascimento DATE NOT NULL,
     telefone VARCHAR(15),
     classe_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    FOREIGN KEY (classe_id) REFERENCES classes(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (classe_id) REFERENCES classes(id) ON DELETE CASCADE
 );
+
 
 -- Tabela de usuários
 CREATE TABLE usuarios (
