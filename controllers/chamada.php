@@ -19,7 +19,7 @@ function sendErrorResponse($message) {
     exit;
 }
 
-// Verifica se a requisição é POST
+// Função para verificar se a requisição foi feita via POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendErrorResponse('Método inválido. Apenas POST é permitido.');
 }
@@ -51,6 +51,7 @@ try {
             break;
 
         case 'getClassesByCongregacao':
+            // Verificação de congregação
             $congregacao_id = $input['congregacao_id'] ?? 0;
             if (!$congregacao_id) {
                 sendErrorResponse('ID da congregação inválido.');
@@ -60,20 +61,26 @@ try {
             break;
 
         case 'getAlunosByClasse':
+            // Verificação de classe e congregação
             $classe_id = $input['classe_id'] ?? 0;
-            if (!$classe_id) {
-                sendErrorResponse('ID da classe inválido.');
+            $congregacao_id = $input['congregacao_id'] ?? 0;
+            
+            if (!$classe_id || !$congregacao_id) {
+                sendErrorResponse('IDs da classe ou congregação inválidos.');
             }
-            $alunos = $chamada->getAlunosByClasse($classe_id);
+            
+            // Chama o método para pegar os alunos, passando tanto classe quanto congregação
+            $alunos = $chamada->getAlunosByClasse($classe_id, $congregacao_id);
             echo json_encode(['status' => 'success', 'data' => $alunos ?: []]);
             break;
 
         case 'salvarChamada':
+            // Verificação de dados para salvar a chamada
             if (!isset($input['data'], $input['classe'], $input['professor'], $input['alunos'])) {
                 sendErrorResponse('Dados inválidos para salvar chamada.');
             }
 
-            $resultado = $chamada->registrarChamada($input['data'], $input['classe'], $input['professor'], $input['alunos']);
+            $resultado = $chamada->registrarChamada($input['data'], $input['classe'], $input['professor'], $input['alunos'], $input['some_missing_argument']);
             if ($resultado['sucesso']) {
                 echo json_encode(['status' => 'success', 'message' => 'Chamada registrada com sucesso.']);
             } else {
@@ -88,6 +95,7 @@ try {
     sendErrorResponse('Erro interno: ' . $e->getMessage());
 }
 ?>
+
 
 
 

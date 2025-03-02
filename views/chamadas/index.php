@@ -40,7 +40,11 @@
                         <label for="data_chamada" class="form-label">Data da Chamada</label>
                         <input type="date" class="form-control" id="data_chamada" required>
                     </div>
-
+                    <!-- Oferta da Classe -->
+                    <div class="mb-3">
+                        <label for="oferta_classe" class="form-label">Oferta da Classe</label>
+                        <input type="text" class="form-control" id="oferta_classe" placeholder="Informe a oferta do dia">
+                    </div>
                     <!-- Professor (hidden) -->
                     <input type="hidden" id="professor_id" value="{{ professor_id }}">
 
@@ -52,147 +56,110 @@
     </div>
 
     <!-- Script para funcionalidade dinâmica -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-<script>
-$(document).ready(function() {
-    // Função para carregar congregações
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+    // Função para carregar as congregações
     function carregarCongregacoes(selectedId = '') {
-        $.post('../../controllers/congregacao.php', {
-            acao: 'listar'
+        $.post('../../controllers/chamada.php', {
+            acao: 'getCongregacoes'
         }, function(response) {
-            if (response.sucesso) {
+            if (response.status === 'success') {
                 let options = '<option value="">Selecione</option>';
                 response.data.forEach(c => {
-                    options +=
-                        `<option value="${c.id}" ${c.id == selectedId ? 'selected' : ''}>${c.nome}</option>`;
+                    options += `<option value="${c.id}" ${c.id == selectedId ? 'selected' : ''}>${c.nome}</option>`;
                 });
                 $('#congregacao').html(options);
-                $('#congregacao_editar').html(options);
             } else {
-                console.error("Erro ao carregar congregações:", response.mensagem);
+                console.error("Erro ao carregar congregações:", response.message);
             }
         }, 'json').fail(function(jqXHR, textStatus, errorThrown) {
             console.error("Erro na requisição das congregações:", textStatus, errorThrown);
         });
     }
 
- // Carregar as classes ao selecionar a congregação
-$('#congregacao').change(function() {
-    let congregacaoId = $(this).val();
-    if (congregacaoId) {
-        $.ajax({
-            url: '../../controllers/chamada.php',  // URL para o controlador PHP
-            type: 'POST',  // Usar POST para enviar dados
-            data: { 
-                acao: 'getClassesByCongregacao',  // Ação para pegar as classes
-                congregacao_id: congregacaoId // Enviar o ID da congregação via POST
-            },
-            dataType: 'json', // Certifique-se de que o tipo de dado é JSON
-            success: function(response) {
-                if (response.status === 'success' && response.data.length > 0) {
-                    let options = '<option value="">Selecione a Classe</option>';
-                    response.data.forEach(function(classe) {
-                        options += `<option value="${classe.id}">${classe.nome}</option>`;
-                    });
-                    $("#classe").html(options).prop('disabled', false);  // Preenche o select e habilita
-                } else {
-                    console.error("Nenhuma classe encontrada ou erro na resposta:", response);
-                    $("#classe").html('<option value="">Nenhuma classe disponível</option>').prop('disabled', true);
+    // Carregar as classes ao selecionar a congregação
+    $('#congregacao').change(function() {
+        let congregacaoId = $(this).val();
+        if (congregacaoId) {
+            $.ajax({
+                url: '../../controllers/chamada.php',  // URL para o controlador PHP
+                type: 'POST',
+                data: {
+                    acao: 'getClassesByCongregacao',  // Ação para pegar as classes
+                    congregacao_id: congregacaoId
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success' && response.data.length > 0) {
+                        let options = '<option value="">Selecione a Classe</option>';
+                        response.data.forEach(function(classe) {
+                            options += `<option value="${classe.id}">${classe.nome}</option>`;
+                        });
+                        $("#classe").html(options).prop('disabled', false);  // Preenche o select e habilita
+                    } else {
+                        console.error("Nenhuma classe encontrada ou erro na resposta:", response);
+                        $("#classe").html('<option value="">Nenhuma classe disponível</option>').prop('disabled', true);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error("Erro na requisição das classes:", textStatus, errorThrown);
+                    alert("Erro ao carregar as classes. Veja o console para mais detalhes.");
+                    $("#classe").html('<option value="">Erro ao carregar as classes</option>').prop('disabled', true);
                 }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                let errorMsg = "Erro ao carregar classes";
-                if (jqXHR.responseJSON && jqXHR.responseJSON.mensagem) {
-                    errorMsg = jqXHR.responseJSON.mensagem;
-                }
-                console.error(errorMsg, textStatus, errorThrown);
-                $("#classe").html('<option value="">' + errorMsg + '</option>').prop('disabled', true);  // Exibe mensagem de erro
-            }
-        });
-    } else {
-        $("#classe").prop('disabled', true).html('<option value="">Selecione a Classe</option>');
-    }
-});
+            });
+        } else {
+            $("#classe").prop('disabled', true).html('<option value="">Selecione a Classe</option>');
+        }
+    });
 
-// Carregar alunos ao selecionar a classe
-$('#classe').change(function() {
-    let classeId = $(this).val();
-    if (classeId) {
-        $.ajax({
-            url: '../../controllers/chamada.php',  // Verifique o caminho da URL
-            type: 'POST',
-            data: {
-                acao: 'getAlunosByClasse',
-                classe_id: classeId
-            },
-            dataType: 'json',  // Garante que a resposta seja interpretada como JSON
-            success: function(response) {
-                if (response.status === 'success' && response.data.length > 0) {
-                    let table = `<table class="table table-striped">
-                                    <thead><tr><th>Nome</th><th>Presente</th></tr></thead><tbody>`;
-                    response.data.forEach(function(aluno) {
-                        table += `<tr><td>${aluno.nome}</td><td><input type="checkbox" class="aluno-presenca" data-id="${aluno.id}"></td></tr>`;
+            // Enviar dados para salvar a chamada
+            $('#formChamada').submit(function(event) {
+                event.preventDefault();
+                let dataChamada = $('#data_chamada').val();
+                let classeId = $('#classe').val();
+                let professorId = $('#professor_id').val();
+                let ofertaClasse = $('#oferta_classe').val();  // Obter o valor da oferta da classe
+                let presencas = [];
+                $('.aluno-presenca').each(function() {
+                    presencas.push({
+                        id: $(this).data('id'),
+                        presente: $(this).is(':checked')
                     });
-                    table += `</tbody></table>`;
-                    $("#alunos-container").html(table);
-                } else {
-                    console.error("Erro ao carregar alunos:", response.message);
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error("Erro na requisição dos alunos:", textStatus, errorThrown);
-                alert("Ocorreu um erro ao tentar carregar os alunos. Tente novamente.");
-            }
-        });
-    } else {
-        $("#alunos-container").empty();
-    }
-});
+                });
 
-        // Enviar dados para salvar a chamada
-        $('#formChamada').submit(function(event) {
-            event.preventDefault();
-            let dataChamada = $('#data_chamada').val();
-            let classeId = $('#classe').val();
-            let professorId = $('#professor_id').val();
-            let presencas = [];
-            $('.aluno-presenca').each(function() {
-                presencas.push({
-                    id: $(this).data('id'),
-                    presente: $(this).is(':checked')
+                $.ajax({
+                    url: '../../controllers/chamada.php',
+                    type: 'POST',
+                    data: JSON.stringify({
+                        acao: 'salvarChamada',
+                        data: dataChamada,
+                        classe: classeId,
+                        professor: professorId,
+                        alunos: presencas,
+                        oferta_classe: ofertaClasse, // Enviar a oferta da classe                
+                    }),
+                    contentType: "application/json",
+                    success: function(response) {
+                        if (response.sucesso) {
+                            alert('Chamada salva com sucesso!');
+                            window.location.href = "/dashboard"; // Atualize para a URL correta
+                        } else {
+                            alert('Erro ao salvar a chamada.');
+                            console.error("Erro ao salvar a chamada:", response.mensagem);
+                        }
+                    },
+                    error: function() {
+                        alert('Erro ao salvar a chamada.');
+                    }
                 });
             });
 
-            $.ajax({
-                url: '../../controllers/chamada.php',
-                type: 'POST',
-                data: JSON.stringify({
-                    acao: 'salvarChamada',
-                    data: dataChamada,
-                    classe: classeId,
-                    professor: professorId,
-                    alunos: presencas
-                }),
-                contentType: "application/json",
-                success: function(response) {
-                    if (response.sucesso) {
-                        alert('Chamada salva com sucesso!');
-                        window.location.href = "/dashboard"; // Atualize para a URL correta
-                    } else {
-                        alert('Erro ao salvar a chamada.');
-                        console.error("Erro ao salvar a chamada:", response.mensagem);
-                    }
-                },
-                error: function() {
-                    alert('Erro ao salvar a chamada.');
-                }
-            });
-    });
-
-    // Inicializar carregando as congregações
-    carregarCongregacoes();
-});
-</script>
+            // Inicializar carregando as congregações
+            carregarCongregacoes();
+        });
+    </script>
 </body>
 </html>
+

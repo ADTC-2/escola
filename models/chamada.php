@@ -24,11 +24,12 @@ class Chamada {
 public function getClassesByCongregacao($congregacao_id) {
     global $pdo;
     
-    // Atualizando a consulta para buscar classes da tabela matriculas
+    // Atualizando a consulta para buscar classes da tabela matriculas, apenas as ativas
     $query = "SELECT DISTINCT c.* 
               FROM classes c
               INNER JOIN matriculas m ON m.classe_id = c.id
-              WHERE m.congregacao_id = ?";
+              WHERE m.congregacao_id = ? 
+              AND m.status = 'ativo'";  // Apenas matrículas ativas
     
     $stmt = $pdo->prepare($query);
     $stmt->bindValue(1, $congregacao_id, PDO::PARAM_INT);
@@ -37,8 +38,8 @@ public function getClassesByCongregacao($congregacao_id) {
     $classes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     if (empty($classes)) {
-        // Se não houver classes, enviar erro
-        $this->sendErrorResponse('Nenhuma classe encontrada.');
+        // Se não houver classes ativas para esta congregação, enviar erro
+        $this->sendErrorResponse('Nenhuma classe ativa encontrada para esta congregação.');
     }
 
     // Retornar classes em formato JSON
@@ -48,16 +49,17 @@ public function getClassesByCongregacao($congregacao_id) {
 
     
 // Método getAlunosByClasse
-public function getAlunosByClasse($classeId) {
+public function getAlunosByClasse($classeId, $congregacaoId) {
     // Preparar a consulta SQL
     $query = "SELECT a.id, a.nome 
               FROM alunos a
               JOIN matriculas m ON m.aluno_id = a.id
-              WHERE m.classe_id = :classe_id";
+              WHERE m.classe_id = :classe_id AND m.congregacao_id = :congregacao_id AND m.status = 'ativo'";
     
     // Preparar a execução
     $stmt = $this->pdo->prepare($query);
     $stmt->bindParam(':classe_id', $classeId, PDO::PARAM_INT);
+    $stmt->bindParam(':congregacao_id', $congregacaoId, PDO::PARAM_INT);
     $stmt->execute();
 
     // Recuperar os dados
@@ -65,7 +67,7 @@ public function getAlunosByClasse($classeId) {
 
     if (empty($alunos)) {
         // Caso não haja alunos, retorna um erro
-        $this->sendErrorResponse('Nenhum aluno encontrado para esta classe.');
+        $this->sendErrorResponse('Nenhum aluno encontrado para esta classe e congregação.');
     }
 
     // Retornar os alunos como resposta
@@ -104,17 +106,21 @@ private function sendErrorResponse($mensagem) {
             return ['sucesso' => false, 'mensagem' => 'Erro ao buscar professor: ' . $e->getMessage()];
         }
     }
-    public function registrarChamada($data, $classe_id, $professor_id, $alunos) {
+
+
+    // Metodo para registrar a chamada 
+    public function registrarChamada($data, $classe_id, $professor_id, $alunos, $oferta_classe) {
         try {
             // Começar a transação para garantir integridade dos dados
             $this->pdo->beginTransaction();
     
             // Inserir a chamada na tabela chamadas (ajuste conforme sua tabela)
-            $queryChamada = "INSERT INTO chamadas (data, classe_id, professor_id) VALUES (:data, :classe_id, :professor_id)";
+            $queryChamada = "INSERT INTO chamadas (data, classe_id, professor_id, oferta_classe) VALUES (:data, :classe_id, :professor_id, :oferta_classe)";
             $stmtChamada = $this->pdo->prepare($queryChamada);
             $stmtChamada->bindParam(':data', $data, PDO::PARAM_STR);
             $stmtChamada->bindParam(':classe_id', $classe_id, PDO::PARAM_INT);
             $stmtChamada->bindParam(':professor_id', $professor_id, PDO::PARAM_INT);
+            $stmtChamada->bindParam(':oferta_classe', $oferta_classe, PDO::PARAM_STR);
             $stmtChamada->execute();
     
             // Obter o ID da chamada inserida
