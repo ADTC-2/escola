@@ -66,7 +66,7 @@ class Matricula {
             $aluno_id = isset($data['aluno_id']) ? $data['aluno_id'] : null;
             $classe_id = isset($data['classe_id']) ? $data['classe_id'] : null;
             $congregacao_id = isset($data['congregacao_id']) ? $data['congregacao_id'] : null;
-            $usuario_id = isset($data['usuario_id']) ? $data['usuario_id'] : null;
+            $professor_id = isset($data['professor_id']) ? $data['professor_id'] : null;
             $status = isset($data['status']) ? $data['status'] : null;
             $trimestre = isset($data['trimestre']) ? $data['trimestre'] : null;
 
@@ -80,7 +80,7 @@ class Matricula {
                     ':aluno_id' => $aluno_id,
                     ':classe_id' => $classe_id,
                     ':congregacao_id' => $congregacao_id,
-                    ':usuario_id' => $usuario_id,
+                    ':professor_id' => $professor_id,
                     ':status' => $status,
                     ':trimestre' => $trimestre
                 ]);

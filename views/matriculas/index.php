@@ -151,6 +151,8 @@ require_once '../includes/header.php';
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
 <script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 
 <script> 
 $(document).ready(function() {
@@ -249,26 +251,28 @@ $('#formCadastrarMatricula').submit(function(e) {
 
     $.ajax({
         url: '../../controllers/matriculas.php?acao=criarMatricula',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(dados),
-        dataType: 'json',  // Define que espera JSON na resposta
-        success: function(response) {
-            console.log("Resposta do servidor:", response);  // Verificar resposta do servidor
-            if (response.sucesso) {
-                alert(response.mensagem);
-                $('#formCadastrarMatricula')[0].reset();  // Limpa o formulário após sucesso
-                listarMatriculas();  // Atualiza a lista de matrículas
-            } else {
-                alert(response.mensagem || "Erro ao cadastrar matrícula.");
-            }
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            console.error("Erro AJAX:", textStatus, errorThrown);
-            alert('Erro ao cadastrar matrícula.');
-        }
-    });
-});
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(dados),
+                dataType: 'json',  // Define que espera JSON na resposta
+                success: function(response) {
+                    console.log("Resposta do servidor:", response);  // Verificar resposta do servidor
+                    if (response.sucesso) {
+                        alert(response.mensagem);
+                        $('#formCadastrarMatricula')[0].reset();  // Limpa o formulário após sucesso
+                        var modal = bootstrap.Modal.getInstance(document.getElementById('modalCadastrar'));
+                        modal.hide();  // Fecha o modal utilizando a nova API do Bootstrap 5
+                        listarMatriculas();  // Atualiza a lista de matrículas
+                    } else {
+                        alert(response.mensagem || "Erro ao cadastrar matrícula.");
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error("Erro AJAX:", textStatus, errorThrown);
+                    alert('Erro ao cadastrar matrícula.');
+                }
+            });
+        });
 
     // Editar Matrícula
     $(document).on('click', '.editar', function() {
