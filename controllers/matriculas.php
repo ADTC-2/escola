@@ -2,6 +2,9 @@
 require_once '../config/conexao.php';
 require_once '../models/matricula.php';
 
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 class MatriculaController {
     private $model;
 
@@ -41,19 +44,24 @@ class MatriculaController {
     // Atualizar uma matrícula existente
     public function atualizarMatricula($id, $data) {
         // Verificar se todos os campos essenciais foram preenchidos
-        if (empty($data['aluno_id']) || empty($data['classe_id']) || empty($data['congregacao_id']) || empty($data['status'])|| empty($data['professor_id'])) {
+        if (empty($data['aluno_id']) || empty($data['classe_id']) || empty($data['congregacao_id']) || empty($data['status']) || empty($data['professor_id'])) {
             echo json_encode(['sucesso' => false, 'mensagem' => 'Todos os campos obrigatórios devem ser preenchidos.']);
-            return;
+            exit(); // Impede a execução posterior e garante que a resposta seja enviada
         }
     
         try {
+            // Chama o modelo para atualizar a matrícula
             $this->model->atualizarMatricula($id, $data);
             echo json_encode(['sucesso' => true, 'mensagem' => 'Matrícula atualizada com sucesso.']);
+            exit(); // Impede a execução posterior e garante que a resposta seja enviada
         } catch (Exception $e) {
             error_log("Erro ao atualizar matrícula (Controller): " . $e->getMessage());
             echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao atualizar matrícula.']);
+            exit(); // Impede a execução posterior e garante que a resposta seja enviada
         }
     }
+    
+    
 
     // Excluir uma matrícula
     public function excluirMatricula($id) {

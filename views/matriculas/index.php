@@ -211,9 +211,8 @@ $(document).ready(function() {
                             <td>${matricula.usuario}</td>
                             <td>${matricula.trimestre}</td>
                             <td>${matricula.status}</td>
-                            <td>
-                                <button class="btn btn-warning editar" data-id="${matricula.id}">Editar</button>
-                                <button class="btn btn-danger excluir" data-id="${matricula.id}">Excluir</button>
+                            <td>                               
+                                <button class="btn btn-danger excluir" data-id="${matricula.id}"><i class="fas fa-trash-alt"></i></button>
                             </td>
                         </tr>`;
                     });
@@ -274,34 +273,43 @@ $('#formCadastrarMatricula').submit(function(e) {
             });
         });
 
-    // Editar Matrícula
-    $(document).on('click', '.editar', function() {
-        let matricula_id = $(this).data('id');
-        $.ajax({
-            url: '../../controllers/matriculas.php',
-            type: 'GET',
-            data: { acao: 'carregarEdicao', id: matricula_id },
-            dataType: 'json',
-            success: function(response) {
-                if (response.sucesso) {
-                    let matricula = response.dados;
-                    $('#matricula_id').val(matricula.id);
-                    $('#aluno_edit').val(matricula.aluno_id);
-                    $('#classe_edit').val(matricula.classe_id);
-                    $('#congregacao_edit').val(matricula.congregacao_id);
-                    $('#professor_edit').val(matricula.usuario_id);
-                    $('#trimestre_edit').val(matricula.trimestre);
-                    $('#status_edit').val(matricula.status);
-                    $('#modalEditar').modal('show');
-                } else {
-                    alert(response.mensagem || "Erro ao carregar dados para edição.");
-                }
-            },
-            error: function() {
-                alert("Erro ao carregar os dados de edição.");
+// Editar Matrícula
+$(document).on('click', '.editar', function() {
+    let matricula_id = $(this).data('id');
+    
+    if (!matricula_id) {
+        alert("ID da matrícula não encontrado.");
+        return;
+    }
+
+    $.ajax({
+        url: '../../controllers/matriculas.php',
+        type: 'GET',
+        data: { acao: 'atualizarMatricula', id: matricula_id },  // Usando matricula_id aqui
+        dataType: 'json',  // Garantir que a resposta seja interpretada como JSON
+        success: function(response) {
+            console.log("Resposta recebida:", response);  // Log para depuração
+            // Verifique se a resposta é válida e do tipo JSON
+            if (response && response.sucesso) {
+                let matricula = response.dados;
+                $('#matricula_id').val(matricula.id);
+                $('#aluno_edit').val(matricula.aluno_id);
+                $('#classe_edit').val(matricula.classe_id);
+                $('#congregacao_edit').val(matricula.congregacao_id);
+                $('#professor_edit').val(matricula.professor_id);
+                $('#trimestre_edit').val(matricula.trimestre);
+                $('#status_edit').val(matricula.status);
+                $('#modalEditar').modal('show');
+            } else {
+                alert(response.mensagem || "Erro ao carregar dados para edição.");
             }
-        });
+        },
+        error: function(xhr, status, error) {
+            console.error("Erro AJAX:", status, error);  // Log de erro no console
+            alert("Erro ao carregar os dados de edição.");
+        }
     });
+});
 
 // Atualizar Matrícula
 $('#formEditarMatricula').submit(function(e) {
@@ -324,26 +332,30 @@ $('#formEditarMatricula').submit(function(e) {
     }
 
     $.ajax({
-        url: `../../controllers/matriculas.php?acao=atualizarMatricula&id=${matricula_id}`,
-        type: 'PUT',  // O controller espera um PUT
-        contentType: 'application/json',
-        data: JSON.stringify(dados),
-        dataType: 'json',
+        url: `../../controllers/matriculas.php`, // Usar método POST
+        type: 'POST',
+        data: {
+            acao: 'editarMatricula',  // Identificar a ação como edição
+            id: matricula_id,
+            ...dados  // Passar os dados de matrícula
+        },
+        dataType: 'json',  // Garantir que a resposta seja interpretada como JSON
         success: function(response) {
+            console.log("Resposta de atualização:", response);  // Log para depuração
             if (response.sucesso) {
                 alert(response.mensagem);
                 $('#modalEditar').modal('hide');
-                listarMatriculas();
+                listarMatriculas(); // Função para listar novamente as matrículas
             } else {
                 alert(response.mensagem || "Erro desconhecido");
             }
         },
-        error: function() {
+        error: function(xhr, status, error) {
+            console.error("Erro AJAX:", status, error);  // Log de erro no console
             alert("Erro ao editar matrícula.");
         }
     });
 });
-
 
 // Excluir Matrícula
 $(document).on('click', '.excluir', function() {

@@ -66,13 +66,13 @@ class Matricula {
             $aluno_id = isset($data['aluno_id']) ? $data['aluno_id'] : null;
             $classe_id = isset($data['classe_id']) ? $data['classe_id'] : null;
             $congregacao_id = isset($data['congregacao_id']) ? $data['congregacao_id'] : null;
-            $professor_id = isset($data['professor_id']) ? $data['professor_id'] : null;
+            $professor_id = isset($data['professor_id']) ? $data['professor_id'] : null; // Corrigir para professor_id            
             $status = isset($data['status']) ? $data['status'] : null;
             $trimestre = isset($data['trimestre']) ? $data['trimestre'] : null;
-
+    
             if ($id) {
                 $sql = "UPDATE matriculas SET aluno_id = :aluno_id, classe_id = :classe_id, congregacao_id = :congregacao_id, 
-                        usuario_id = :usuario_id, status = :status, trimestre = :trimestre 
+                        usuario_id = :professor_id, status = :status, trimestre = :trimestre 
                         WHERE id = :id";
                 $stmt = $this->pdo->prepare($sql);
                 $stmt->execute([
@@ -80,15 +80,21 @@ class Matricula {
                     ':aluno_id' => $aluno_id,
                     ':classe_id' => $classe_id,
                     ':congregacao_id' => $congregacao_id,
-                    ':professor_id' => $professor_id,
+                    ':usuario_id' => $professor_id,
                     ':status' => $status,
                     ':trimestre' => $trimestre
                 ]);
+                return true;
+            } else {
+                throw new Exception("ID inválido.");
             }
         } catch (Exception $e) {
-            throw new Exception("Erro ao atualizar matrícula.");
+            // Log do erro
+            error_log("Erro ao atualizar matrícula: " . $e->getMessage());
+            return false;
         }
     }
+    
 
     // Excluir uma matrícula
     public function excluirMatricula($id) {
