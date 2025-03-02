@@ -48,30 +48,27 @@ public function getClassesByCongregacao($congregacao_id) {
 
 
     
-// Método getAlunosByClasse
-public function getAlunosByClasse($classeId, $congregacaoId) {
-    // Preparar a consulta SQL
-    $query = "SELECT a.id, a.nome 
+// Método para obter os alunos de uma classe
+public function getAlunosByClasse($classe_id) {
+    global $pdo;
+
+    // Consulta para obter os alunos associados à classe
+    $query = "SELECT a.id, a.nome
               FROM alunos a
-              JOIN matriculas m ON m.aluno_id = a.id
-              WHERE m.classe_id = :classe_id AND m.congregacao_id = :congregacao_id AND m.status = 'ativo'";
-    
-    // Preparar a execução
-    $stmt = $this->pdo->prepare($query);
-    $stmt->bindParam(':classe_id', $classeId, PDO::PARAM_INT);
-    $stmt->bindParam(':congregacao_id', $congregacaoId, PDO::PARAM_INT);
+              INNER JOIN matriculas m ON m.aluno_id = a.id
+              WHERE m.classe_id = ? AND m.status = 'ativo'";
+
+    $stmt = $pdo->prepare($query);
+    $stmt->bindValue(1, $classe_id, PDO::PARAM_INT);
     $stmt->execute();
 
-    // Recuperar os dados
     $alunos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if (empty($alunos)) {
-        // Caso não haja alunos, retorna um erro
-        $this->sendErrorResponse('Nenhum aluno encontrado para esta classe e congregação.');
+        $this->sendErrorResponse('Nenhum aluno encontrado para esta classe.');
     }
 
-    // Retornar os alunos como resposta
-    return $alunos;
+    return ['status' => 'success', 'data' => $alunos];
 }
 
 // Método sendErrorResponse (para enviar a resposta de erro)
@@ -108,89 +105,46 @@ private function sendErrorResponse($mensagem) {
     }
 
 
-    // Metodo para registrar a chamada 
-    public function registrarChamada($data, $classe_id, $professor_id, $alunos, $oferta_classe) {
-        try {
-            // Começar a transação para garantir integridade dos dados
-            $this->pdo->beginTransaction();
-    
-            // Inserir a chamada na tabela chamadas (ajuste conforme sua tabela)
-            $queryChamada = "INSERT INTO chamadas (data, classe_id, professor_id, oferta_classe) VALUES (:data, :classe_id, :professor_id, :oferta_classe)";
-            $stmtChamada = $this->pdo->prepare($queryChamada);
-            $stmtChamada->bindParam(':data', $data, PDO::PARAM_STR);
-            $stmtChamada->bindParam(':classe_id', $classe_id, PDO::PARAM_INT);
-            $stmtChamada->bindParam(':professor_id', $professor_id, PDO::PARAM_INT);
-            $stmtChamada->bindParam(':oferta_classe', $oferta_classe, PDO::PARAM_STR);
-            $stmtChamada->execute();
-    
-            // Obter o ID da chamada inserida
-            $chamada_id = $this->pdo->lastInsertId();
-    
-            // Registrar as presenças
-            foreach ($alunos as $aluno) {
-                $queryPresenca = "INSERT INTO presencas (chamada_id, aluno_id, presente) VALUES (:chamada_id, :aluno_id, :presente)";
-                $stmtPresenca = $this->pdo->prepare($queryPresenca);
-                $stmtPresenca->bindParam(':chamada_id', $chamada_id, PDO::PARAM_INT);
-                $stmtPresenca->bindParam(':aluno_id', $aluno['aluno_id'], PDO::PARAM_INT);
-                $stmtPresenca->bindParam(':presente', $aluno['presente'], PDO::PARAM_BOOL);
-                $stmtPresenca->execute();
-            }
-    
-            // Commit da transação
-            $this->pdo->commit();
-    
-            return ['sucesso' => true, 'mensagem' => 'Chamada registrada com sucesso!'];
-    
-        } catch (PDOException $e) {
-            // Reverter transação em caso de erro
-            $this->pdo->rollBack();
-            return ['sucesso' => false, 'mensagem' => 'Erro ao registrar chamada: ' . $e->getMessage()];
-        }
-    }
-    
-    // Método para salvar a chamada
-    public function salvarChamada($dados) {
-        global $pdo;
-        $congregacao = $dados['congregacao'];
-        $classe = $dados['classe'];
-        $professor = $dados['professor'];
-        $data = $dados['data'];
-        $alunos = $dados['alunos'];
-
+  // Método para registrar a chamada
+public function registrarChamada($data, $classe_id, $professor_id, $alunos, $oferta_classe) {
+    try {
         // Começar a transação
-        $pdo->beginTransaction();
+        $this->pdo->beginTransaction();
 
-        try {
-            // Salvar chamada
-            $query = "INSERT INTO chamadas (congregacao_id, classe_id, professor_id, data) VALUES (?, ?, ?, ?)";
-            $stmt = $pdo->prepare($query);
-            $stmt->bindValue(1, $congregacao, PDO::PARAM_INT);
-            $stmt->bindValue(2, $classe, PDO::PARAM_INT);
-            $stmt->bindValue(3, $professor, PDO::PARAM_INT);
-            $stmt->bindValue(4, $data, PDO::PARAM_STR);
-            $stmt->execute();
-            $chamada_id = $pdo->lastInsertId(); // Obtendo o ID da última inserção
+        // Inserir a chamada
+        $queryChamada = "INSERT INTO chamadas (data, classe_id, professor_id, oferta_classe) VALUES (:data, :classe_id, :professor_id, :oferta_classe)";
+        $stmtChamada = $this->pdo->prepare($queryChamada);
+        $stmtChamada->bindParam(':data', $data, PDO::PARAM_STR);
+        $stmtChamada->bindParam(':classe_id', $classe_id, PDO::PARAM_INT);
+        $stmtChamada->bindParam(':professor_id', $professor_id, PDO::PARAM_INT);
+        $stmtChamada->bindParam(':oferta_classe', $oferta_classe, PDO::PARAM_STR);
+        $stmtChamada->execute();
 
-            // Salvar presença dos alunos
-            foreach ($alunos as $aluno) {
-                $query = "INSERT INTO chamada_alunos (chamada_id, aluno_id, presente) VALUES (?, ?, ?)";
-                $stmt = $pdo->prepare($query);
-                $stmt->bindValue(1, $chamada_id, PDO::PARAM_INT);
-                $stmt->bindValue(2, $aluno['id'], PDO::PARAM_INT);
-                $stmt->bindValue(3, $aluno['presente'], PDO::PARAM_INT);
-                $stmt->execute();
-            }
+        // Obter o ID da chamada
+        $chamada_id = $this->pdo->lastInsertId();
 
-            // Commit da transação
-            $pdo->commit();
-            return ['status' => 'success', 'message' => 'Chamada salva com sucesso.'];
-
-        } catch (Exception $e) {
-            // Rollback em caso de erro
-            $pdo->rollBack();
-            return ['status' => 'error', 'message' => 'Erro ao salvar a chamada: ' . $e->getMessage()];
+        // Registrar as presenças
+        foreach ($alunos as $aluno) {
+            $queryPresenca = "INSERT INTO presencas (chamada_id, aluno_id, presente) VALUES (:chamada_id, :aluno_id, :presente)";
+            $stmtPresenca = $this->pdo->prepare($queryPresenca);
+            $stmtPresenca->bindParam(':chamada_id', $chamada_id, PDO::PARAM_INT);
+            $stmtPresenca->bindParam(':aluno_id', $aluno['id'], PDO::PARAM_INT);
+            $stmtPresenca->bindParam(':presente', $aluno['presente'], PDO::PARAM_BOOL);
+            $stmtPresenca->execute();
         }
+
+        // Commit da transação
+        $this->pdo->commit();
+
+        return ['sucesso' => true, 'mensagem' => 'Chamada registrada com sucesso!'];
+
+    } catch (PDOException $e) {
+        // Reverter transação em caso de erro
+        $this->pdo->rollBack();
+        return ['sucesso' => false, 'mensagem' => 'Erro ao registrar chamada: ' . $e->getMessage()];
     }
+}
+
 
 }
 

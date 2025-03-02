@@ -51,7 +51,6 @@ try {
             break;
 
         case 'getClassesByCongregacao':
-            // Verificação de congregação
             $congregacao_id = $input['congregacao_id'] ?? 0;
             if (!$congregacao_id) {
                 sendErrorResponse('ID da congregação inválido.');
@@ -61,26 +60,22 @@ try {
             break;
 
         case 'getAlunosByClasse':
-            // Verificação de classe e congregação
             $classe_id = $input['classe_id'] ?? 0;
             $congregacao_id = $input['congregacao_id'] ?? 0;
-            
             if (!$classe_id || !$congregacao_id) {
                 sendErrorResponse('IDs da classe ou congregação inválidos.');
             }
-            
-            // Chama o método para pegar os alunos, passando tanto classe quanto congregação
             $alunos = $chamada->getAlunosByClasse($classe_id, $congregacao_id);
             echo json_encode(['status' => 'success', 'data' => $alunos ?: []]);
             break;
 
         case 'salvarChamada':
             // Verificação de dados para salvar a chamada
-            if (!isset($input['data'], $input['classe'], $input['professor'], $input['alunos'])) {
+            if (!isset($input['data'], $input['classe'], $input['professor'], $input['alunos'], $input['oferta_classe'])) {
                 sendErrorResponse('Dados inválidos para salvar chamada.');
             }
 
-            $resultado = $chamada->registrarChamada($input['data'], $input['classe'], $input['professor'], $input['alunos'], $input['some_missing_argument']);
+            $resultado = $chamada->registrarChamada($input['data'], $input['classe'], $input['professor'], $input['alunos'], $input['oferta_classe']);
             if ($resultado['sucesso']) {
                 echo json_encode(['status' => 'success', 'message' => 'Chamada registrada com sucesso.']);
             } else {
