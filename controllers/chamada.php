@@ -7,7 +7,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Garantir que a resposta seja JSON
+// Garantir que a resposta seja sempre JSON
 header('Content-Type: application/json');
 
 // Criar a instância do objeto Chamada
@@ -19,13 +19,21 @@ function sendErrorResponse($message) {
     exit;
 }
 
-// Verificar se a requisição é POST
+// Verifica se a requisição é POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendErrorResponse('Método inválido. Apenas POST é permitido.');
 }
 
-// Garantir que 'acao' foi enviado
-$acao = $_POST['acao'] ?? '';
+// Obtém os dados enviados
+$input = json_decode(file_get_contents('php://input'), true);
+
+// Se os dados não foram enviados em JSON, tenta com $_POST
+if (!$input) {
+    $input = $_POST;
+}
+
+// Verificar se 'acao' foi enviada
+$acao = $input['acao'] ?? '';
 if (empty($acao)) {
     sendErrorResponse('Ação não especificada.');
 }
@@ -39,45 +47,28 @@ try {
     switch ($acao) {
         case 'getCongregacoes':
             $congregacoes = $chamada->getCongregacoes();
-            if ($congregacoes) {
-                echo json_encode(['status' => 'success', 'data' => $congregacoes]);
-            } else {
-                sendErrorResponse('Nenhuma congregação encontrada.');
-            }
+            echo json_encode(['status' => 'success', 'data' => $congregacoes ?: []]);
             break;
 
         case 'getClassesByCongregacao':
-            $congregacao_id = $_POST['congregacao_id'] ?? 0;
+            $congregacao_id = $input['congregacao_id'] ?? 0;
             if (!$congregacao_id) {
                 sendErrorResponse('ID da congregação inválido.');
             }
             $classes = $chamada->getClassesByCongregacao($congregacao_id);
-            if ($classes) {
-                echo json_encode(['status' => 'success', 'data' => $classes]);
-            } else {
-                sendErrorResponse('Nenhuma classe encontrada para esta congregação.');
-            }
+            echo json_encode(['status' => 'success', 'data' => $classes ?: []]);
             break;
 
         case 'getAlunosByClasse':
-            $classe_id = $_POST['classe_id'] ?? 0;
+            $classe_id = $input['classe_id'] ?? 0;
             if (!$classe_id) {
                 sendErrorResponse('ID da classe inválido.');
             }
-            
-            // Chama a função que foi adicionada na classe Chamada
             $alunos = $chamada->getAlunosByClasse($classe_id);
-            
-            // Verifica se alunos foram encontrados
-            if ($alunos) {
-                echo json_encode(['status' => 'success', 'data' => $alunos]);
-            } else {
-                sendErrorResponse('Nenhum aluno encontrado para esta classe.');
-            }
+            echo json_encode(['status' => 'success', 'data' => $alunos ?: []]);
             break;
 
         case 'salvarChamada':
-            $input = json_decode(file_get_contents('php://input'), true);
             if (!isset($input['data'], $input['classe'], $input['professor'], $input['alunos'])) {
                 sendErrorResponse('Dados inválidos para salvar chamada.');
             }
@@ -92,11 +83,11 @@ try {
 
         default:
             sendErrorResponse('Ação inválida.');
-            break;
     }
 } catch (Exception $e) {
     sendErrorResponse('Erro interno: ' . $e->getMessage());
 }
 ?>
+
 
 

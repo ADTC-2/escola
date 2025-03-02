@@ -15,10 +15,9 @@ CREATE TABLE alunos (
     data_nascimento DATE NOT NULL,
     telefone VARCHAR(15),
     classe_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (classe_id) REFERENCES classes(id) ON DELETE CASCADE
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    FOREIGN KEY (classe_id) REFERENCES classes(id) ON DELETE CASCADE,
 );
-
 
 -- Tabela de usuários
 CREATE TABLE usuarios (
@@ -32,13 +31,6 @@ CREATE TABLE usuarios (
     FOREIGN KEY (congregacao_id) REFERENCES congregacoes(id) ON DELETE SET NULL
 );
 
--- Tabela de professores
-CREATE TABLE professores (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    usuario_id INT NOT NULL UNIQUE,   
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE    
-);
 
 -- Tabela de classes (turmas) - sem congregação diretamente associada
 CREATE TABLE classes (
@@ -47,12 +39,13 @@ CREATE TABLE classes (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabela de matrículas (vincula alunos às classes e congregações)
+-- Tabela de matrículas (vincula alunos às classes e congregações, com o usuário responsável pela matrícula)
 CREATE TABLE matriculas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     aluno_id INT NOT NULL,
     classe_id INT NOT NULL,
     congregacao_id INT NOT NULL, -- Congregação agora vinculada à matrícula
+    usuario_id INT,  -- Novo campo para registrar o usuário responsável
     data_matricula DATE NOT NULL DEFAULT CURRENT_DATE,
     status ENUM('ativo', 'concluido', 'cancelado') NOT NULL DEFAULT 'ativo',
     trimestre INT NOT NULL CHECK (trimestre BETWEEN 1 AND 4), -- Campo trimestre
@@ -60,10 +53,13 @@ CREATE TABLE matriculas (
     FOREIGN KEY (aluno_id) REFERENCES alunos(id) ON DELETE CASCADE,
     FOREIGN KEY (classe_id) REFERENCES classes(id) ON DELETE CASCADE,
     FOREIGN KEY (congregacao_id) REFERENCES congregacoes(id) ON DELETE CASCADE,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,  -- Relacionamento com usuário
     INDEX idx_aluno (aluno_id),
     INDEX idx_classe (classe_id),
-    INDEX idx_congregacao (congregacao_id)
+    INDEX idx_congregacao (congregacao_id),
+    INDEX idx_usuario (usuario_id)  -- Índice para o relacionamento com usuário
 );
+
 
 -- Tabela de chamadas (registro de presença)
 CREATE TABLE chamadas (
