@@ -107,29 +107,20 @@ $usuario_id = $_SESSION['usuario_id']; // Supondo que o ID do usuário esteja na
                                 options +=
                                     `<option value="${classe.id}">${classe.nome}</option>`;
                             });
-                            $("#classe").html(options).prop('disabled',
-                            false); // Preenche o select e habilita
+                            $("#classe").html(options).prop('disabled', false); // Preenche o select e habilita
                         } else {
-                            console.error("Nenhuma classe encontrada ou erro na resposta:",
-                                response);
-                            $("#classe").html(
-                                    '<option value="">Nenhuma classe disponível</option>')
-                                .prop('disabled', true);
+                            console.error("Nenhuma classe encontrada ou erro na resposta:", response);
+                            $("#classe").html('<option value="">Nenhuma classe disponível</option>').prop('disabled', true);
                         }
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
-                        console.error("Erro na requisição das classes:", textStatus,
-                            errorThrown);
-                        alert(
-                            "Erro ao carregar as classes. Veja o console para mais detalhes.");
-                        $("#classe").html(
-                                '<option value="">Erro ao carregar as classes</option>')
-                            .prop('disabled', true);
+                        console.error("Erro na requisição das classes:", textStatus, errorThrown);
+                        alert("Erro ao carregar as classes. Veja o console para mais detalhes.");
+                        $("#classe").html('<option value="">Erro ao carregar as classes</option>').prop('disabled', true);
                     }
                 });
             } else {
-                $("#classe").prop('disabled', true).html(
-                '<option value="">Selecione a Classe</option>');
+                $("#classe").prop('disabled', true).html('<option value="">Selecione a Classe</option>');
             }
         });
 
@@ -143,17 +134,13 @@ $usuario_id = $_SESSION['usuario_id']; // Supondo que o ID do usuário esteja na
                     data: {
                         acao: 'getAlunosByClasse',
                         classe_id: classeId,
-                        congregacao_id: $('#congregacao')
-                        .val() // Enviar também o ID da congregação
+                        congregacao_id: $('#congregacao').val() // Enviar também o ID da congregação
                     },
                     dataType: 'json',
                     success: function(response) {
-                        // Log para verificar a resposta
                         console.log(response);
 
-                        // Verifique se a resposta tem status 'success' e se há alunos
-                        if (response.status === 'success' && Array.isArray(response.data
-                                .data) && response.data.data.length > 0) {
+                        if (response.status === 'success' && Array.isArray(response.data.data) && response.data.data.length > 0) {
                             let alunosHtml = `
                                 <table class="table table-bordered">
                                     <thead>
@@ -163,42 +150,31 @@ $usuario_id = $_SESSION['usuario_id']; // Supondo que o ID do usuário esteja na
                                             <th>Falta</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                            `;
-                            // Loop para adicionar alunos na tabela
+                                    <tbody>`;
                             response.data.data.forEach(function(aluno) {
                                 alunosHtml += `
                                     <tr>
                                         <td>${aluno.nome}</td>
                                         <td><input type="checkbox" class="aluno-presenca" data-id="${aluno.id}" /></td>
                                         <td><input type="checkbox" class="aluno-falta" data-id="${aluno.id}" /></td>
-                                    </tr>
-                                `;
+                                    </tr>`;
                             });
                             alunosHtml += `</tbody></table>`;
-                            // Exibe a tabela de alunos
                             $('#alunos-container').html(alunosHtml);
                         } else {
-                            // Caso não haja alunos
-                            $('#alunos-container').html(
-                                '<p>Sem alunos para esta classe.</p>');
+                            $('#alunos-container').html('<p>Sem alunos para esta classe.</p>');
                         }
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
-                        // Erro no AJAX
-                        console.error("Erro ao carregar os alunos:", textStatus,
-                            errorThrown);
-                        alert(
-                            "Erro ao carregar os alunos. Veja o console para mais detalhes.");
+                        console.error("Erro ao carregar os alunos:", textStatus, errorThrown);
+                        alert("Erro ao carregar os alunos. Veja o console para mais detalhes.");
                         $('#alunos-container').html('<p>Erro ao carregar alunos.</p>');
                     }
                 });
             } else {
-                // Caso o ID da classe não seja selecionado
                 $('#alunos-container').html('');
             }
         });
-
 
 // Enviar dados de presença no AJAX
 $('#formChamada').submit(function(event) {
@@ -213,13 +189,12 @@ $('#formChamada').submit(function(event) {
     $('.aluno-presenca').each(function() {
         let alunoId = $(this).data('id');
         let presente = $(this).is(':checked');
-        let falta = $(this).closest('tr').find('.aluno-falta').is(':checked'); // Verifica se a falta está marcada
+        let falta = $(this).closest('tr').find('.aluno-falta').is(':checked');
 
-        // Adiciona a presença e falta
         presencas.push({
             id: alunoId,
-            presente: presente,  // "presente" ou "ausente"
-            falta: falta  // "falta" ou não
+            presente: presente,
+            falta: falta
         });
     });
 
@@ -247,15 +222,20 @@ $('#formChamada').submit(function(event) {
         }),
         contentType: "application/json",
         success: function(response) {
+            // Verificar a estrutura da resposta
+            console.log(response);
+
             if (response.sucesso) {
                 alert('Chamada salva com sucesso!');
                 window.location.href = "/dashboard"; // Atualize para a URL correta
             } else {
                 alert('Erro ao salvar a chamada.');
-                console.error("Erro ao salvar a chamada:", response.mensagem);
+                console.error("Erro ao salvar a chamada:", response.mensagem || 'Mensagem não encontrada');
             }
         },
-        error: function() {
+        error: function(xhr, status, error) {
+            console.error("Status:", status);
+            console.error("Erro:", error);
             alert('Erro ao salvar a chamada.');
         }
     });
@@ -264,7 +244,8 @@ $('#formChamada').submit(function(event) {
         // Inicializar carregando as congregações
         carregarCongregacoes();
     });
-    </script>
+</script>
+
 
 </body>
 

@@ -2,6 +2,11 @@
 // Inclua o arquivo de configuração e conexão com o banco de dados
 include_once('../config/conexao.php');
 
+ini_set('display_errors', 1);  // Ativa a exibição de erros
+ini_set('display_startup_errors', 1);  // Ativa a exibição de erros durante a inicialização
+error_reporting(E_ALL);  // Exibe todos os erros
+
+
 class Chamada {
     private $pdo;
 
@@ -105,62 +110,60 @@ private function sendErrorResponse($mensagem) {
     }
 
 
-  // Método para registrar a chamada
 // Método para registrar a chamada
-public function registrarChamada($data, $classe_id, $professor_id, $alunos, $oferta_classe) {
+public function registrarChamada($data, $classeId, $professorId, $alunos, $ofertaClasse) {
     try {
-        // Começar a transação
+        // Iniciar a transação
         $this->pdo->beginTransaction();
 
-        // Inserir a chamada (registro principal)
-        $queryChamada = "INSERT INTO chamadas (data, classe_id, professor_id, oferta_classe) 
-                         VALUES (:data, :classe_id, :professor_id, :oferta_classe)";
-        $stmtChamada = $this->pdo->prepare($queryChamada);
-        $stmtChamada->bindParam(':data', $data, PDO::PARAM_STR);
-        $stmtChamada->bindParam(':classe_id', $classe_id, PDO::PARAM_INT);
-        $stmtChamada->bindParam(':professor_id', $professor_id, PDO::PARAM_INT);
-        $stmtChamada->bindParam(':oferta_classe', $oferta_classe, PDO::PARAM_STR);
+        // Inserir a chamada
+        $sqlChamada = "INSERT INTO chamadas (data, classe_id, professor_id, oferta_classe) 
+                       VALUES (:data, :classe_id, :professor_id, :oferta_classe)";
+        $stmt = $this->pdo->prepare($sqlChamada);
+        $stmt->execute([
+            ':data' => $data,
+            ':classe_id' => $classeId,
+            ':professor_id' => $professorId,
+            ':oferta_classe' => $ofertaClasse
+        ]);
+        
+        // Recuperar o ID da chamada inserida
+        $chamadaId = $this->pdo->lastInsertId();
 
-        // Verificar o que será enviado para a query
-        var_dump($data, $classe_id, $professor_id, $oferta_classe); // Depuração
+        // Preparar o SQL para inserir a presença dos alunos
+        $sqlPresenca = "INSERT INTO presencas (chamada_id, aluno_id, presente) 
+                        VALUES (:chamada_id, :aluno_id, :presente)";
+        $stmtPresenca = $this->pdo->prepare($sqlPresenca);
 
-        $stmtChamada->execute();
-
-        // Obter o ID da chamada recém-criada
-        $chamada_id = $this->pdo->lastInsertId();
-
-        // Registrar as presenças e faltas dos alunos na tabela 'presencas'
+        // Inserir a presença para cada aluno
         foreach ($alunos as $aluno) {
-            // Verificar os dados de cada aluno antes de inserir
-            var_dump($aluno); // Depuração
-
-            $presenca = $aluno['presente'] ? 'presente' : 'ausente'; // Se o aluno está presente ou ausente
-            $falta = $aluno['falta'] ? 'justificado' : $presenca; // Se a falta está marcada, marca como "justificado", senão mantém a presença
-
-            // Inserção de cada aluno na chamada
-            $queryPresenca = "INSERT INTO presencas (chamada_id, aluno_id, presente) 
-                              VALUES (:chamada_id, :aluno_id, :presente)";
-            $stmtPresenca = $this->pdo->prepare($queryPresenca);
-            $stmtPresenca->bindParam(':chamada_id', $chamada_id, PDO::PARAM_INT);  // Referência à chamada
-            $stmtPresenca->bindParam(':aluno_id', $aluno['id'], PDO::PARAM_INT);  // Referência ao aluno
-            $stmtPresenca->bindParam(':presente', $falta, PDO::PARAM_STR);  // Valor da presença (presente, ausente, justificado)
+            // Verificar se o aluno está presente ou ausente
+            $presente = $aluno['presente'] ? 'presente' : 'ausente';
             
-            $stmtPresenca->execute();
+            // Caso o aluno tenha faltado e esteja justificado, marcar como 'justificado'
+            if (isset($aluno['justificado']) && $aluno['justificado']) {
+                $presente = 'justificado';
+            }
+
+            // Inserir a presença no banco de dados
+            $stmtPresenca->execute([
+                ':chamada_id' => $chamadaId,
+                ':aluno_id' => $aluno['id'],
+                ':presente' => $presente
+            ]);
         }
 
-        // Commit da transação
+        // Confirmar a transação
         $this->pdo->commit();
 
-        return ['sucesso' => true, 'mensagem' => 'Chamada registrada com sucesso!'];
-
-    } catch (PDOException $e) {
-        // Reverter transação em caso de erro
+        return ['sucesso' => true];
+    } catch (Exception $e) {
+        // Caso ocorra erro, faz o rollback
         $this->pdo->rollBack();
-        return ['sucesso' => false, 'mensagem' => 'Erro ao registrar chamada: ' . $e->getMessage()];
+        error_log("Erro ao registrar a chamada: " . $e->getMessage());  // Log do erro
+        return ['sucesso' => false, 'mensagem' => $e->getMessage()];
     }
 }
-
-
 }
 
 ?>
