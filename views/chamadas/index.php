@@ -177,8 +177,10 @@ $usuario_id = $_SESSION['usuario_id']; // Supondo que o ID do usuário esteja na
         });
 
 // Enviar dados de presença no AJAX
+// Enviar dados de presença no AJAX
 $('#formChamada').submit(function(event) {
     event.preventDefault();
+
     let dataChamada = $('#data_chamada').val();
     let classeId = $('#classe').val();
     let professorId = $('#professor_id').val();
@@ -225,9 +227,19 @@ $('#formChamada').submit(function(event) {
             // Verificar a estrutura da resposta
             console.log(response);
 
-            if (response.sucesso) {
+            // Checando se a resposta tem o campo 'status' como success
+            if (response.status === 'success') {
                 alert('Chamada salva com sucesso!');
-                window.location.href = "/dashboard"; // Atualize para a URL correta
+                
+                // Limpar o formulário
+                $('#formChamada')[0].reset(); // Limpa o formulário
+
+                // Opcional: Se você quiser também limpar os campos de presença e falta
+                $('.aluno-presenca').prop('checked', false);
+                $('.aluno-falta').prop('checked', false);
+                
+                // Redireciona para o dashboard
+                window.location.href = "../chamadas/index.php"; // Atualize para a URL correta
             } else {
                 alert('Erro ao salvar a chamada.');
                 console.error("Erro ao salvar a chamada:", response.mensagem || 'Mensagem não encontrada');
@@ -240,7 +252,6 @@ $('#formChamada').submit(function(event) {
         }
     });
 });
-
         // Inicializar carregando as congregações
         carregarCongregacoes();
     });
