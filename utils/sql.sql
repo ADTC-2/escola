@@ -63,23 +63,24 @@ CREATE TABLE matriculas (
 
 -- Tabela de chamadas (registro de presença)
 CREATE TABLE chamadas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    data DATE NOT NULL,
-    classe_id INT NOT NULL,
-    professor_id INT NOT NULL,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (classe_id) REFERENCES classes(id) ON DELETE CASCADE,
-    FOREIGN KEY (professor_id) REFERENCES professores(id) ON DELETE CASCADE
+    id INT AUTO_INCREMENT PRIMARY KEY,              -- Identificador único da chamada
+    data DATE NOT NULL,                             -- Data da chamada
+    classe_id INT NOT NULL,                         -- Identificador da classe
+    professor_id INT NOT NULL,                      -- Identificador do professor
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Data e hora de criação do registro
+    oferta_classe VARCHAR(100),                     -- Oferta da classe (ex: nome do curso)
+    FOREIGN KEY (classe_id) REFERENCES classes(id) ON DELETE CASCADE,  -- Relacionamento com a tabela de classes
+    FOREIGN KEY (professor_id) REFERENCES professores(id) ON DELETE CASCADE  -- Relacionamento com a tabela de professores
 );
 
--- Tabela de chamada de alunos (presença)
-CREATE TABLE chamada_alunos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    chamada_id INT NOT NULL,
-    aluno_id INT NOT NULL,
-    presente BOOLEAN NOT NULL,
-    FOREIGN KEY (chamada_id) REFERENCES chamadas(id) ON DELETE CASCADE,
-    FOREIGN KEY (aluno_id) REFERENCES alunos(id) ON DELETE CASCADE
+-- Tabela de presenças (registro de presença dos alunos)
+CREATE TABLE presencas (
+    id INT AUTO_INCREMENT PRIMARY KEY,             -- Identificador único da presença
+    chamada_id INT NOT NULL,                        -- Identificador da chamada
+    aluno_id INT NOT NULL,                          -- Identificador do aluno
+    presente ENUM('presente', 'ausente', 'justificado') NOT NULL,  -- Status da presença
+    FOREIGN KEY (chamada_id) REFERENCES chamadas(id) ON DELETE CASCADE,  -- Relacionamento com a tabela de chamadas
+    FOREIGN KEY (aluno_id) REFERENCES alunos(id) ON DELETE CASCADE  -- Relacionamento com a tabela de alunos
 );
 
 -- Tabela de permissões

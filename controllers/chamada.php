@@ -69,19 +69,20 @@ try {
             echo json_encode(['status' => 'success', 'data' => $alunos ?: []]);
             break;
 
-        case 'salvarChamada':
-            // Verificação de dados para salvar a chamada
-            if (!isset($input['data'], $input['classe'], $input['professor'], $input['alunos'], $input['oferta_classe'])) {
-                sendErrorResponse('Dados inválidos para salvar chamada.');
-            }
-
-            $resultado = $chamada->registrarChamada($input['data'], $input['classe'], $input['professor'], $input['alunos'], $input['oferta_classe']);
-            if ($resultado['sucesso']) {
-                echo json_encode(['status' => 'success', 'message' => 'Chamada registrada com sucesso.']);
-            } else {
-                sendErrorResponse($resultado['mensagem']);
-            }
-            break;
+            case 'salvarChamada':
+                // Verificação de dados para salvar a chamada
+                if (!isset($input['data'], $input['classe'], $input['professor'], $input['alunos'], $input['oferta_classe'])) {
+                    sendErrorResponse('Dados inválidos para salvar chamada.');
+                }
+            
+                // Registrar a chamada
+                $resultado = $chamada->registrarChamada($input['data'], $input['classe'], $input['professor'], $input['alunos'], $input['oferta_classe']);
+                if ($resultado['sucesso']) {
+                    echo json_encode(['status' => 'success', 'message' => 'Chamada registrada com sucesso.']);
+                } else {
+                    sendErrorResponse($resultado['mensagem']);
+                }
+                break;
 
         default:
             sendErrorResponse('Ação inválida.');

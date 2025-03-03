@@ -106,30 +106,45 @@ private function sendErrorResponse($mensagem) {
 
 
   // Método para registrar a chamada
+// Método para registrar a chamada
 public function registrarChamada($data, $classe_id, $professor_id, $alunos, $oferta_classe) {
     try {
         // Começar a transação
         $this->pdo->beginTransaction();
 
-        // Inserir a chamada
-        $queryChamada = "INSERT INTO chamadas (data, classe_id, professor_id, oferta_classe) VALUES (:data, :classe_id, :professor_id, :oferta_classe)";
+        // Inserir a chamada (registro principal)
+        $queryChamada = "INSERT INTO chamadas (data, classe_id, professor_id, oferta_classe) 
+                         VALUES (:data, :classe_id, :professor_id, :oferta_classe)";
         $stmtChamada = $this->pdo->prepare($queryChamada);
         $stmtChamada->bindParam(':data', $data, PDO::PARAM_STR);
         $stmtChamada->bindParam(':classe_id', $classe_id, PDO::PARAM_INT);
         $stmtChamada->bindParam(':professor_id', $professor_id, PDO::PARAM_INT);
         $stmtChamada->bindParam(':oferta_classe', $oferta_classe, PDO::PARAM_STR);
+
+        // Verificar o que será enviado para a query
+        var_dump($data, $classe_id, $professor_id, $oferta_classe); // Depuração
+
         $stmtChamada->execute();
 
-        // Obter o ID da chamada
+        // Obter o ID da chamada recém-criada
         $chamada_id = $this->pdo->lastInsertId();
 
-        // Registrar as presenças
+        // Registrar as presenças e faltas dos alunos na tabela 'presencas'
         foreach ($alunos as $aluno) {
-            $queryPresenca = "INSERT INTO presencas (chamada_id, aluno_id, presente) VALUES (:chamada_id, :aluno_id, :presente)";
+            // Verificar os dados de cada aluno antes de inserir
+            var_dump($aluno); // Depuração
+
+            $presenca = $aluno['presente'] ? 'presente' : 'ausente'; // Se o aluno está presente ou ausente
+            $falta = $aluno['falta'] ? 'justificado' : $presenca; // Se a falta está marcada, marca como "justificado", senão mantém a presença
+
+            // Inserção de cada aluno na chamada
+            $queryPresenca = "INSERT INTO presencas (chamada_id, aluno_id, presente) 
+                              VALUES (:chamada_id, :aluno_id, :presente)";
             $stmtPresenca = $this->pdo->prepare($queryPresenca);
-            $stmtPresenca->bindParam(':chamada_id', $chamada_id, PDO::PARAM_INT);
-            $stmtPresenca->bindParam(':aluno_id', $aluno['id'], PDO::PARAM_INT);
-            $stmtPresenca->bindParam(':presente', $aluno['presente'], PDO::PARAM_BOOL);
+            $stmtPresenca->bindParam(':chamada_id', $chamada_id, PDO::PARAM_INT);  // Referência à chamada
+            $stmtPresenca->bindParam(':aluno_id', $aluno['id'], PDO::PARAM_INT);  // Referência ao aluno
+            $stmtPresenca->bindParam(':presente', $falta, PDO::PARAM_STR);  // Valor da presença (presente, ausente, justificado)
+            
             $stmtPresenca->execute();
         }
 
