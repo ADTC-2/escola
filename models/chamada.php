@@ -105,20 +105,23 @@ private function sendErrorResponse($mensagem) {
 
 
 // Método para registrar a chamada
-public function registrarChamada($data, $classeId, $professorId, $alunos, $ofertaClasse) {
+public function registrarChamada($data, $classeId, $professorId, $alunos, $ofertaClasse, $total_biblias, $total_revistas, $total_visitantes) {
     try {
         // Iniciar a transação
         $this->pdo->beginTransaction();
 
         // Inserir a chamada
-        $sqlChamada = "INSERT INTO chamadas (data, classe_id, professor_id, oferta_classe) 
-                       VALUES (:data, :classe_id, :professor_id, :oferta_classe)";
+        $sqlChamada = "INSERT INTO chamadas (data, classe_id, professor_id, oferta_classe,total_biblias,total_revistas,total_visitantes) 
+                       VALUES (:data, :classe_id, :professor_id, :oferta_classe, :total_biblias, :total_revistas, :total_visitantes)";
         $stmt = $this->pdo->prepare($sqlChamada);
         $stmt->execute([
             ':data' => $data,
             ':classe_id' => $classeId,
             ':professor_id' => $professorId,
-            ':oferta_classe' => $ofertaClasse
+            ':oferta_classe' => $ofertaClasse,
+            ':total_biblias' => $total_biblias,
+            ':total_revistas' => $total_revistas,
+            ':total_visitantes' => $total_visitantes
         ]);
         
         // Recuperar o ID da chamada inserida

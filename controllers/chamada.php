@@ -58,7 +58,7 @@ try {
             break;
 
             case 'salvarChamada':
-                if (!isset($input['data'], $input['classe'], $input['professor'], $input['alunos'], $input['oferta_classe'])) {
+                if (!isset($input['data'], $input['classe'], $input['professor'], $input['alunos'], $input['oferta_classe'], $input['total_visitantes'], $input['total_biblias'], $input['total_revistas'])) {
                     sendErrorResponse('Dados inválidos para salvar chamada.');
                 }
                 
@@ -67,7 +67,10 @@ try {
                     $input['classe'],
                     $input['professor'],
                     $input['alunos'],
-                    $input['oferta_classe']
+                    $input['oferta_classe'],
+                    $input['total_visitantes'],
+                    $input['total_biblias'],
+                    $input['total_revistas']
                 );
             
                 if ($resultado['sucesso']) {

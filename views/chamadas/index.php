@@ -53,6 +53,23 @@ $usuario_id = $_SESSION['usuario_id']; // Supondo que o ID do usuário esteja na
                         <input type="text" class="form-control" id="oferta_classe"
                             placeholder="Informe a oferta do dia">
                     </div>
+                                    <!-- Novo campo para o total de visitantes -->
+                <div class="mb-3">
+                    <label for="total_visitantes" class="form-label">Total de Visitantes</label>
+                    <input type="number" class="form-control" id="total_visitantes" value="0" min="0" required>
+                </div>
+
+                <!-- Novo campo para o total de Bíblias levadas -->
+                <div class="mb-3">
+                    <label for="total_biblias" class="form-label">Total de Bíblias Levadas</label>
+                    <input type="number" class="form-control" id="total_biblias" value="0" min="0" required>
+                </div>
+
+                <!-- Novo campo para o total de revistas levadas -->
+                <div class="mb-3">
+                    <label for="total_revistas" class="form-label">Total de Revistas Levadas</label>
+                    <input type="number" class="form-control" id="total_revistas" value="0" min="0" required>
+                </div>
                     <!-- Professor (hidden) -->
                     <input type="hidden" id="professor_id" value="{{ professor_id }}">
 
@@ -198,6 +215,9 @@ $('#formChamada').submit(function(event) {
     let classeId = $('#classe').val();
     let professorId = $('#professor_id').val();
     let ofertaClasse = $('#oferta_classe').val();
+    let totalVisitantes = $('#total_visitantes').val();
+    let totalBiblias = $('#total_biblias').val(); 
+    let totalRevistas = $('#total_revistas').val();  
     let presencas = [];
 
     // Itera sobre todos os alunos para pegar a presença e falta
@@ -220,7 +240,10 @@ $('#formChamada').submit(function(event) {
         classe: classeId,
         professor: professorId,
         alunos: presencas,
-        oferta_classe: ofertaClasse
+        oferta_classe: ofertaClasse,
+        total_visitantes: totalVisitantes,
+        total_biblias: totalBiblias,
+        total_revistas: totalRevistas
     });
 
     // Enviar os dados para o servidor via AJAX
@@ -233,7 +256,10 @@ $('#formChamada').submit(function(event) {
             classe: classeId,
             professor: professorId,
             alunos: presencas,
-            oferta_classe: ofertaClasse                
+            oferta_classe: ofertaClasse,
+            total_visitantes: totalVisitantes,
+            total_biblias: totalBiblias,
+            total_revistas: totalRevistas                
         }),
             contentType: "application/json",
             dataType: "json", // Garantir que a resposta seja tratada como JSON
