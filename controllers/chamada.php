@@ -2,7 +2,7 @@
 require_once '../models/chamada.php';
 require_once '../config/conexao.php';
 
-header('Content-Type: application/json');
+//header('Content-Type: application/json');
 
 // Criar a instância do objeto Chamada
 $chamada = new Chamada($pdo);
@@ -62,7 +62,6 @@ try {
                     sendErrorResponse('Dados inválidos para salvar chamada.');
                 }
                 
-                // Chamada do método registrarChamada
                 $resultado = $chamada->registrarChamada(
                     $input['data'],
                     $input['classe'],
@@ -70,7 +69,7 @@ try {
                     $input['alunos'],
                     $input['oferta_classe']
                 );
-        
+            
                 if ($resultado['sucesso']) {
                     echo json_encode(['status' => 'success', 'message' => 'Chamada registrada com sucesso.']);
                 } else {

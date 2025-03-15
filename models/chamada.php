@@ -1,12 +1,6 @@
 <?php
 // Inclua o arquivo de configuração e conexão com o banco de dados
 include_once('../config/conexao.php');
-
-ini_set('display_errors', 1);  // Ativa a exibição de erros
-ini_set('display_startup_errors', 1);  // Ativa a exibição de erros durante a inicialização
-error_reporting(E_ALL);  // Exibe todos os erros
-
-
 class Chamada {
     private $pdo;
 
@@ -165,7 +159,6 @@ public function registrarChamada($data, $classeId, $professorId, $alunos, $ofert
     }
 }
 }
-
 ?>
 
 

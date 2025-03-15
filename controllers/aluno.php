@@ -34,64 +34,74 @@ switch ($acao) {
         echo json_encode($aluno->buscar($id));
         break;
 
-    case 'salvar':
-        $dados = [
-            'nome' => $_POST['nome'] ?? '',
-            'data_nascimento' => $_POST['data_nascimento'] ?? '',
-            'telefone' => $_POST['telefone'] ?? '',
-            'classe_id' => $_POST['classe_id'] ?? ''
-        ];
-
-        // Valida os dados antes de salvar
-        $erro = validarDados($dados);  
-        if ($erro) {
-            echo json_encode($erro);
+        case 'salvar':
+            // Remover qualquer ID enviado indevidamente
+            unset($_POST['id']);
+        
+            $dados = [
+                'nome' => $_POST['nome'] ?? '',
+                'data_nascimento' => $_POST['data_nascimento'] ?? '',
+                'telefone' => $_POST['telefone'] ?? '',
+                'classe_id' => $_POST['classe_id'] ?? ''
+            ];
+        
+            // Valida os dados antes de salvar
+            $erro = validarDados($dados);  
+            if ($erro) {
+                echo json_encode(["status" => "error", "message" => $erro]);
+                break;
+            }
+        
+            $resultado = $aluno->salvar($dados);
+            echo json_encode($resultado);
             break;
-        }
+        
+        
+        case 'editar':
+                // Verifica se o ID foi enviado corretamente
+                $id = $_POST['id'] ?? null;
+            
+                if (!$id || !filter_var($id, FILTER_VALIDATE_INT)) {
+                    echo json_encode(["status" => "error", "message" => "ID inválido"]);
+                    break;
+                }
+            
+                $dados = [
+                    'nome' => $_POST['nome'] ?? '',
+                    'data_nascimento' => $_POST['data_nascimento'] ?? '',
+                    'telefone' => $_POST['telefone'] ?? '',
+                    'classe_id' => $_POST['classe_id'] ?? ''
+                ];
+            
+                // Valida os dados antes de editar
+                $erro = validarDados($dados);
+                if ($erro) {
+                    echo json_encode(["status" => "error", "message" => $erro]);
+                    break;
+                }
+            
+                $resultado = $aluno->editar($id, $dados);
+                echo json_encode($resultado);
+                break;
+            
 
-        $resultado = $aluno->salvar($dados);
-        echo json_encode($resultado);
-        break;
+        case 'excluir':
+            $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+            if (!$id) {
+                echo json_encode(["status" => "error", "message" => "ID inválido"]);
+                break;
+            }
 
-    case 'editar':
-        $dados = [
-            'id' => $_POST['id'] ?? '',
-            'nome' => $_POST['nome'] ?? '',
-            'data_nascimento' => $_POST['data_nascimento'] ?? '',
-            'telefone' => $_POST['telefone'] ?? '',
-            'classe_id' => $_POST['classe_id'] ?? ''
-        ];
-
-        // Valida os dados antes de editar
-        $erro = validarDados($dados);  
-        if ($erro) {
-            echo json_encode($erro);
+            echo json_encode($aluno->excluir($id));
             break;
-        }
 
-        $resultado = $aluno->editar($dados);
-        echo json_encode($resultado);
-        break;
-
-    case 'excluir':
-        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-        if (!$id) {
-            echo json_encode(["status" => "error", "message" => "ID inválido"]);
+        case 'listar_classes':
+            echo json_encode(["status" => "success", "data" => $classe->listar()]);
             break;
-        }
 
-        echo json_encode($aluno->excluir($id));
-        break;
-
-    case 'listar_classes':
-        echo json_encode(["status" => "success", "data" => $classe->listar()]);
-        break;
-
-    default:
-        http_response_code(400);
-        echo json_encode(["status" => "error", "message" => "Ação inválida"]);
-        break;
+        default:
+            http_response_code(400);
+            echo json_encode(["status" => "error", "message" => "Ação inválida"]);
+            break;
 }
 ?>
-
-

@@ -60,11 +60,15 @@ class Aluno {
             $data_nascimento = $dados['data_nascimento'];
             $telefone = trim(htmlspecialchars($dados['telefone'], ENT_QUOTES, 'UTF-8'));
             $classe_id = filter_var($dados['classe_id'], FILTER_VALIDATE_INT);
-
+    
             if (!$nome || !$data_nascimento || !$telefone || !$classe_id) {
                 return ["status" => "error", "message" => "Dados inválidos"];
             }
-
+    
+            // Debug: Verificar se os dados estão corretos
+            error_log("Salvando aluno: " . json_encode($dados));
+    
+            // Usar INSERT INTO sem afetar registros existentes
             $stmt = $this->db->prepare("
                 INSERT INTO alunos (nome, data_nascimento, telefone, classe_id) 
                 VALUES (:nome, :data_nascimento, :telefone, :classe_id)
@@ -75,27 +79,35 @@ class Aluno {
                 ':telefone' => $telefone,
                 ':classe_id' => $classe_id
             ]);
-
+    
             return ["status" => "success", "message" => "Aluno cadastrado com sucesso"];
         } catch (PDOException $e) {
             return ["status" => "error", "message" => "Erro ao salvar aluno: " . $e->getMessage()];
         }
     }
+    
 
-    public function editar($dados) {
+
+    public function editar($id, $dados) {
         try {
-            $id = filter_var($dados['id'], FILTER_VALIDATE_INT);
+            $id = filter_var($id, FILTER_VALIDATE_INT);
             $nome = trim(htmlspecialchars($dados['nome'], ENT_QUOTES, 'UTF-8'));
             $data_nascimento = $dados['data_nascimento'];
             $telefone = trim(htmlspecialchars($dados['telefone'], ENT_QUOTES, 'UTF-8'));
             $classe_id = filter_var($dados['classe_id'], FILTER_VALIDATE_INT);
     
+            // Verifica se os dados são válidos
             if (!$id || !$nome || !$data_nascimento || !$telefone || !$classe_id) {
                 return ["status" => "error", "message" => "Dados inválidos"];
             }
     
+            // Debug: Verificar os dados antes de atualizar
+            error_log("Editando aluno ID: $id - Dados: " . json_encode($dados));
+    
+            // Atualiza os dados do aluno
             $stmt = $this->db->prepare("
-                UPDATE alunos SET nome = :nome, data_nascimento = :data_nascimento, telefone = :telefone, classe_id = :classe_id
+                UPDATE alunos 
+                SET nome = :nome, data_nascimento = :data_nascimento, telefone = :telefone, classe_id = :classe_id
                 WHERE id = :id
             ");
             $stmt->execute([
@@ -111,6 +123,7 @@ class Aluno {
             return ["status" => "error", "message" => "Erro ao editar aluno: " . $e->getMessage()];
         }
     }
+    
 
     public function excluir($id) {
         try {

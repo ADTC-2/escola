@@ -22,7 +22,7 @@ $usuario_id = $_SESSION['usuario_id']; // Supondo que o ID do usuário esteja na
             </div>
             <div class="card-body">
                 <form id="formChamada">
-                <input type="hidden" id="professor_id" value="<?php echo $usuario_id; ?>">
+                    <input type="hidden" id="professor_id" value="<?php echo $usuario_id; ?>">
                     <!-- Seleção de Congregação -->
                     <div class="mb-3">
                         <label for="congregacao" class="form-label">Congregação</label>
@@ -107,20 +107,29 @@ $usuario_id = $_SESSION['usuario_id']; // Supondo que o ID do usuário esteja na
                                 options +=
                                     `<option value="${classe.id}">${classe.nome}</option>`;
                             });
-                            $("#classe").html(options).prop('disabled', false); // Preenche o select e habilita
+                            $("#classe").html(options).prop('disabled',
+                            false); // Preenche o select e habilita
                         } else {
-                            console.error("Nenhuma classe encontrada ou erro na resposta:", response);
-                            $("#classe").html('<option value="">Nenhuma classe disponível</option>').prop('disabled', true);
+                            console.error("Nenhuma classe encontrada ou erro na resposta:",
+                                response);
+                            $("#classe").html(
+                                    '<option value="">Nenhuma classe disponível</option>')
+                                .prop('disabled', true);
                         }
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
-                        console.error("Erro na requisição das classes:", textStatus, errorThrown);
-                        alert("Erro ao carregar as classes. Veja o console para mais detalhes.");
-                        $("#classe").html('<option value="">Erro ao carregar as classes</option>').prop('disabled', true);
+                        console.error("Erro na requisição das classes:", textStatus,
+                            errorThrown);
+                        alert(
+                            "Erro ao carregar as classes. Veja o console para mais detalhes.");
+                        $("#classe").html(
+                                '<option value="">Erro ao carregar as classes</option>')
+                            .prop('disabled', true);
                     }
                 });
             } else {
-                $("#classe").prop('disabled', true).html('<option value="">Selecione a Classe</option>');
+                $("#classe").prop('disabled', true).html(
+                '<option value="">Selecione a Classe</option>');
             }
         });
 
@@ -134,13 +143,15 @@ $usuario_id = $_SESSION['usuario_id']; // Supondo que o ID do usuário esteja na
                     data: {
                         acao: 'getAlunosByClasse',
                         classe_id: classeId,
-                        congregacao_id: $('#congregacao').val() // Enviar também o ID da congregação
+                        congregacao_id: $('#congregacao')
+                        .val() // Enviar também o ID da congregação
                     },
                     dataType: 'json',
                     success: function(response) {
                         console.log(response);
 
-                        if (response.status === 'success' && Array.isArray(response.data.data) && response.data.data.length > 0) {
+                        if (response.status === 'success' && Array.isArray(response.data
+                                .data) && response.data.data.length > 0) {
                             let alunosHtml = `
                                 <table class="table table-bordered">
                                     <thead>
@@ -162,12 +173,15 @@ $usuario_id = $_SESSION['usuario_id']; // Supondo que o ID do usuário esteja na
                             alunosHtml += `</tbody></table>`;
                             $('#alunos-container').html(alunosHtml);
                         } else {
-                            $('#alunos-container').html('<p>Sem alunos para esta classe.</p>');
+                            $('#alunos-container').html(
+                                '<p>Sem alunos para esta classe.</p>');
                         }
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
-                        console.error("Erro ao carregar os alunos:", textStatus, errorThrown);
-                        alert("Erro ao carregar os alunos. Veja o console para mais detalhes.");
+                        console.error("Erro ao carregar os alunos:", textStatus,
+                            errorThrown);
+                        alert(
+                            "Erro ao carregar os alunos. Veja o console para mais detalhes.");
                         $('#alunos-container').html('<p>Erro ao carregar alunos.</p>');
                     }
                 });
@@ -176,7 +190,6 @@ $usuario_id = $_SESSION['usuario_id']; // Supondo que o ID do usuário esteja na
             }
         });
 
-// Enviar dados de presença no AJAX
 // Enviar dados de presença no AJAX
 $('#formChamada').submit(function(event) {
     event.preventDefault();
@@ -222,40 +235,41 @@ $('#formChamada').submit(function(event) {
             alunos: presencas,
             oferta_classe: ofertaClasse                
         }),
-        contentType: "application/json",
-        success: function(response) {
-            // Verificar a estrutura da resposta
-            console.log(response);
+            contentType: "application/json",
+            dataType: "json", // Garantir que a resposta seja tratada como JSON
+            success: function(response) {
+                console.log("Resposta do servidor:", response);
 
-            // Checando se a resposta tem o campo 'status' como success
-            if (response.status === 'success') {
-                alert('Chamada salva com sucesso!');
-                
-                // Limpar o formulário
-                $('#formChamada')[0].reset(); // Limpa o formulário
+                // Checando se a resposta tem o campo 'status' como 'success'
+                if (response.status === 'success') {
+                    alert(response.message); // Exibir a mensagem de sucesso
+                    
+                    // Limpar o formulário
+                    $('#formChamada')[0].reset();  // Limpa todos os campos do formulário
 
-                // Opcional: Se você quiser também limpar os campos de presença e falta
-                $('.aluno-presenca').prop('checked', false);
-                $('.aluno-falta').prop('checked', false);
-                
-                // Redireciona para o dashboard
-                window.location.href = "../chamadas/index.php"; // Atualize para a URL correta
-            } else {
+                    // Limpar as checkboxes de presença e falta
+                    $('.aluno-presenca').prop('checked', false);
+                    $('.aluno-falta').prop('checked', false);
+                    
+                    // Redireciona para o dashboard
+                    window.location.href = "../chamadas/index.php"; // Atualize para a URL correta
+                } else {
+                    alert('Erro ao salvar a chamada: ' + response.message);
+                    console.error("Erro ao salvar a chamada:", response.message || 'Mensagem não encontrada');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Status:", status);
+                console.error("Erro:", error);
                 alert('Erro ao salvar a chamada.');
-                console.error("Erro ao salvar a chamada:", response.mensagem || 'Mensagem não encontrada');
             }
-        },
-        error: function(xhr, status, error) {
-            console.error("Status:", status);
-            console.error("Erro:", error);
-            alert('Erro ao salvar a chamada.');
-        }
+        });
     });
-});
+
         // Inicializar carregando as congregações
         carregarCongregacoes();
     });
-</script>
+    </script>
 
 
 </body>

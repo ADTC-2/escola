@@ -67,12 +67,14 @@ CREATE TABLE chamadas (
     data DATE NOT NULL,                             -- Data da chamada
     classe_id INT NOT NULL,                         -- Identificador da classe
     professor_id INT NOT NULL,                      -- Identificador do professor
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Data e hora de criação do registro
+    total_biblias INT DEFAULT 0,                    -- Total de Bíblias levadas pelos alunos
+    total_revistas INT DEFAULT 0,                   -- Total de revistas levadas pelos alunos
     oferta_classe VARCHAR(100),                     -- Oferta da classe (ex: nome do curso)
+    total_visitantes INT DEFAULT 0,                 -- Total de visitantes presentes
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Data e hora de criação do registro
     FOREIGN KEY (classe_id) REFERENCES classes(id) ON DELETE CASCADE,  -- Relacionamento com a tabela de classes
     FOREIGN KEY (professor_id) REFERENCES professores(id) ON DELETE CASCADE  -- Relacionamento com a tabela de professores
 );
-
 -- Tabela de presenças (registro de presença dos alunos)
 CREATE TABLE presencas (
     id INT AUTO_INCREMENT PRIMARY KEY,             -- Identificador único da presença

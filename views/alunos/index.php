@@ -77,7 +77,7 @@ function carregarClasses() {
                 var selectClasses = $('#classe_id');
                 selectClasses.empty(); // Limpa o select
                 selectClasses.append('<option value="">Selecione uma classe</option>');
-                if (Array.isArray(response.data)) {  // Verifica se response.data é um array
+                if (Array.isArray(response.data)) {
                     response.data.forEach(function(classe) {
                         selectClasses.append('<option value="' + classe.id + '">' + classe.nome + '</option>');
                     });
@@ -201,17 +201,19 @@ $('#modalCadastroEdicao').on('show.bs.modal', function (event) {
         // Cadastro de aluno
         $('#modalCadastroEdicaoLabel').text('Cadastrar Aluno');
         $('#formCadastroEdicao')[0].reset(); // Limpa o formulário
+        $('#id').val(''); // Garante que o campo ID esteja vazio para novos cadastros
     }
 
     carregarClasses(); // Carrega as classes para o modal
 });
 
-// Função para salvar ou editar aluno
+// Função para salvar 
 $('#btnSalvar').on('click', function() {
     var nome = $('#nome').val().trim();
     var telefone = $('#telefone').val().trim();
     var dataNascimento = $('#data_nascimento').val().trim();
     var classeId = $('#classe_id').val();
+    var alunoId = $('#id').val(); // Captura o ID (se existir)
 
     // Validação básica
     if (!nome || !telefone || !dataNascimento || !classeId) {
@@ -219,38 +221,29 @@ $('#btnSalvar').on('click', function() {
         return;
     }
 
-    // Verifique os dados antes de enviar
-    console.log("Dados para enviar:", {
-        nome: nome,
-        telefone: telefone,
-        data_nascimento: dataNascimento,
-        classe_id: classeId
-    });
+    // Define se é um novo aluno ou uma edição
+    var url = alunoId ? '../../controllers/aluno.php?acao=editar' : '../../controllers/aluno.php?acao=salvar';
 
-    // Verifica se está editando ou salvando (cadastrar novo)
-    var url = $('#id').val() ? '../../controllers/aluno.php?acao=editar' : '../../controllers/aluno.php?acao=salvar';
-    
     $.ajax({
-        url: url,  // Se estiver editando ou salvando, a URL muda
+        url: url,
         method: 'POST',
-        data: $('#formCadastroEdicao').serialize(),  // Envia todos os dados do formulário
+        data: $('#formCadastroEdicao').serialize(),
         dataType: 'json',
         success: function(response) {
             if (response.status === "success") {
-                $('#modalCadastroEdicao').modal('hide');  // Fecha o modal
-                tabela.ajax.reload(null, false);  // Atualiza a tabela sem resetar o estado
-                exibirMensagem('sucesso', response.message);  // Exibe a mensagem de sucesso
+                $('#modalCadastroEdicao').modal('hide'); // Fecha o modal
+                tabela.ajax.reload(null, false); // Atualiza a tabela sem resetar o estado
+                exibirMensagem('sucesso', response.message);
             } else {
-                exibirMensagem('erro', response.message);  // Exibe a mensagem de erro
+                exibirMensagem('erro', response.message);
             }
         },
         error: function(xhr, status, error) {
             console.error("Erro ao salvar aluno:", error);
-            exibirMensagem('erro', 'Erro ao salvar aluno.');  // Exibe a mensagem de erro caso falhe
+            exibirMensagem('erro', 'Erro ao salvar aluno.');
         }
     });
 });
-
 
 // Função para excluir aluno
 $('#tabelaAlunos').on('click', '.btnExcluir', function() {
@@ -306,8 +299,3 @@ $(document).ready(function() {
 </script>
 </body>
 </html>
-
-
-
-
-
