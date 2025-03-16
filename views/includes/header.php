@@ -14,6 +14,7 @@
     <link href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="../../assets/images/biblia.png" type="image/x-icon">
     
 
     <link rel="stylesheet" href="../../assets/css/dashboard.css">
@@ -37,7 +38,7 @@
                     <li class="nav-item"><a class="nav-link" href="../matriculas/index.php">Matriculas</a></li>
                     <li class="nav-item"><a class="nav-link" href="../usuario/index.php">Usuários</a></li>
                     <li class="nav-item"><a class="nav-link active" href="../permissoes/index.php">Permissões</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Relatórios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../relatorios/index.php">Relatórios</a></li>
                     <li class="nav-item">
                         <a class="nav-link" href="../../auth/logout.php">
                             <i class="fas fa-sign-out-alt"></i>

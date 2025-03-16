@@ -11,6 +11,7 @@
     <title>Sistema E.B.D</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"> 
+    <link rel="icon" href="../../assets/images/biblia.png" type="image/x-icon">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
     <!-- Ícones -->
 </head>
@@ -30,8 +31,8 @@
                     <li class="nav-item"><a class="nav-link" href="./congregacao/index.php">Congregações</a></li>
                     <li class="nav-item"><a class="nav-link" href="./matriculas/index.php">Matriculas</a></li>
                     <li class="nav-item"><a class="nav-link" href="./usuario/index.php">Usuários</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="./permissoes/index.php">Permissões</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Relatórios</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="./permissoes/index.php">Permissões</a></li>                    
+                    <li class="nav-item"><a class="nav-link" href="./relatorios/index.php">Relatórios</a></li>
                     
                     <li class="nav-item">
                         <a class="nav-link" href="../auth/logout.php">
