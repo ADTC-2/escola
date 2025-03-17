@@ -1,4 +1,6 @@
 <?php
+require_once '../config/conexao.php'; // Certifique-se de que o arquivo de conexão está correto
+
 // Verificar se a requisição é uma GET para o relatório
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     // Obter os parâmetros da requisição
@@ -15,9 +17,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 COUNT(CASE WHEN p.presente = 'presente' THEN 1 END) AS alunos_presentes,
                 COUNT(CASE WHEN p.presente = 'ausente' THEN 1 END) AS alunos_ausentes,
                 COUNT(CASE WHEN p.presente = 'justificado' THEN 1 END) AS alunos_justificados,
-                SUM(c.total_biblias) AS biblias,
-                SUM(c.total_revistas) AS revistas,
-                SUM(c.total_visitantes) AS visitantes
+                COALESCE(SUM(c.total_biblias), 0) AS biblias,
+                COALESCE(SUM(c.total_revistas), 0) AS revistas,
+                COALESCE(SUM(c.total_visitantes), 0) AS visitantes,
+                COALESCE(SUM(c.total_ofertas), 0) AS ofertas
             FROM chamadas c
             LEFT JOIN presencas p ON p.chamada_id = c.id
             WHERE c.classe_id = :classe
@@ -41,8 +44,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             // Obter os resultados
             $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Armazenar os dados em um array
-            $dados = ['total_frequencia' => $resultados];
+            // Verificar se há resultados
+            if ($resultados) {
+                $dados = ['status' => 'success', 'total_frequencia' => $resultados];
+            } else {
+                $dados = ['status' => 'error', 'message' => 'Nenhum dado encontrado para o período selecionado.'];
+            }
 
             // Retornar os dados no formato JSON
             echo json_encode($dados);
@@ -56,8 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 } else {
     echo json_encode(['status' => 'error', 'message' => 'Método inválido.']);
 }
-
 ?>
+
 
 
 

@@ -25,51 +25,58 @@ class Matricula {
         }
     }
 
-    // Criar uma nova matrícula
     public function criarMatricula($data) {
         try {
-            // Verifica se as chaves existem no array e define valores padrão (null)
-            $aluno_id = isset($data['aluno_id']) ? $data['aluno_id'] : null;
-            $classe_id = isset($data['classe_id']) ? $data['classe_id'] : null;
-            $congregacao_id = isset($data['congregacao_id']) ? $data['congregacao_id'] : null;
-            $professor_id = isset($data['professor_id']) ? $data['professor_id'] : null;
-            $data_matricula = isset($data['data_matricula']) ? $data['data_matricula'] : date('Y-m-d');  // Corrigido: Se não houver data, usa a data atual
-            $status = isset($data['status']) ? $data['status'] : null;  // Status aqui
-            $trimestre = isset($data['trimestre']) ? $data['trimestre'] : null;
-            
-            // Valida se os campos essenciais estão preenchidos
-            if ($aluno_id && $classe_id && $congregacao_id && $status) {
-                $sql = "INSERT INTO matriculas (aluno_id, classe_id, congregacao_id, usuario_id, data_matricula, status, trimestre)
-                        VALUES (:aluno_id, :classe_id, :congregacao_id, :professor_id, :data_matricula, :status, :trimestre)";
-                $stmt = $this->pdo->prepare($sql);
-                $stmt->execute([
-                    ':aluno_id' => $aluno_id,
-                    ':classe_id' => $classe_id,
-                    ':congregacao_id' => $congregacao_id,
-                    ':professor_id' => $professor_id,
-                    ':data_matricula' => $data_matricula,
-                    ':status' => $status,  // Inclui status aqui
-                    ':trimestre' => $trimestre
-                ]);
-            } else {
-                throw new Exception("Dados incompletos para criar a matrícula.");
+            // Validar se todos os dados obrigatórios foram recebidos
+            if (empty($data['aluno_id']) || empty($data['classe_id']) || empty($data['congregacao_id']) || empty($data['status']) || empty($data['professor_id']) || empty($data['trimestre'])) {
+                throw new Exception("Todos os campos obrigatórios devem ser preenchidos.");
             }
+    
+            // Verificar se o aluno já está matriculado na mesma classe e congregação
+            if ($this->verificarMatriculaExistente($data['aluno_id'], $data['classe_id'], $data['congregacao_id'])) {
+                throw new Exception("Este aluno já está matriculado nesta classe e congregação.");
+            }
+    
+            // Definir a data de matrícula como a data atual, se não for fornecida
+            $data_matricula = !empty($data['data_matricula']) ? $data['data_matricula'] : date('Y-m-d');
+    
+            // Verificar se a data de matrícula é válida
+            if (!strtotime($data_matricula)) {
+                throw new Exception("Data de matrícula inválida.");
+            }
+    
+            // Inserir no banco de dados
+            $sql = "INSERT INTO matriculas (aluno_id, classe_id, congregacao_id, usuario_id, data_matricula, status, trimestre)
+                    VALUES (:aluno_id, :classe_id, :congregacao_id, :usuario_id, :data_matricula, :status, :trimestre)";
+    
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([
+                ':aluno_id' => $data['aluno_id'],
+                ':classe_id' => $data['classe_id'],
+                ':congregacao_id' => $data['congregacao_id'],
+                ':usuario_id' => $data['professor_id'], // Correção aqui
+                ':data_matricula' => $data_matricula,
+                ':status' => $data['status'],
+                ':trimestre' => $data['trimestre']
+            ]);
+    
+            return true;
         } catch (Exception $e) {
+            error_log("Erro ao criar matrícula: " . $e->getMessage());
             throw new Exception("Erro ao criar matrícula: " . $e->getMessage());
         }
     }
-
+    
     // Atualizar uma matrícula existente
     public function atualizarMatricula($id, $data) {
         try {
-            // Verifica se as chaves existem no array e define valores padrão (null)
-            $aluno_id = isset($data['aluno_id']) ? $data['aluno_id'] : null;
-            $classe_id = isset($data['classe_id']) ? $data['classe_id'] : null;
-            $congregacao_id = isset($data['congregacao_id']) ? $data['congregacao_id'] : null;
-            $professor_id = isset($data['professor_id']) ? $data['professor_id'] : null; // Corrigir para professor_id            
-            $status = isset($data['status']) ? $data['status'] : null;
-            $trimestre = isset($data['trimestre']) ? $data['trimestre'] : null;
-    
+            $aluno_id = $data['aluno_id'];
+            $classe_id = $data['classe_id'];
+            $congregacao_id = $data['congregacao_id'];
+            $professor_id = $data['professor_id'];
+            $status = $data['status'];
+            $trimestre = $data['trimestre'];
+
             if ($id) {
                 $sql = "UPDATE matriculas SET aluno_id = :aluno_id, classe_id = :classe_id, congregacao_id = :congregacao_id, 
                         usuario_id = :professor_id, status = :status, trimestre = :trimestre 
@@ -89,12 +96,10 @@ class Matricula {
                 throw new Exception("ID inválido.");
             }
         } catch (Exception $e) {
-            // Log do erro
             error_log("Erro ao atualizar matrícula: " . $e->getMessage());
             return false;
         }
     }
-    
 
     // Excluir uma matrícula
     public function excluirMatricula($id) {
@@ -107,22 +112,76 @@ class Matricula {
         }
     }
 
+    // Verificar se a matrícula já existe (evitar duplicação)
+    public function verificarMatriculaExistente($aluno_id, $classe_id, $congregacao_id) {
+        $sql = "SELECT COUNT(*) FROM matriculas WHERE aluno_id = :aluno_id AND classe_id = :classe_id AND congregacao_id = :congregacao_id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':aluno_id' => $aluno_id, ':classe_id' => $classe_id, ':congregacao_id' => $congregacao_id]);
+        return $stmt->fetchColumn() > 0;
+    }
+
+    // Verificar se a matrícula existe para exclusão
+    public function verificarMatriculaExistenteParaExclusao($id) {
+        $sql = "SELECT COUNT(*) FROM matriculas WHERE id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetchColumn() > 0;
+    }
+
+    // Carregar dados para selects
     public function carregarSelects() {
-        // Implement the logic to load the select options
-        // Example:
-        $alunos = $this->pdo->query("SELECT id, nome FROM alunos")->fetchAll();
-        $classes = $this->pdo->query("SELECT id, nome FROM classes")->fetchAll();
-        $congregacoes = $this->pdo->query("SELECT id, nome FROM congregacoes")->fetchAll();
-        $usuarios = $this->pdo->query("SELECT id, nome FROM usuarios")->fetchAll();
+        $sql_alunos = "SELECT id, nome FROM alunos";
+        $sql_classes = "SELECT id, nome FROM classes";
+        $sql_congregacoes = "SELECT id, nome FROM congregacoes";
+        $sql_usuarios = "SELECT id, nome FROM usuarios";
+
+        $stmt_alunos = $this->pdo->prepare($sql_alunos);
+        $stmt_classes = $this->pdo->prepare($sql_classes);
+        $stmt_congregacoes = $this->pdo->prepare($sql_congregacoes);
+        $stmt_usuarios = $this->pdo->prepare($sql_usuarios);
+
+        $stmt_alunos->execute();
+        $stmt_classes->execute();
+        $stmt_congregacoes->execute();
+        $stmt_usuarios->execute();
 
         return [
-            'alunos' => $alunos,
-            'classes' => $classes,
-            'congregacoes' => $congregacoes,
-            'usuarios' => $usuarios
+            'alunos' => $stmt_alunos->fetchAll(PDO::FETCH_ASSOC),
+            'classes' => $stmt_classes->fetchAll(PDO::FETCH_ASSOC),
+            'congregacoes' => $stmt_congregacoes->fetchAll(PDO::FETCH_ASSOC),
+            'usuarios' => $stmt_usuarios->fetchAll(PDO::FETCH_ASSOC),
         ];
     }
+    public function listarMatriculasPorTrimestre($trimestre_atual) {
+        $stmt = $this->pdo->prepare("SELECT * FROM matriculas WHERE trimestre = :trimestre_atual");
+        $stmt->bindParam(':trimestre_atual', $trimestre_atual);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    // Migrar as matrículas para o próximo trimestre
+    public function migrarMatriculaParaNovoTrimestre($matricula, $trimestre_novo) {
+        $sql = "UPDATE matriculas SET trimestre = :trimestre_novo WHERE id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':trimestre_novo' => $trimestre_novo, ':id' => $matricula['id']]);
+    }
+
+    public function buscarMatriculaPorId($id) {
+        try {
+            $sql = "SELECT m.id, m.aluno_id, m.classe_id, m.congregacao_id, m.usuario_id, 
+                           m.trimestre, m.status, m.data_matricula 
+                    FROM matriculas m
+                    WHERE m.id = :id";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([':id' => $id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            throw new Exception("Erro ao buscar matrícula.");
+        }
+    }
 }
+?>
+
+
 
 
 
