@@ -26,6 +26,9 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC); // Armazenar resultados em um arra
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     
+    <!-- Buttons CSS -->
+    <link href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css" rel="stylesheet">
+    
     <!-- Estilos Personalizados -->
     <style>
         body {
@@ -128,49 +131,87 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC); // Armazenar resultados em um arra
                 <?php } ?>
             </tbody>
         </table>
-        
-        <!-- Cards para Dispositivos Móveis -->
-        <div class="card-container d-block d-md-none">
-            <?php foreach ($results as $row) { ?>
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title"><?php echo htmlspecialchars($row['aluno_nome']); ?></h5>
-                        <p class="card-text"><strong>Presenças:</strong> <?php echo $row['total_presencas']; ?></p>
-                        <p class="card-text"><strong>Faltas:</strong> <?php echo $row['total_faltas']; ?></p>
-                        <p class="card-text"><strong>Classe:</strong> <?php echo htmlspecialchars($row['classe_nome']); ?></p>
-                        <p class="card-text"><strong>Congregação:</strong> <?php echo htmlspecialchars($row['congregacao_nome']); ?></p>
-                        <p class="card-text"><strong>Trimestre:</strong> <?php echo htmlspecialchars($row['trimestres']); ?></p>
-                        <p class="card-text"><strong>Matrícula:</strong> <?php echo date('d/m/Y', strtotime($row['matriculas'])); ?></p>
-                    </div>
-                </div>
-            <?php } ?>
-        </div>
     </div>
+
+    <!-- jQuery - Sempre deve ser carregado antes dos scripts do DataTables -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <!-- Bootstrap 5 JS e Dependências -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
     
     <!-- DataTables JS -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     
+    <!-- Buttons JS -->
+    <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
+
     <!-- Inicialização do DataTables -->
     <script>
-        $(document).ready(function() {
-            $('#presencaTable').DataTable({
-                language: {
-                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
-                },
-                responsive: true,
-                order: [[0, 'asc']],
-                paging: true,
-                searching: true,
-                autoWidth: false
-            });
+    $(document).ready(function() {
+        $('#presencaTable').DataTable({
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
+            },
+            responsive: true,
+            order: [[0, 'asc']],
+            paging: true,
+            searching: true,
+            autoWidth: false,
+            dom: 'Bfrtip', // Incluir a barra de botões
+            buttons: [
+                {
+                    extend: 'pdfHtml5',  // Utiliza o botão de exportação em PDF
+                    text: 'Exportar PDF', // Texto simples para o botão
+                    title: 'Lista de Presenças - Alunos',
+                    orientation: 'landscape', // Orientação do PDF
+                    pageSize: 'A4', // Tamanho da página
+                    exportOptions: {
+                        columns: ':visible' // Exporta todas as colunas visíveis
+                    },
+                    customize: function (doc) {
+                        // Verifica se o objeto doc.content existe
+                        if (doc.content && doc.content.length > 1) {
+                            // Personalizar o estilo do PDF
+                            doc.styles = doc.styles || {};
+                            doc.styles.tableHeader = {
+                                fillColor: '#0d6efd', // Cor do cabeçalho da tabela
+                                color: '#ffffff', // Cor do texto no cabeçalho
+                                bold: true
+                            };
+                            doc.styles.tableBodyEven = {
+                                fillColor: '#f8f9fa' // Cor de fundo das linhas pares
+                            };
+                            doc.styles.tableBodyOdd = {
+                                fillColor: '#ffffff' // Cor de fundo das linhas ímpares
+                            };
+
+                            // Aplicar estilos às células da tabela
+                            for (let i = 1; i < doc.content[1].table.body.length; i++) {
+                                if (i % 2 === 0) {
+                                    doc.content[1].table.body[i].forEach(function(cell) {
+                                        cell.fillColor = '#f8f9fa'; // Linhas pares
+                                    });
+                                } else {
+                                    doc.content[1].table.body[i].forEach(function(cell) {
+                                        cell.fillColor = '#ffffff'; // Linhas ímpares
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
         });
-    </script>
+    });
+</script>
 </body>
 </html>
 
@@ -178,17 +219,3 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC); // Armazenar resultados em um arra
 // Fechar a conexão com o banco
 $pdo = null;
 ?>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
