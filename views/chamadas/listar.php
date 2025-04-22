@@ -61,10 +61,6 @@ require_once '../../views/includes/header.php';
                 <td>
                   <a href="visualizar_chamada.php?id=${chamada.id}" class="btn btn-sm btn-info me-1"><i class="fas fa-eye"></i></a>
                   <a href="editar_chamada.php?id=${chamada.id}" class="btn btn-sm btn-warning me-1"><i class="fas fa-edit"></i></a>
-                 <button onclick="deletarChamada(${chamada.id})" class="btn btn-sm btn-danger">
-                      <i class="fas fa-trash-alt"></i>
-                  </button>
-
                 </td>
               </tr>`;
           });
