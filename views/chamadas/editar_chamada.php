@@ -1,135 +1,144 @@
 <?php
-require_once '../../views/includes/header.php';
+require_once '../../config/conexao.php';
+
+$id = $_GET['id'] ?? 0;
+
 ?>
-
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0">Chamadas</h4>
-    <a class="btn btn-primary" href="./index.php">
-      <i class="fas fa-plus"></i> Nova Chamada
-    </a>
-  </div>
-
-  <div id="tabelaChamadas" class="table-responsive">
-    <!-- A tabela será preenchida via AJAX -->
-  </div>
-</div>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    listarChamadas();
-  });
-
-  function listarChamadas() {
-    fetch('chamadas_helper.php?acao=listar')
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'success') {
-          let tabela = `
-            <table id="tabelaChamadasDataTable" class="table table-striped">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Data</th>
-                  <th>Classe</th>
-                  <th>Oferta</th>
-                  <th>Bíblias</th>
-                  <th>Revistas</th>
-                  <th>Visitantes</th>
-                  <th>Trimestre</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>`;
-
-          data.chamadas.forEach(chamada => {
-            const dataObj = new Date(chamada.data);
-            
-            // Corrigir a data para o fuso horário correto
-            const dataFormatada = corrigirData(dataObj);
-
-            tabela += `
-              <tr>
-                <td>${chamada.id}</td>
-                <td>${dataFormatada}</td>
-                <td>${chamada.classe_nome}</td>
-                <td>${chamada.oferta_classe}</td>
-                <td>${chamada.total_biblias}</td>
-                <td>${chamada.total_revistas}</td>
-                <td>${chamada.total_visitantes}</td>
-                <td>${chamada.trimestre}</td>
-                <td>
-                  <a href="visualizar_chamada.php?id=${chamada.id}" class="btn btn-sm btn-info me-1"><i class="fas fa-eye"></i></a>
-                  <a href="editar_chamada.php?id=${chamada.id}" class="btn btn-sm btn-warning me-1"><i class="fas fa-edit"></i></a>
-                  <button onclick="deletarChamada(${chamada.id})" class="btn btn-sm btn-danger"><i class="fas fa-trash-alt"></i></button>
-                </td>
-              </tr>`;
-          });
-
-          tabela += '</tbody></table>';
-          document.getElementById('tabelaChamadas').innerHTML = tabela;
-
-          $('#tabelaChamadasDataTable').DataTable({
-            language: {
-              sProcessing: "Processando...",
-              sLengthMenu: "Mostrar _MENU_ registros",
-              sZeroRecords: "Nenhuma chamada encontrada",
-              sInfo: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
-              sInfoEmpty: "Mostrando 0 até 0 de 0 registros",
-              sInfoFiltered: "(filtrado de _MAX_ registros no total)",
-              sSearch: "Pesquisar:",
-              oPaginate: {
-                sFirst: "Primeiro",
-                sPrevious: "Anterior",
-                sNext: "Próximo",
-                sLast: "Último"
-              }
-            }
-          });
-
-        } else {
-          document.getElementById('tabelaChamadas').innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Chamada</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
         }
-      })
-      .catch(() => {
-        document.getElementById('tabelaChamadas').innerHTML = '<div class="alert alert-danger">Erro ao carregar as chamadas.</div>';
-      });
-  }
+    </style>
+</head>
+<body>
 
-  function corrigirData(dataObj) {
-    // Subtrair 1 dia para corrigir o fuso horário (no caso de UTC para horário local)
-    dataObj.setDate(dataObj.getDate() + 1);
-    return dataObj.toLocaleDateString('pt-BR'); // Formato 'dd/mm/yyyy'
-  }
+<div class="container">
+<?php
+if ((int)$id > 0) {
+    try {
+        $sql = "SELECT c.id, c.data, c.classe_id, c.oferta_classe, c.total_biblias, c.total_revistas, c.total_visitantes, c.trimestre
+                FROM chamadas c
+                WHERE c.id = :id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $chamada = $stmt->fetch(PDO::FETCH_ASSOC);
 
-  function deletarChamada(id) {
-    Swal.fire({
-      title: 'Excluir chamada?',
-      text: "Essa ação não poderá ser desfeita!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Sim, excluir',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        fetch(`chamadas_helper.php?acao=deletar&id=${id}`, { method: 'POST' })
-          .then(response => response.json())
-          .then(data => {
-            if (data.status === 'success') {
-              Swal.fire('Excluída!', data.message, 'success');
-              listarChamadas();
-            } else {
-              Swal.fire('Erro!', data.message, 'error');
-            }
-          })
-          .catch(() => Swal.fire('Erro!', 'Erro ao tentar excluir a chamada.', 'error'));
-      }
-    });
-  }
-</script>
+        if ($chamada) {
+?>
+    <h1 class="mb-4"><i class="fas fa-edit"></i> Editar Chamada</h1>
+
+    <a href="listar.php" class="btn btn-secondary mb-3">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+
+    <form id="formEditarChamada" class="row g-3">
+        <input type="hidden" id="id" value="<?php echo $chamada['id']; ?>">
+
+        <div class="col-md-6">
+            <label for="data" class="form-label">Data:</label>
+            <input type="text" class="form-control" id="data" value="<?php echo date('d/m/Y', strtotime($chamada['data'])); ?>" required>
+
+        </div>
+
+        <div class="col-md-6">
+            <label for="classe_id" class="form-label">Classe:</label>
+            <input type="number" class="form-control" id="classe_id" value="<?php echo $chamada['classe_id']; ?>" required>
+        </div>
+
+        <div class="col-md-6">
+            <label for="oferta_classe" class="form-label">Oferta da Classe:</label>
+            <input type="text" class="form-control" id="oferta_classe" value="<?php echo $chamada['oferta_classe']; ?>" required>
+        </div>
+
+        <div class="col-md-6">
+            <label for="total_biblias" class="form-label">Total de Bíblias:</label>
+            <input type="number" class="form-control" id="total_biblias" value="<?php echo $chamada['total_biblias']; ?>" required>
+        </div>
+
+        <div class="col-md-6">
+            <label for="total_revistas" class="form-label">Total de Revistas:</label>
+            <input type="number" class="form-control" id="total_revistas" value="<?php echo $chamada['total_revistas']; ?>" required>
+        </div>
+
+        <div class="col-md-6">
+            <label for="total_visitantes" class="form-label">Total de Visitantes:</label>
+            <input type="number" class="form-control" id="total_visitantes" value="<?php echo $chamada['total_visitantes']; ?>" required>
+        </div>
+
+        <div class="col-md-6">
+            <label for="trimestre" class="form-label">Trimestre:</label>
+            <input type="text" class="form-control" id="trimestre" value="<?php echo $chamada['trimestre']; ?>" required>
+        </div>
+
+        <div class="col-12 mt-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Atualizar
+            </button>
+        </div>
+    </form>
 
 <?php
-require_once '../../views/includes/footer.php';
+        } else {
+            echo "<div class='alert alert-warning'>Chamada não encontrada.</div>";
+        }
+    } catch (PDOException $e) {
+        echo "<div class='alert alert-danger'>Erro ao buscar chamada: " . $e->getMessage() . "</div>";
+    }
+} else {
+    echo "<div class='alert alert-danger'>ID inválido.</div>";
+}
 ?>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+<script>
+    flatpickr("#data", {
+        locale: "pt",
+        dateFormat: "d/m/Y",
+    });
+
+
+    document.getElementById('formEditarChamada').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = {
+            id: document.getElementById('id').value,
+            data: document.getElementById('data').value,
+            classe_id: document.getElementById('classe_id').value,
+            oferta_classe: document.getElementById('oferta_classe').value,
+            total_biblias: document.getElementById('total_biblias').value,
+            total_revistas: document.getElementById('total_revistas').value,
+            total_visitantes: document.getElementById('total_visitantes').value,
+            trimestre: document.getElementById('trimestre').value
+        };
+
+        fetch('./chamadas_helper.php?acao=atualizar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+        })
+        .catch(error => {
+            alert('Erro ao atualizar: ' + error.message);
+        });
+    });
+</script>
+</body>
+</html>
+
+

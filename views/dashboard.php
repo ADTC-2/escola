@@ -190,7 +190,7 @@ $estatisticas = obterEstatisticasChamadasMensais($pdo);
           <h5>Chamadas</h5>
           <p>Registre a frequência das turmas e mantenha o histórico.</p>
           <a href="../views/chamadas/index.php" class="btn btn-primary mt-2">Nova Chamada</a>
-          <a href="../views/chamadas/editar_chamada.php" class="btn btn-warning mt-2">Editar Chamada</a>
+          <a href="../views/chamadas/listar.php" class="btn btn-warning mt-2">Editar Chamada</a>
         </div>
       </div>
 
