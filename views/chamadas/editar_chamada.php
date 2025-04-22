@@ -5,7 +5,7 @@ require_once '../../views/includes/header.php';
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0">Chamadas</h4>
-    <a class="btn btn-primary" href="criar_chamada.php">
+    <a class="btn btn-primary" href="./index.php">
       <i class="fas fa-plus"></i> Nova Chamada
     </a>
   </div>
