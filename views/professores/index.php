@@ -1,13 +1,12 @@
 <?php require_once '../includes/header.php'; ?>
 
-<div class="container mt-5">
-    <h2>Gerenciamento de Professores</h2>
-    <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
+<div class="container mt-2">    
+    <button class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
         <i class="fas fa-plus-circle"></i> <span><strong>Cadastrar</strong></span>
     </button><br><br>
 
-    <table class="table table-striped" id="tabelaProfessores">
-        <thead>
+    <table class="table table-bordered table-hover" id="tabelaProfessores">
+        <thead class="table-primary">
             <tr>
                 <th>ID</th>
                 <th>Nome</th>
@@ -25,7 +24,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form id="formCadastrarProfessor">
-                <div class="modal-header">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="modalCadastrarLabel">Cadastrar Professor</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -51,7 +50,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form id="formEditarProfessor">
-                <div class="modal-header">
+                <div class="modal-header bg-info text-dark">
                     <h5 class="modal-title" id="modalEditarProfessorLabel">Editar Professor</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -72,7 +71,6 @@
         </div>
     </div>
 </div>
-
 
 <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
@@ -197,10 +195,5 @@
     });
 </script>
 
-
 </body>
 </html>
-
-
-
-

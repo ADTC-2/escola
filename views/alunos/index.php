@@ -1,16 +1,15 @@
 <?php require_once '../includes/header.php'; ?>
 
-<div class="container mt-5">
-    <h2>Cadastro de Alunos</h2>
-    <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastroEdicao">
-       <i class="fas fa-plus-circle"></i> <span><strong>Cadastrar</strong></span>
+<div class="container mt-2">    
+    <button class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastroEdicao">
+        <i class="fas fa-plus-circle"></i> <span><strong>Cadastrar Novo Aluno</strong></span>
     </button>
     <br><br>
 
-    <!-- Tabela DataTables e Cartões -->
+    <!-- Tabela DataTables -->
     <div id="tabelaContainer" class="table-responsive">
-        <table id="tabelaAlunos" class="display nowrap table table-striped d-none d-md-table" style="width:100%">
-            <thead>
+        <table id="tabelaAlunos" class="table table-bordered table-hover d-none d-md-table" style="width:100%">
+            <thead class="table-dark">
                 <tr>
                     <th>Nome</th>
                     <th>Data de Nascimento</th>
@@ -23,30 +22,41 @@
         </table>
     </div>
 
-    <!-- Container para Cartões (apenas para telas menores que md) -->
+    <!-- Cartões para telas pequenas -->
     <div id="cartoesContainer" class="row d-md-none"></div>
 
     <!-- Modal de Cadastro e Edição -->
     <div id="modalCadastroEdicao" class="modal fade" tabindex="-1" aria-labelledby="modalCadastroEdicaoLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="modalCadastroEdicaoLabel">Cadastrar/Editar Aluno</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formCadastroEdicao">
                         <input type="hidden" id="id" name="id">
-                        <label for="nome">Nome</label>
-                        <input type="text" id="nome" name="nome" class="form-control" required>
-                        
-                        <label for="telefone">Telefone</label>
-                        <input type="text" id="telefone" name="telefone" class="form-control" required>
-                        
-                        <label for="data_nascimento">Data de Nascimento</label>
-                        <input type="date" id="data_nascimento" name="data_nascimento" class="form-control" required>
-                        
-                        <label for="classe_id">Classe</label>
-                        <select id="classe_id" name="classe_id" class="form-control" required></select>
+                        <div class="mb-3">
+                            <label for="nome" class="form-label">Nome</label>
+                            <input type="text" id="nome" name="nome" class="form-control" placeholder="Nome completo" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="telefone" class="form-label">Telefone</label>
+                            <input type="text" id="telefone" name="telefone" class="form-control" placeholder="(XX) XXXXX-XXXX" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="data_nascimento" class="form-label">Data de Nascimento</label>
+                            <input type="date" id="data_nascimento" name="data_nascimento" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="classe_id" class="form-label">Classe</label>
+                            <select id="classe_id" name="classe_id" class="form-control" required>
+                                <!-- As opções serão carregadas dinamicamente -->
+                            </select>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -102,14 +112,14 @@ function renderizarCartoes(alunos) {
         const card = document.createElement("div");
         card.className = "col-12 col-md-4 mb-3";
         card.innerHTML = `
-            <div class="card">
+            <div class="card shadow-lg border-0 rounded">
                 <div class="card-body">
-                    <h5 class="card-title">${aluno.nome}</h5>
+                    <h5 class="card-title text-primary">${aluno.nome}</h5>
                     <p class="card-text"><strong>Data de Nascimento:</strong> ${aluno.data_nascimento}</p>
                     <p class="card-text"><strong>Telefone:</strong> ${aluno.telefone}</p>
                     <p class="card-text"><strong>Classe:</strong> ${aluno.classe}</p>
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalCadastroEdicao" data-id="${aluno.id}">Editar</button>
-                    <button class="btn btn-danger btn-sm btnExcluir" data-id="${aluno.id}">Excluir</button>
+                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalCadastroEdicao" data-id="${aluno.id}"><i class="fas fa-edit"></i> Editar</button>
+                    <button class="btn btn-danger btn-sm btnExcluir" data-id="${aluno.id}"><i class="fas fa-trash-alt"></i> Excluir</button>
                 </div>
             </div>
         `;
@@ -137,7 +147,7 @@ function carregarAlunos() {
     });
 }
 
-// Funções para DataTable e exibição
+// DataTable
 let tabela = $('#tabelaAlunos').DataTable({
     ajax: {
         url: '../../controllers/aluno.php?acao=listar',
@@ -295,7 +305,7 @@ function exibirMensagem(tipo, mensagem) {
 $(document).ready(function() {
     carregarAlunos();
 });
-
 </script>
 </body>
 </html>
+<?php require_once '../includes/footer.php'; ?>

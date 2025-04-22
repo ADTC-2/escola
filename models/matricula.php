@@ -68,38 +68,35 @@ class Matricula {
     }
     
     // Atualizar uma matrícula existente
-    public function atualizarMatricula($id, $data) {
-        try {
-            $aluno_id = $data['aluno_id'];
-            $classe_id = $data['classe_id'];
-            $congregacao_id = $data['congregacao_id'];
-            $professor_id = $data['professor_id'];
-            $status = $data['status'];
-            $trimestre = $data['trimestre'];
-
-            if ($id) {
-                $sql = "UPDATE matriculas SET aluno_id = :aluno_id, classe_id = :classe_id, congregacao_id = :congregacao_id, 
-                        usuario_id = :professor_id, status = :status, trimestre = :trimestre 
-                        WHERE id = :id";
-                $stmt = $this->pdo->prepare($sql);
-                $stmt->execute([
-                    ':id' => $id,
-                    ':aluno_id' => $aluno_id,
-                    ':classe_id' => $classe_id,
-                    ':congregacao_id' => $congregacao_id,
-                    ':usuario_id' => $professor_id,
-                    ':status' => $status,
-                    ':trimestre' => $trimestre
-                ]);
-                return true;
-            } else {
-                throw new Exception("ID inválido.");
-            }
-        } catch (Exception $e) {
-            error_log("Erro ao atualizar matrícula: " . $e->getMessage());
-            return false;
-        }
+// No método atualizarMatricula do Model
+public function atualizarMatricula($id, $data) {
+    try {
+        $sql = "UPDATE matriculas SET 
+                aluno_id = :aluno_id, 
+                classe_id = :classe_id, 
+                congregacao_id = :congregacao_id, 
+                usuario_id = :usuario_id, 
+                trimestre = :trimestre, 
+                status = :status 
+                WHERE id = :id";
+                
+        $stmt = $this->pdo->prepare($sql);
+        $resultado = $stmt->execute([
+            ':id' => $id,
+            ':aluno_id' => $data['aluno_id'],
+            ':classe_id' => $data['classe_id'],
+            ':congregacao_id' => $data['congregacao_id'],
+            ':usuario_id' => $data['professor_id'],
+            ':trimestre' => $data['trimestre'],
+            ':status' => $data['status']
+        ]);
+        
+        return $resultado;
+    } catch (Exception $e) {
+        error_log("Erro ao atualizar matrícula (Model): " . $e->getMessage());
+        throw new Exception("Erro ao atualizar matrícula.");
     }
+}
 
     // Excluir uma matrícula
     public function excluirMatricula($id) {
@@ -178,6 +175,85 @@ class Matricula {
             throw new Exception("Erro ao buscar matrícula.");
         }
     }
+
+    public function migrarMatriculasParaNovoTrimestre($trimestre_atual, $trimestre_novo, $congregacao_id, $manter_status = true) {
+        try {
+            // Busca todas as matrículas do trimestre atual e congregação
+            $sql = "SELECT * FROM matriculas 
+                    WHERE trimestre = :trimestre_atual 
+                    AND congregacao_id = :congregacao_id";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([
+                ':trimestre_atual' => $trimestre_atual,
+                ':congregacao_id' => $congregacao_id
+            ]);
+            
+            $matriculas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (empty($matriculas)) {
+                throw new Exception("Nenhuma matrícula encontrada para o trimestre e congregação selecionados.");
+            }
+            
+            // Inicia transação
+            $this->pdo->beginTransaction();
+            
+            foreach ($matriculas as $matricula) {
+                $novo_status = $manter_status ? $matricula['status'] : 'ativo';
+                
+                // Verifica se já existe matrícula para o mesmo aluno, classe e trimestre
+                if (!$this->verificarMatriculaExistenteParaTrimestre(
+                    $matricula['aluno_id'],
+                    $matricula['classe_id'],
+                    $matricula['congregacao_id'],
+                    $trimestre_novo
+                )) {
+                    $sql_insert = "INSERT INTO matriculas 
+                                  (aluno_id, classe_id, congregacao_id, usuario_id, data_matricula, status, trimestre)
+                                  VALUES (:aluno_id, :classe_id, :congregacao_id, :usuario_id, :data_matricula, :status, :trimestre)";
+                    
+                    $stmt_insert = $this->pdo->prepare($sql_insert);
+                    $stmt_insert->execute([
+                        ':aluno_id' => $matricula['aluno_id'],
+                        ':classe_id' => $matricula['classe_id'],
+                        ':congregacao_id' => $matricula['congregacao_id'],
+                        ':usuario_id' => $matricula['usuario_id'],
+                        ':data_matricula' => date('Y-m-d'),
+                        ':status' => $novo_status,
+                        ':trimestre' => $trimestre_novo
+                    ]);
+                }
+            }
+            
+            $this->pdo->commit();
+            return ['sucesso' => true, 'mensagem' => 'Matrículas migradas com sucesso para o novo trimestre.'];
+            
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            error_log("Erro ao migrar matrículas (Model): " . $e->getMessage());
+            return ['sucesso' => false, 'mensagem' => $e->getMessage()];
+        }
+    }
+    
+    private function verificarMatriculaExistenteParaTrimestre($aluno_id, $classe_id, $congregacao_id, $trimestre) {
+        $sql = "SELECT COUNT(*) as total FROM matriculas 
+                WHERE aluno_id = :aluno_id 
+                AND classe_id = :classe_id
+                AND congregacao_id = :congregacao_id
+                AND trimestre = :trimestre";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ':aluno_id' => $aluno_id,
+            ':classe_id' => $classe_id,
+            ':congregacao_id' => $congregacao_id,
+            ':trimestre' => $trimestre
+        ]);
+        
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $resultado['total'] > 0;
+    }
+
 }
 ?>
 

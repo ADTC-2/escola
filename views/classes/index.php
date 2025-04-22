@@ -1,31 +1,37 @@
 <?php require_once '../includes/header.php'; ?>
 
-<div class="container mt-5">
-    <h2>Gerenciamento de Classes</h2>
-    <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
-    <i class="fas fa-plus-circle"></i> <span><strong>Cadastrar</strong></span>
+<div class="container mt-2">    
+    <button class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
+        <i class="fas fa-plus-circle"></i> <span><strong>Cadastrar Classe</strong></span>
     </button><br><br>
 
-    <table class="table table-striped" id="tabelaClasses">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nome</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody id="listaClasses">
-            <!-- Classes serão carregadas aqui -->
-        </tbody>
-    </table>
+    <!-- Tabela DataTables -->
+    <div id="tabelaContainer" class="table-responsive">
+        <table class="table table-bordered table-hover" id="tabelaClasses">
+            <thead class="table-primary">
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="listaClasses">
+                <!-- Classes serão carregadas aqui -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Cartões para telas pequenas -->
+    <div id="cartoesContainer" class="row d-md-none"></div>
+
 </div>
 
 <!-- Modal Cadastrar -->
-<div class="modal" id="modalCadastrar" tabindex="-1">
-    <div class="modal-dialog">
+<div class="modal" id="modalCadastrar" tabindex="-1" aria-labelledby="modalCadastrarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Cadastrar Classe</h5>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalCadastrarLabel">Cadastrar Classe</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -43,11 +49,11 @@
 
 <!-- Modal Editar -->
 <div class="modal" id="modalEditarClasse" tabindex="-1" aria-labelledby="modalEditarClasseLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-info text-dark">
                 <h5 class="modal-title" id="modalEditarClasseLabel">Editar Classe</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="formEditarClasse">
@@ -63,7 +69,6 @@
     </div>
 </div>
 
-
 <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
@@ -78,13 +83,13 @@ $(document).ready(function() {
             data: { acao: 'listar' },
             dataType: "json",
             beforeSend: function() {
-                // Exibe um loading ou uma animação enquanto os dados estão sendo carregados
-                $('#loading').show(); // Supondo que você tenha um elemento com id "loading"
+                $('#loading').show(); // Exibe um loading ou uma animação enquanto os dados estão sendo carregados
             },
             success: function(response) {
                 $('#loading').hide();
                 if (response.sucesso) {
                     table.clear().rows.add(response.data).draw();
+                    renderizarCartoes(response.data); // Exibe cartões para dispositivos móveis
                 } else {
                     alert(response.mensagem);
                 }
@@ -111,6 +116,31 @@ $(document).ready(function() {
             }
         ]
     });
+
+    // Renderiza os alunos como cartões em dispositivos móveis
+    function renderizarCartoes(classes) {
+        const container = document.getElementById("cartoesContainer");
+        container.innerHTML = "";
+        classes.forEach(classe => {
+            const card = document.createElement("div");
+            card.className = "col-12 col-md-4 mb-3";
+            card.innerHTML = `
+                <div class="card shadow-lg border-0 rounded">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">${classe.nome}</h5>
+                        <p class="card-text"><strong>ID:</strong> ${classe.id}</p>
+                        <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditarClasse" data-id="${classe.id}">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm btnExcluir" data-id="${classe.id}">
+                            <i class="fas fa-trash-alt"></i> Excluir
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
 
     // Salvar nova classe
     $(document).on('submit', '#formCadastrarClasse', function(e) {
@@ -179,6 +209,6 @@ $(document).ready(function() {
 });
 </script>
 
-
 </body>
 </html>
+<?php require_once '../includes/footer.php'; ?>

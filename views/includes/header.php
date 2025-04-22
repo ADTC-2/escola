@@ -20,13 +20,20 @@
     <link rel="stylesheet" href="../../assets/css/dashboard.css">
     <link rel="stylesheet" href="../../assets/css/aluno.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-
+    <style>
+  body {
+            padding-top: 80px; /* Ajuste esse valor conforme a altura da sua navbar */
+        }
+</style>
 </head>
 
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="#">E.B.D - Painel</a>
+           <a class="navbar-brand d-flex align-items-center" href="#">
+                <img src="../../assets/images/biblia.png" alt="Logo EBD" style="height: 40px; margin-right: 10px;">
+                <span>Escola Bíblica</span>
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>

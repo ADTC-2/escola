@@ -69,29 +69,36 @@ public function buscarMatricula($id) {
         echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao buscar matrícula.']);
     }
 }
-    // Atualizar uma matrícula existente
-    public function atualizarMatricula($id, $data) {
-        if (empty($data['aluno_id']) || empty($data['classe_id']) || empty($data['congregacao_id']) || empty($data['status']) || empty($data['professor_id'])) {
-            echo json_encode(['sucesso' => false, 'mensagem' => 'Todos os campos obrigatórios devem ser preenchidos.']);
-            exit();
-        }
-
-        // Verificar se a data da matrícula é válida
-        if (strtotime($data['data_matricula']) === false) {
-            echo json_encode(['sucesso' => false, 'mensagem' => 'Data de matrícula inválida.']);
-            exit();
-        }
-
-        try {
-            $this->model->atualizarMatricula($id, $data);
-            echo json_encode(['sucesso' => true, 'mensagem' => 'Matrícula atualizada com sucesso.']);
-            exit();
-        } catch (Exception $e) {
-            error_log("Erro ao atualizar matrícula (Controller): " . $e->getMessage());
-            echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao atualizar matrícula.']);
-            exit();
-        }
+// No método atualizarMatricula do Controller
+public function atualizarMatricula($id, $data) {
+    if (empty($data['aluno_id']) || empty($data['classe_id']) || 
+       empty($data['congregacao_id']) || empty($data['professor_id']) || 
+       empty($data['trimestre']) || empty($data['status'])) {
+        echo json_encode(['sucesso' => false, 'mensagem' => 'Todos os campos obrigatórios devem ser preenchidos.']);
+        return;
     }
+
+    try {
+        // Verificar se a matrícula existe
+        $matriculaExistente = $this->model->buscarMatriculaPorId($id);
+        if (!$matriculaExistente) {
+            echo json_encode(['sucesso' => false, 'mensagem' => 'Matrícula não encontrada.']);
+            return;
+        }
+
+        // Atualizar a matrícula
+        $resultado = $this->model->atualizarMatricula($id, $data);
+        
+        if ($resultado) {
+            echo json_encode(['sucesso' => true, 'mensagem' => 'Matrícula atualizada com sucesso.']);
+        } else {
+            echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao atualizar matrícula.']);
+        }
+    } catch (Exception $e) {
+        error_log("Erro ao atualizar matrícula (Controller): " . $e->getMessage());
+        echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao atualizar matrícula: ' . $e->getMessage()]);
+    }
+}
 
     // Excluir uma matrícula
     public function excluirMatricula($id) {
@@ -125,23 +132,29 @@ public function buscarMatricula($id) {
     }
 
     // Método para migrar matrículas para o próximo trimestre
-    public function migrarMatriculas($trimestre_atual, $trimestre_novo) {
+    public function migrarMatriculas($trimestre_atual, $trimestre_novo, $congregacao_id, $manter_status = true) {
         try {
-            $matriculas = $this->model->listarMatriculasPorTrimestre($trimestre_atual);
-
-            if (empty($matriculas)) {
-                echo json_encode(['sucesso' => false, 'mensagem' => 'Não há matrículas para migrar no trimestre informado.']);
-                return;
+            // Validação dos trimestres
+            if (empty($trimestre_atual) || empty($trimestre_novo)) {
+                throw new Exception("Trimestres atual e novo são obrigatórios.");
             }
-
-            foreach ($matriculas as $matricula) {
-                $this->model->migrarMatriculaParaNovoTrimestre($matricula, $trimestre_novo);
+            
+            if ($trimestre_atual === $trimestre_novo) {
+                throw new Exception("O novo trimestre deve ser diferente do trimestre atual.");
             }
-
-            echo json_encode(['sucesso' => true, 'mensagem' => 'Matrículas migradas com sucesso para o novo trimestre.']);
+            
+            // Chama o model para migrar as matrículas
+            $resultado = $this->model->migrarMatriculasParaNovoTrimestre(
+                $trimestre_atual, 
+                $trimestre_novo, 
+                $congregacao_id, 
+                $manter_status
+            );
+            
+            echo json_encode($resultado);
         } catch (Exception $e) {
-            error_log("Erro ao migrar matrículas (Controller): " . $e->getMessage());
-            echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao migrar matrículas.']);
+            error_log("Erro no migrarMatriculas (Controller): " . $e->getMessage());
+            echo json_encode(['sucesso' => false, 'mensagem' => $e->getMessage()]);
         }
     }
 }
@@ -174,15 +187,27 @@ if (isset($_GET['acao'])) {
         case 'carregarSelects':
             $controller->carregarSelects();
             break;
-        case 'migrarMatriculas':
-            $trimestre_atual = $_GET['trimestre_atual'];  // Trimestre atual
-            $trimestre_novo = $_GET['trimestre_novo'];    // Novo trimestre
-            $controller->migrarMatriculas($trimestre_atual, $trimestre_novo);
-            break;
         case 'buscarMatricula':
                 $id = $_GET['id'];
                 $controller->buscarMatricula($id);
-                break;    
+                break; 
+                case 'migrarMatriculas':
+                    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                        $data = json_decode(file_get_contents("php://input"), true);
+                        
+                        if (!isset($data['trimestre_atual']) || !isset($data['novo_trimestre']) || !isset($data['congregacao_id'])) {
+                            echo json_encode(['sucesso' => false, 'mensagem' => 'Dados incompletos para migração.']);
+                            break;
+                        }
+                        
+                        $controller->migrarMatriculas(
+                            $data['trimestre_atual'],
+                            $data['novo_trimestre'],
+                            $data['congregacao_id'],
+                            $data['manter_status'] ?? true
+                        );
+                    }
+                    break;           
         default:
             echo json_encode(['sucesso' => false, 'mensagem' => 'Ação inválida.']);
             break;

@@ -1,112 +1,181 @@
-CREATE DATABASE escola;
-USE escola;
 
--- Tabela de congregações
-CREATE TABLE congregacoes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+CREATE TABLE `alunos` (
+  `id` int(11) NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `data_nascimento` date NOT NULL,
+  `telefone` varchar(15) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `classe_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+--
+CREATE TABLE `aniversariantes_mes` (
+`id` int(11)
+,`nome` varchar(100)
+,`data_nascimento` date
+,`telefone` varchar(15)
+,`classe_id` int(11)
 );
 
--- Tabela de alunos
-CREATE TABLE alunos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
-    data_nascimento DATE NOT NULL,
-    telefone VARCHAR(15),
-    classe_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    FOREIGN KEY (classe_id) REFERENCES classes(id) ON DELETE CASCADE,
-);
+-- --------------------------------------------------------
 
--- Tabela de usuários
-CREATE TABLE usuarios (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    senha VARCHAR(255) NOT NULL,
-    perfil ENUM('admin', 'user', 'professor') NOT NULL,
-    congregacao_id INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (congregacao_id) REFERENCES congregacoes(id) ON DELETE SET NULL
-);
+--
+-- Estrutura para tabela `chamadas`
+--
+
+CREATE TABLE `chamadas` (
+  `id` int(11) NOT NULL,
+  `data` date NOT NULL,
+  `classe_id` int(11) NOT NULL,
+  `professor_id` int(11) NOT NULL,
+  `criado_em` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `oferta_classe` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `total_biblias` int(10) NOT NULL,
+  `total_revistas` int(10) NOT NULL,
+  `total_visitantes` int(10) NOT NULL,
+  `trimestre` tinyint(4) NOT NULL DEFAULT '1' COMMENT '1=1º Trimestre, 2=2º Trimestre, 3=3º Trimestre, 4=4º Trimestre'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
--- Tabela de classes (turmas) - sem congregação diretamente associada
-CREATE TABLE classes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Tabela de matrículas (vincula alunos às classes e congregações, com o usuário responsável pela matrícula)
-CREATE TABLE matriculas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    aluno_id INT NOT NULL,
-    classe_id INT NOT NULL,
-    congregacao_id INT NOT NULL, -- Congregação agora vinculada à matrícula
-    usuario_id INT,  -- Novo campo para registrar o usuário responsável
-    data_matricula DATE NOT NULL DEFAULT CURRENT_DATE,
-    status ENUM('ativo', 'concluido', 'cancelado') NOT NULL DEFAULT 'ativo',
-    trimestre INT NOT NULL CHECK (trimestre BETWEEN 1 AND 4), -- Campo trimestre
-    UNIQUE (aluno_id, classe_id, status),
-    FOREIGN KEY (aluno_id) REFERENCES alunos(id) ON DELETE CASCADE,
-    FOREIGN KEY (classe_id) REFERENCES classes(id) ON DELETE CASCADE,
-    FOREIGN KEY (congregacao_id) REFERENCES congregacoes(id) ON DELETE CASCADE,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL,  -- Relacionamento com usuário
-    INDEX idx_aluno (aluno_id),
-    INDEX idx_classe (classe_id),
-    INDEX idx_congregacao (congregacao_id),
-    INDEX idx_usuario (usuario_id)  -- Índice para o relacionamento com usuário
-);
+CREATE TABLE `classes` (
+  `id` int(11) NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
--- Tabela de chamadas (registro de presença)
-CREATE TABLE chamadas (
-    id INT AUTO_INCREMENT PRIMARY KEY,              -- Identificador único da chamada
-    data DATE NOT NULL,                             -- Data da chamada
-    classe_id INT NOT NULL,                         -- Identificador da classe
-    professor_id INT NOT NULL,                      -- Identificador do professor
-    total_biblias INT DEFAULT 0,                    -- Total de Bíblias levadas pelos alunos
-    total_revistas INT DEFAULT 0,                   -- Total de revistas levadas pelos alunos
-    oferta_classe VARCHAR(100),                     -- Oferta da classe (ex: nome do curso)
-    total_visitantes INT DEFAULT 0,                 -- Total de visitantes presentes
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Data e hora de criação do registro
-    FOREIGN KEY (classe_id) REFERENCES classes(id) ON DELETE CASCADE,  -- Relacionamento com a tabela de classes
-    FOREIGN KEY (professor_id) REFERENCES professores(id) ON DELETE CASCADE  -- Relacionamento com a tabela de professores
-);
--- Tabela de presenças (registro de presença dos alunos)
-CREATE TABLE presencas (
-    id INT AUTO_INCREMENT PRIMARY KEY,             -- Identificador único da presença
-    chamada_id INT NOT NULL,                        -- Identificador da chamada
-    aluno_id INT NOT NULL,                          -- Identificador do aluno
-    presente ENUM('presente', 'ausente', 'justificado') NOT NULL,  -- Status da presença
-    FOREIGN KEY (chamada_id) REFERENCES chamadas(id) ON DELETE CASCADE,  -- Relacionamento com a tabela de chamadas
-    FOREIGN KEY (aluno_id) REFERENCES alunos(id) ON DELETE CASCADE  -- Relacionamento com a tabela de alunos
+
+CREATE TABLE `congregacoes` (
+  `id` int(11) NOT NULL,
+  `nome` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Despejando dados para a tabela `congregacoes`
+--
+
+INSERT INTO `congregacoes` (`id`, `nome`, `created_at`) VALUES
+(7, 'SEDE', '2025-02-20 15:52:53');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `logs`
+--
+
+CREATE TABLE `logs` (
+  `id` int(11) NOT NULL,
+  `usuario_id` int(11) NOT NULL,
+  `acao` varchar(255) NOT NULL,
+  `tabela_afetada` varchar(100) NOT NULL,
+  `registro_id` int(11) NOT NULL,
+  `data` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+
+CREATE TABLE `matriculas` (
+  `id` int(11) NOT NULL,
+  `aluno_id` int(11) NOT NULL,
+  `classe_id` int(11) NOT NULL,
+  `congregacao_id` int(11) NOT NULL,
+  `usuario_id` int(11) DEFAULT NULL,
+  `data_matricula` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `status` enum('ativo','concluido','cancelado') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'ativo',
+  `trimestre` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+
+CREATE TABLE `permissoes` (
+  `id` int(11) NOT NULL,
+  `nome` varchar(50) NOT NULL COMMENT 'Ex: gerenciar_alunos'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+
+CREATE TABLE `presencas` (
+  `id` int(11) NOT NULL,
+  `chamada_id` int(11) NOT NULL,
+  `aluno_id` int(11) NOT NULL,
+  `presente` enum('presente','ausente','justificado') NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+
+
+CREATE TABLE `professores` (
+  `id` int(11) NOT NULL,
+  `usuario_id` int(11) NOT NULL,
+  `congregacao_id` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+CREATE TABLE `professores_classes` (
+  `id` int(11) NOT NULL,
+  `professor_id` int(11) NOT NULL,
+  `classe_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `relatorio_consolidado` (
+`congregacao_id` int(11)
+,`congregacao_nome` varchar(255)
+,`classe_id` int(11)
+,`classe_nome` varchar(100)
+,`trimestre` int(11)
+,`data_inicio` date
+,`data_fim` date
+,`total_alunos_matriculados` bigint(21)
+,`total_presentes` bigint(21)
+,`total_ausentes` bigint(21)
+,`total_justificados` bigint(21)
+,`total_biblias` decimal(32,0)
+,`total_revistas` decimal(32,0)
+,`total_visitantes` decimal(32,0)
+,`total_ofertas_distintas` bigint(21)
+,`ofertas` text
 );
 
--- Tabela de permissões
-CREATE TABLE permissoes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(50) NOT NULL UNIQUE COMMENT 'Ex: gerenciar_alunos'
+CREATE TABLE `relatorio_trimestre_congregacao` (
+`classe_nome` varchar(100)
+,`congregacao_nome` varchar(255)
+,`trimestre` int(11)
+,`total_biblias` decimal(32,0)
+,`total_revistas` decimal(32,0)
+,`total_visitantes` decimal(32,0)
+,`total_ofertas` decimal(32,2)
 );
 
--- Tabela de associação de usuários com permissões
-CREATE TABLE usuario_permissoes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    usuario_id INT NOT NULL,
-    permissao_id INT NOT NULL,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-    FOREIGN KEY (permissao_id) REFERENCES permissoes(id) ON DELETE CASCADE
+
+CREATE TABLE `resumo_presenca` (
+`aluno_id` int(11)
+,`aluno_nome` varchar(100)
+,`classe_id` int(11)
+,`classe_nome` varchar(100)
+,`congregacao_id` int(11)
+,`congregacao_nome` varchar(255)
+,`trimestre` int(11)
+,`total_presentes` bigint(21)
+,`total_ausentes` bigint(21)
 );
 
--- Tabela de logs (registro de atividades no sistema)
-CREATE TABLE logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    usuario_id INT NOT NULL,
-    acao VARCHAR(255) NOT NULL,
-    tabela_afetada VARCHAR(100) NOT NULL,
-    registro_id INT NOT NULL,
-    data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
-);
+
+CREATE TABLE `usuarios` (
+  `id` int(11) NOT NULL,
+  `nome` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `senha` varchar(255) NOT NULL,
+  `perfil` enum('admin','user','professor') NOT NULL,
+  `congregacao_id` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+CREATE TABLE `usuario_permissoes` (
+  `id` int(11) NOT NULL,
+  `usuario_id` int(11) NOT NULL,
+  `permissao_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

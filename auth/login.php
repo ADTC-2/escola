@@ -14,8 +14,8 @@ $alertClass = (stripos($mensagem, 'sucesso') !== false) ? 'alert-success' : 'ale
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Sistema E.B.D</title>
-
+    <title>Escola Bíblica</title>
+    <link rel="icon" href="../assets/images/biblia.png" type="image/x-icon">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     

@@ -105,59 +105,66 @@ private function sendErrorResponse($mensagem) {
 
 
 // Método para registrar a chamada
-public function registrarChamada($data, $classeId, $professorId, $alunos, $ofertaClasse, $total_biblias, $total_revistas, $total_visitantes) {
+public function registrarChamada($data, $trimestre, $classeId, $professorId, $alunos, $ofertaClasse = 0, $total_visitantes = 0, $total_biblias = 0, $total_revistas = 0) {
     try {
-        // Iniciar a transação
+        // Validações básicas
+        if (!DateTime::createFromFormat('Y-m-d', $data)) {
+            throw new Exception("Formato de data inválido. Use YYYY-MM-DD");
+        }
+
+
+        // Iniciar transação
         $this->pdo->beginTransaction();
 
         // Inserir a chamada
-        $sqlChamada = "INSERT INTO chamadas (data, classe_id, professor_id, oferta_classe,total_biblias,total_revistas,total_visitantes) 
-                       VALUES (:data, :classe_id, :professor_id, :oferta_classe, :total_biblias, :total_revistas, :total_visitantes)";
+        $sqlChamada = "INSERT INTO chamadas 
+                      (data, trimestre, classe_id, professor_id, oferta_classe, 
+                      total_biblias, total_revistas, total_visitantes) 
+                      VALUES (:data, :trimestre, :classe_id, :professor_id, 
+                      :oferta_classe, :total_biblias, :total_revistas, :total_visitantes)";
+        
         $stmt = $this->pdo->prepare($sqlChamada);
         $stmt->execute([
             ':data' => $data,
-            ':classe_id' => $classeId,
-            ':professor_id' => $professorId,
-            ':oferta_classe' => $ofertaClasse,
-            ':total_biblias' => $total_biblias,
-            ':total_revistas' => $total_revistas,
-            ':total_visitantes' => $total_visitantes
+            ':trimestre' => (int)$trimestre, // Garante que é inteiro
+            ':classe_id' => (int)$classeId,
+            ':professor_id' => (int)$professorId,
+            ':oferta_classe' => number_format((float)$ofertaClasse, 2, '.', ''), // Formata para decimal(10,2)
+            ':total_biblias' => (int)$total_biblias,
+            ':total_revistas' => (int)$total_revistas,
+            ':total_visitantes' => (int)$total_visitantes
         ]);
         
-        // Recuperar o ID da chamada inserida
         $chamadaId = $this->pdo->lastInsertId();
 
-        // Preparar o SQL para inserir a presença dos alunos
-        $sqlPresenca = "INSERT INTO presencas (chamada_id, aluno_id, presente) 
+        // Inserir presenças
+        $sqlPresenca = "INSERT INTO presencas 
+                        (chamada_id, aluno_id, presente) 
                         VALUES (:chamada_id, :aluno_id, :presente)";
         $stmtPresenca = $this->pdo->prepare($sqlPresenca);
 
-        // Inserir a presença para cada aluno
         foreach ($alunos as $aluno) {
-            // Verificar se o aluno está presente ou ausente
-            $presente = $aluno['presente'] ? 'presente' : 'ausente';
-            
-            // Caso o aluno tenha faltado e esteja justificado, marcar como 'justificado'
-            if (isset($aluno['justificado']) && $aluno['justificado']) {
-                $presente = 'justificado';
+            if (!isset($aluno['id']) || !isset($aluno['status'])) {
+                throw new Exception("Dados do aluno incompletos");
             }
-
-            // Inserir a presença no banco de dados
+            
+            $presente = ($aluno['status'] === 'presente') ? 1 : 0;
+            
             $stmtPresenca->execute([
                 ':chamada_id' => $chamadaId,
-                ':aluno_id' => $aluno['id'],
+                ':aluno_id' => (int)$aluno['id'],
                 ':presente' => $presente
             ]);
         }
 
-        // Confirmar a transação
         $this->pdo->commit();
+        return ['sucesso' => true, 'mensagem' => 'Chamada registrada com sucesso'];
 
-        return ['sucesso' => true];
     } catch (Exception $e) {
-        // Caso ocorra erro, faz o rollback
-        $this->pdo->rollBack();
-        error_log("Erro ao registrar a chamada: " . $e->getMessage());  // Log do erro
+        if ($this->pdo->inTransaction()) {
+            $this->pdo->rollBack();
+        }
+        error_log("Erro ao registrar chamada: " . $e->getMessage());
         return ['sucesso' => false, 'mensagem' => $e->getMessage()];
     }
 }

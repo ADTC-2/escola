@@ -1,14 +1,13 @@
 <?php require_once '../includes/header.php'; ?>
 
-<div class="container mt-5">
-    <h2>Gerenciamento de Congregações</h2>
-    <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
-         <i class="fas fa-plus-circle"></i> <span><strong>Cadastrar</strong></span>
+<div class="container mt-2">    
+    <button class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
+        <i class="fas fa-plus-circle"></i> <span><strong>Cadastrar</strong></span>
     </button>
     <br><br>
 
-    <table class="table table-striped" id="tabelaCongregacoes">
-        <thead>
+    <table class="table table-bordered table-hover" id="tabelaCongregacoes">
+        <thead class="table-primary">
             <tr>
                 <th>ID</th>
                 <th>Nome</th>
@@ -22,12 +21,12 @@
 </div>
 
 <!-- Modal Cadastrar -->
-<div class="modal" id="modalCadastrar" tabindex="-1">
+<div class="modal fade" id="modalCadastrar" tabindex="-1" aria-labelledby="modalCadastrarLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Cadastrar Congregação</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalCadastrarLabel">Cadastrar Congregação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="formCadastrarCongregacao">
@@ -43,12 +42,12 @@
 </div>
 
 <!-- Modal Editar -->
-<div class="modal" id="modalEditarCongregacao" tabindex="-1">
+<div class="modal fade" id="modalEditarCongregacao" tabindex="-1" aria-labelledby="modalEditarCongregacaoLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Editar Congregação</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-info text-dark">
+                <h5 class="modal-title" id="modalEditarCongregacaoLabel">Editar Congregação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="formEditarCongregacao">
@@ -169,4 +168,4 @@ $(document).ready(function() {
 
 </body>
 </html>
-
+<?php require_once '../includes/footer.php'; ?>

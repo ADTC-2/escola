@@ -2,9 +2,8 @@
 require_once '../includes/header.php'; 
 ?>
 
-<div class="container mt-5">
-    <h2>Gerenciamento de Matrículas</h2>
-    <button class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
+<div class="container mt-2">  
+    <button class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#modalCadastrar">
         <i class="fas fa-plus-circle"></i> <span><strong>Cadastrar</strong></span>
     </button><br><br>
 
@@ -153,6 +152,48 @@ require_once '../includes/header.php';
         </div>
     </div>
 
+    <!-- Modal de Matrícula em Massa -->
+<div class="modal fade" id="modalMatriculaMassa" tabindex="-1" aria-labelledby="modalMatriculaMassaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalMatriculaMassaLabel">Matricular em Massa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formMatriculaMassa">
+                    <div class="mb-3">
+                        <label for="trimestre_atual" class="form-label">Trimestre Atual</label>
+                        <input type="text" id="trimestre_atual" class="form-control" placeholder="Ex: 2023-3">
+                    </div>
+                    <div class="mb-3">
+                        <label for="novo_trimestre" class="form-label">Novo Trimestre</label>
+                        <input type="text" id="novo_trimestre" class="form-control" placeholder="Ex: 2024-1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="congregacao_massa" class="form-label">Congregação</label>
+                        <select id="congregacao_massa" class="form-select">
+                            <option value="">Selecione</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="manter_status">
+                        <label class="form-check-label" for="manter_status">Manter status atual das matrículas</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Migrar Matrículas</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botão para abrir o modal de matrícula em massa -->
+<button class="btn btn-info mt-4 ms-2" data-bs-toggle="modal" data-bs-target="#modalMatriculaMassa">
+    <i class="fas fa-users"></i> <span><strong>Matricular em Massa</strong></span>
+</button>
+
+
+
 </div>
 
 <!-- Scripts -->
@@ -184,30 +225,31 @@ require_once '../includes/header.php';
 <script> 
 $(document).ready(function() {
     function carregarSelects() {
-        $.ajax({
-            url: '../../controllers/matriculas.php',
-            type: 'GET',
-            data: { acao: 'carregarSelects' },
-            dataType: 'json',
-            success: function(response) {
-                if (response.sucesso) {
-                    preencherSelect('#aluno', response.dados.alunos);
-                    preencherSelect('#classe', response.dados.classes);
-                    preencherSelect('#congregacao', response.dados.congregacoes);
-                    preencherSelect('#professor', response.dados.usuarios);
-                    preencherSelect('#aluno_edit', response.dados.alunos);
-                    preencherSelect('#classe_edit', response.dados.classes);
-                    preencherSelect('#congregacao_edit', response.dados.congregacoes);
-                    preencherSelect('#professor_edit', response.dados.usuarios);
-                } else {
-                    alert(response.mensagem || "Erro ao carregar dados.");
-                }
-            },
-            error: function() {
-                alert("Erro ao carregar os dados.");
+    $.ajax({
+        url: '../../controllers/matriculas.php',
+        type: 'GET',
+        data: { acao: 'carregarSelects' },
+        dataType: 'json',
+        success: function(response) {
+            if (response.sucesso) {
+                preencherSelect('#aluno', response.dados.alunos);
+                preencherSelect('#classe', response.dados.classes);
+                preencherSelect('#congregacao', response.dados.congregacoes);
+                preencherSelect('#professor', response.dados.usuarios);
+                preencherSelect('#aluno_edit', response.dados.alunos);
+                preencherSelect('#classe_edit', response.dados.classes);
+                preencherSelect('#congregacao_edit', response.dados.congregacoes);
+                preencherSelect('#professor_edit', response.dados.usuarios);
+                preencherSelect('#congregacao_massa', response.dados.congregacoes); // Novo select
+            } else {
+                alert(response.mensagem || "Erro ao carregar dados.");
             }
-        });
-    }
+        },
+        error: function() {
+            alert("Erro ao carregar os dados.");
+        }
+    });
+}
 
     function preencherSelect(selector, items) {
         let options = '<option value="">Selecione</option>';
@@ -218,72 +260,82 @@ $(document).ready(function() {
     }
 
     function listarMatriculas() {
-        $.ajax({
-            url: '../../controllers/matriculas.php',
-            type: 'GET',
-            data: { acao: 'listarMatriculas' },
-            dataType: 'json',
-            success: function(response) {
-                if (response.sucesso) {
-                    let tabela = [];
-                    response.dados.forEach(matricula => {
-                        tabela.push([
-                            matricula.id,
-                            matricula.aluno,
-                            matricula.classe,
-                            matricula.congregacao,
-                            matricula.usuario,
-                            matricula.trimestre,
-                            matricula.status,
-                            `<button class="btn btn-danger excluir" data-id="${matricula.id}"><i class="fas fa-trash-alt"></i></button>`
-                        ]);
-                    });
+    $.ajax({
+        url: '../../controllers/matriculas.php',
+        type: 'GET',
+        data: { acao: 'listarMatriculas' },
+        dataType: 'json',
+        success: function(response) {
+            if (response.sucesso) {
+                let tabela = [];
+                response.dados.forEach(matricula => {
+                    tabela.push([
+                        matricula.id,
+                        matricula.aluno,
+                        matricula.classe,
+                        matricula.congregacao,
+                        matricula.usuario,
+                        matricula.trimestre,
+                        matricula.status,
+                        `<div class="btn-group">
+                            <button class="btn btn-primary editar" data-id="${matricula.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger excluir" data-id="${matricula.id}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>`
+                    ]);
+                });
 
-                    if ($.fn.DataTable.isDataTable('#tabelaMatriculas')) {
-                        let tabelaMatriculas = $('#tabelaMatriculas').DataTable();
-                        tabelaMatriculas.clear().rows.add(tabela).draw();
-                    } else {
-                        $('#tabelaMatriculas').DataTable({
-                            data: tabela,
-                            columns: [
-                                { title: "ID" },
-                                { title: "Aluno" },
-                                { title: "Classe" },
-                                { title: "Congregação" },
-                                { title: "Usuário" },
-                                { title: "Trimestre" },
-                                { title: "Status" },
-                                { title: "Ações" }
-                            ],
-                            dom: 'Bfrtip',
-                            buttons: [
-                                {
-                                    extend: 'pdfHtml5',
-                                    text: 'Exportar PDF',
-                                    title: 'Matrículas',
-                                    orientation: 'landscape',
-                                    pageSize: 'A4'
-                                },
-                                {
-                                    extend: 'excelHtml5',
-                                    text: 'Exportar Excel'
-                                }
-                            ],
-                            language: {
-                                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
-                            },
-                            destroy: true  // Permite reinicializar corretamente
-                        });
-                    }
+                if ($.fn.DataTable.isDataTable('#tabelaMatriculas')) {
+                    let tabelaMatriculas = $('#tabelaMatriculas').DataTable();
+                    tabelaMatriculas.clear().rows.add(tabela).draw();
                 } else {
-                    alert(response.mensagem || "Erro ao carregar matrículas.");
+                    $('#tabelaMatriculas').DataTable({
+                        data: tabela,
+                        columns: [
+                            { title: "ID" },
+                            { title: "Aluno" },
+                            { title: "Classe" },
+                            { title: "Congregação" },
+                            { title: "Usuário" },
+                            { title: "Trimestre" },
+                            { title: "Status" },
+                            { 
+                                title: "Ações",
+                                className: "text-center"
+                            }
+                        ],
+                        dom: 'Bfrtip',
+                        buttons: [
+                            {
+                                extend: 'pdfHtml5',
+                                text: 'Exportar PDF',
+                                title: 'Matrículas',
+                                orientation: 'landscape',
+                                pageSize: 'A4'
+                            },
+                            {
+                                extend: 'excelHtml5',
+                                text: 'Exportar Excel'
+                            }
+                        ],
+                        language: {
+                            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
+                        },
+                        destroy: true
+                    });
                 }
-            },
-            error: function() {
-                alert("Erro ao listar matrículas.");
+            } else {
+                alert(response.mensagem || "Erro ao carregar matrículas.");
             }
-        });
-    }
+        },
+        error: function() {
+            alert("Erro ao listar matrículas.");
+        }
+    });
+}
     $('#formCadastrarMatricula').submit(function(e) {
     e.preventDefault();
 
@@ -325,39 +377,80 @@ $(document).ready(function() {
     });
 });
 
-    // Editar Matrícula
-    $(document).on('click', '.editar', function() {
+// Editar Matrícula - Corrigido
+$(document).on('click', '.editar', function() {
     let matricula_id = $(this).data('id');
-
+    
     $.ajax({
-        url: `../../controllers/matriculas.php?acao=buscarMatricula&id=${matricula_id}`,
+        url: '../../controllers/matriculas.php?acao=buscarMatricula&id=' + matricula_id,
         type: 'GET',
         dataType: 'json',
         success: function(response) {
-            console.log(response); // Depuração no console
-
             if (response.sucesso) {
                 const matricula = response.dados;
                 $('#id_edit').val(matricula.id);
                 $('#aluno_edit').val(matricula.aluno_id);
                 $('#classe_edit').val(matricula.classe_id);
                 $('#congregacao_edit').val(matricula.congregacao_id);
-                $('#professor_edit').val(matricula.usuario_id); // Correção
+                $('#professor_edit').val(matricula.usuario_id);
                 $('#trimestre_edit').val(matricula.trimestre);
                 $('#status_edit').val(matricula.status);
-
+                
                 $('#modalEditar').modal('show');
             } else {
                 alert(response.mensagem || "Erro ao carregar os dados da matrícula.");
             }
         },
         error: function(xhr) {
-            console.error("Erro ao editar matrícula:", xhr.responseText);
+            console.error("Erro ao buscar matrícula:", xhr.responseText);
             alert("Erro ao buscar matrícula.");
         }
     });
 });
 
+// Formulário de Edição - Corrigido
+$('#formEditarMatricula').submit(function(e) {
+    e.preventDefault();
+    
+    let dados = {
+        aluno_id: $('#aluno_edit').val(),
+        classe_id: $('#classe_edit').val(),
+        congregacao_id: $('#congregacao_edit').val(),
+        professor_id: $('#professor_edit').val(),
+        trimestre: $('#trimestre_edit').val(),
+        status: $('#status_edit').val(),
+        data_matricula: new Date().toISOString().split('T')[0] // Data atual
+    };
+    
+    let id = $('#id_edit').val();
+    
+    if (!id || !dados.aluno_id || !dados.classe_id || !dados.congregacao_id || 
+        !dados.professor_id || !dados.trimestre || !dados.status) {
+        alert("Todos os campos são obrigatórios.");
+        return;
+    }
+    
+    $.ajax({
+        url: '../../controllers/matriculas.php?acao=atualizarMatricula&id=' + id,
+        type: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(dados),
+        dataType: 'json',
+        success: function(response) {
+            if (response.sucesso) {
+                alert(response.mensagem);
+                $('#modalEditar').modal('hide');
+                listarMatriculas();
+            } else {
+                alert(response.mensagem || "Erro ao atualizar matrícula.");
+            }
+        },
+        error: function(xhr) {
+            console.error("Erro ao atualizar matrícula:", xhr.responseText);
+            alert("Erro ao atualizar matrícula.");
+        }
+    });
+});
 
     // Excluir Matrícula
     $(document).on('click', '.excluir', function() {
@@ -386,6 +479,47 @@ $(document).ready(function() {
             }
         });
     });
+    // Matrícula em Massa
+$('#formMatriculaMassa').submit(function(e) {
+    e.preventDefault();
+    
+    let dados = {
+        trimestre_atual: $('#trimestre_atual').val(),
+        novo_trimestre: $('#novo_trimestre').val(),
+        congregacao_id: $('#congregacao_massa').val(),
+        manter_status: $('#manter_status').is(':checked')
+    };
+    
+    if (!dados.trimestre_atual || !dados.novo_trimestre || !dados.congregacao_id) {
+        alert("Por favor, preencha todos os campos obrigatórios.");
+        return;
+    }
+    
+    if (!confirm(`Tem certeza que deseja migrar todas as matrículas do trimestre ${dados.trimestre_atual} para ${dados.novo_trimestre}?`)) {
+        return;
+    }
+    
+    $.ajax({
+        url: '../../controllers/matriculas.php?acao=migrarMatriculas',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(dados),
+        dataType: 'json',
+        success: function(response) {
+            if (response.sucesso) {
+                alert(response.mensagem);
+                $('#modalMatriculaMassa').modal('hide');
+                listarMatriculas();
+            } else {
+                alert(response.mensagem || "Erro ao migrar matrículas.");
+            }
+        },
+        error: function(xhr) {
+            console.error("Erro ao migrar matrículas:", xhr.responseText);
+            alert("Erro ao migrar matrículas.");
+        }
+    });
+});
 
     carregarSelects();
     listarMatriculas();

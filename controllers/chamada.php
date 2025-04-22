@@ -58,19 +58,26 @@ try {
             break;
 
             case 'salvarChamada':
-                if (!isset($input['data'], $input['classe'], $input['professor'], $input['alunos'], $input['oferta_classe'], $input['total_visitantes'], $input['total_biblias'], $input['total_revistas'])) {
-                    sendErrorResponse('Dados inválidos para salvar chamada.');
+                if (!isset($input['data'], $input['classe'], $input['professor'], $input['alunos'], $input['trimestre'])) {
+                    sendErrorResponse('Dados incompletos para salvar chamada. Todos os campos são obrigatórios.');
                 }
-                
+            
+                // Validação do trimestre
+                $trimestre = $input['trimestre'] ?? '';
+                if (!in_array($trimestre, ['1', '2', '3', '4', 1, 2, 3, 4])) {
+                    sendErrorResponse('Trimestre inválido. Deve ser entre 1 e 4');
+                }
+            
                 $resultado = $chamada->registrarChamada(
                     $input['data'],
+                    $input['trimestre'],
                     $input['classe'],
                     $input['professor'],
-                    $input['alunos'],
-                    $input['oferta_classe'],
-                    $input['total_visitantes'],
-                    $input['total_biblias'],
-                    $input['total_revistas']
+                    $input['alunos'],                  
+                    $input['oferta_classe'] ?? 0,
+                    $input['total_visitantes'] ?? 0,
+                    $input['total_biblias'] ?? 0,
+                    $input['total_revistas'] ?? 0
                 );
             
                 if ($resultado['sucesso']) {
