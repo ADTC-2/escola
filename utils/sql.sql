@@ -53,18 +53,6 @@ CREATE TABLE `congregacoes` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
---
--- Despejando dados para a tabela `congregacoes`
---
-
-INSERT INTO `congregacoes` (`id`, `nome`, `created_at`) VALUES
-(7, 'SEDE', '2025-02-20 15:52:53');
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `logs`
---
 
 CREATE TABLE `logs` (
   `id` int(11) NOT NULL,
