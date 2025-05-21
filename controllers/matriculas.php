@@ -25,14 +25,16 @@ class MatriculaController {
 
     // Criar uma nova matrícula
     public function criarMatricula($data) {
-        if (empty($data['aluno_id']) || empty($data['classe_id']) || empty($data['congregacao_id']) || empty($data['status']) || empty($data['professor_id'])) {
+        if (empty($data['aluno_id']) || empty($data['classe_id']) || 
+            empty($data['congregacao_id']) || empty($data['status']) || 
+            empty($data['professor_id']) || empty($data['trimestre'])) {
             echo json_encode(['sucesso' => false, 'mensagem' => 'Todos os campos obrigatórios devem ser preenchidos.']);
             return;
         }
 
-        // Verificar se o aluno já está matriculado na mesma classe ou congregação
-        if ($this->model->verificarMatriculaExistente($data['aluno_id'], $data['classe_id'], $data['congregacao_id'])) {
-            echo json_encode(['sucesso' => false, 'mensagem' => 'Este aluno já está matriculado nesta classe ou congregação.']);
+        // Verificar se o aluno já está matriculado em qualquer classe no mesmo trimestre
+        if ($this->model->verificarMatriculaExistenteNoMesmoTrimestre($data['aluno_id'], $data['trimestre'])) {
+            echo json_encode(['sucesso' => false, 'mensagem' => 'Este aluno já está matriculado em outra classe neste trimestre.']);
             return;
         }
 
@@ -50,55 +52,66 @@ class MatriculaController {
             echo json_encode(['sucesso' => false, 'mensagem' => $e->getMessage()]);
         }
     }
+
     // Buscar uma matrícula específica
-public function buscarMatricula($id) {
-    if (!is_numeric($id) || empty($id)) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'ID inválido.']);
-        return;
-    }
-
-    try {
-        $matricula = $this->model->buscarMatriculaPorId($id);
-        if ($matricula) {
-            echo json_encode(['sucesso' => true, 'dados' => $matricula]);
-        } else {
-            echo json_encode(['sucesso' => false, 'mensagem' => 'Matrícula não encontrada.']);
-        }
-    } catch (Exception $e) {
-        error_log("Erro ao buscar matrícula (Controller): " . $e->getMessage());
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao buscar matrícula.']);
-    }
-}
-// No método atualizarMatricula do Controller
-public function atualizarMatricula($id, $data) {
-    if (empty($data['aluno_id']) || empty($data['classe_id']) || 
-       empty($data['congregacao_id']) || empty($data['professor_id']) || 
-       empty($data['trimestre']) || empty($data['status'])) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Todos os campos obrigatórios devem ser preenchidos.']);
-        return;
-    }
-
-    try {
-        // Verificar se a matrícula existe
-        $matriculaExistente = $this->model->buscarMatriculaPorId($id);
-        if (!$matriculaExistente) {
-            echo json_encode(['sucesso' => false, 'mensagem' => 'Matrícula não encontrada.']);
+    public function buscarMatricula($id) {
+        if (!is_numeric($id) || empty($id)) {
+            echo json_encode(['sucesso' => false, 'mensagem' => 'ID inválido.']);
             return;
         }
 
-        // Atualizar a matrícula
-        $resultado = $this->model->atualizarMatricula($id, $data);
-        
-        if ($resultado) {
-            echo json_encode(['sucesso' => true, 'mensagem' => 'Matrícula atualizada com sucesso.']);
-        } else {
-            echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao atualizar matrícula.']);
+        try {
+            $matricula = $this->model->buscarMatriculaPorId($id);
+            if ($matricula) {
+                echo json_encode(['sucesso' => true, 'dados' => $matricula]);
+            } else {
+                echo json_encode(['sucesso' => false, 'mensagem' => 'Matrícula não encontrada.']);
+            }
+        } catch (Exception $e) {
+            error_log("Erro ao buscar matrícula (Controller): " . $e->getMessage());
+            echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao buscar matrícula.']);
         }
-    } catch (Exception $e) {
-        error_log("Erro ao atualizar matrícula (Controller): " . $e->getMessage());
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao atualizar matrícula: ' . $e->getMessage()]);
     }
-}
+
+    // Atualizar uma matrícula
+    public function atualizarMatricula($id, $data) {
+        if (empty($data['aluno_id']) || empty($data['classe_id']) || 
+           empty($data['congregacao_id']) || empty($data['professor_id']) || 
+           empty($data['trimestre']) || empty($data['status'])) {
+            echo json_encode(['sucesso' => false, 'mensagem' => 'Todos os campos obrigatórios devem ser preenchidos.']);
+            return;
+        }
+
+        try {
+            // Verificar se a matrícula existe
+            $matriculaExistente = $this->model->buscarMatriculaPorId($id);
+            if (!$matriculaExistente) {
+                echo json_encode(['sucesso' => false, 'mensagem' => 'Matrícula não encontrada.']);
+                return;
+            }
+
+            // Verificar se a alteração criaria duplicidade
+            if ($matriculaExistente['aluno_id'] != $data['aluno_id'] || 
+                $matriculaExistente['trimestre'] != $data['trimestre']) {
+                if ($this->model->verificarMatriculaExistenteNoMesmoTrimestre($data['aluno_id'], $data['trimestre'])) {
+                    echo json_encode(['sucesso' => false, 'mensagem' => 'Este aluno já está matriculado em outra classe neste trimestre.']);
+                    return;
+                }
+            }
+
+            // Atualizar a matrícula
+            $resultado = $this->model->atualizarMatricula($id, $data);
+            
+            if ($resultado) {
+                echo json_encode(['sucesso' => true, 'mensagem' => 'Matrícula atualizada com sucesso.']);
+            } else {
+                echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao atualizar matrícula.']);
+            }
+        } catch (Exception $e) {
+            error_log("Erro ao atualizar matrícula (Controller): " . $e->getMessage());
+            echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao atualizar matrícula: ' . $e->getMessage()]);
+        }
+    }
 
     // Excluir uma matrícula
     public function excluirMatricula($id) {
@@ -188,32 +201,31 @@ if (isset($_GET['acao'])) {
             $controller->carregarSelects();
             break;
         case 'buscarMatricula':
-                $id = $_GET['id'];
-                $controller->buscarMatricula($id);
-                break; 
-                case 'migrarMatriculas':
-                    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                        $data = json_decode(file_get_contents("php://input"), true);
-                        
-                        if (!isset($data['trimestre_atual']) || !isset($data['novo_trimestre']) || !isset($data['congregacao_id'])) {
-                            echo json_encode(['sucesso' => false, 'mensagem' => 'Dados incompletos para migração.']);
-                            break;
-                        }
-                        
-                        $controller->migrarMatriculas(
-                            $data['trimestre_atual'],
-                            $data['novo_trimestre'],
-                            $data['congregacao_id'],
-                            $data['manter_status'] ?? true
-                        );
-                    }
-                    break;           
+            $id = $_GET['id'];
+            $controller->buscarMatricula($id);
+            break; 
+        case 'migrarMatriculas':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $data = json_decode(file_get_contents("php://input"), true);
+                
+                if (!isset($data['trimestre_atual']) || !isset($data['novo_trimestre']) || !isset($data['congregacao_id'])) {
+                    echo json_encode(['sucesso' => false, 'mensagem' => 'Dados incompletos para migração.']);
+                    break;
+                }
+                
+                $controller->migrarMatriculas(
+                    $data['trimestre_atual'],
+                    $data['novo_trimestre'],
+                    $data['congregacao_id'],
+                    $data['manter_status'] ?? true
+                );
+            }
+            break;           
         default:
             echo json_encode(['sucesso' => false, 'mensagem' => 'Ação inválida.']);
             break;
     }
 }
-?>
 
 
 

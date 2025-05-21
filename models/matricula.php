@@ -254,6 +254,20 @@ public function atualizarMatricula($id, $data) {
         return $resultado['total'] > 0;
     }
 
+    public function verificarMatriculaExistenteNoMesmoTrimestre($aluno_id, $trimestre) {
+    $sql = "SELECT COUNT(*) FROM matriculas 
+            WHERE aluno_id = :aluno_id 
+            AND trimestre = :trimestre
+            AND status != 'inativo'";
+    
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->bindParam(':aluno_id', $aluno_id, PDO::PARAM_INT);
+    $stmt->bindParam(':trimestre', $trimestre, PDO::PARAM_STR);
+    $stmt->execute();
+    
+    return $stmt->fetchColumn() > 0;
+}
+
 }
 ?>
 
