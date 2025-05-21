@@ -192,6 +192,9 @@ $estatisticas = obterEstatisticasChamadasMensais($pdo);
           <a href="../views/chamadas/index.php" class="btn btn-primary mt-2">Nova Chamada</a>
           <a href="../views/chamadas/listar.php" class="btn btn-warning mt-2">Editar Chamada</a>
           <a href="../views/presencas/index.php" class="btn btn-info mt-2">Corrigir Presenças</a>
+          <a href="./sorteios.php" class="btn btn-primary mt-2">
+            <i class="fas fa-dice"></i> Sorteios
+          </a>
         </div>
       </div>
 

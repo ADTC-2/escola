@@ -1,0 +1,95 @@
+[14-Apr-2025 15:40:45 America/Fortaleza] PHP Warning:  Undefined array key "usuario_id" in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/index.php on line 3
+[14-Apr-2025 16:15:43 America/Fortaleza] PHP Warning:  Undefined array key "usuario_id" in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/index.php on line 3
+[22-Apr-2025 03:58:16 America/Fortaleza] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home1/adtc2m99/public_html/sistemas/escola/views/includes/header.php:5) in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 9
+[22-Apr-2025 03:58:39 America/Fortaleza] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home1/adtc2m99/public_html/sistemas/escola/views/includes/header.php:5) in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 9
+[22-Apr-2025 03:58:53 America/Fortaleza] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home1/adtc2m99/public_html/sistemas/escola/views/includes/header.php:5) in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 9
+[22-Apr-2025 04:15:52 America/Fortaleza] PHP Warning:  Undefined variable $conn in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 8
+[22-Apr-2025 04:15:52 America/Fortaleza] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php:8
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 8
+[22-Apr-2025 04:16:29 America/Fortaleza] PHP Warning:  Undefined variable $conn in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 8
+[22-Apr-2025 04:16:29 America/Fortaleza] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php:8
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 8
+[22-Apr-2025 04:17:23 America/Fortaleza] PHP Warning:  Undefined variable $conn in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 8
+[22-Apr-2025 04:17:23 America/Fortaleza] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php:8
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 8
+[22-Apr-2025 04:17:29 America/Fortaleza] PHP Warning:  Undefined variable $conn in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 8
+[22-Apr-2025 04:17:29 America/Fortaleza] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php:8
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 8
+[22-Apr-2025 04:19:28 America/Fortaleza] PHP Warning:  Undefined variable $conn in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 8
+[22-Apr-2025 04:19:28 America/Fortaleza] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php:8
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 8
+[22-Apr-2025 04:19:32 America/Fortaleza] PHP Warning:  Undefined variable $conn in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 8
+[22-Apr-2025 04:19:32 America/Fortaleza] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php:8
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 8
+[22-Apr-2025 04:20:10 America/Fortaleza] PHP Warning:  Undefined variable $conn in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 8
+[22-Apr-2025 04:20:10 America/Fortaleza] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php:8
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 8
+[22-Apr-2025 04:24:29 America/Fortaleza] PHP Warning:  Undefined variable $conn in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 11
+[22-Apr-2025 04:24:29 America/Fortaleza] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php:11
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 11
+[22-Apr-2025 04:26:09 America/Fortaleza] PHP Warning:  Undefined variable $conn in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 10
+[22-Apr-2025 04:26:09 America/Fortaleza] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php:10
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/chamadas_helper.php on line 10
+[22-Apr-2025 05:43:10 America/Fortaleza] PHP Warning:  require_once(../views/includes/header.php): Failed to open stream: No such file or directory in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:43:10 America/Fortaleza] PHP Fatal error:  Uncaught Error: Failed opening required '../views/includes/header.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php:3
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:43:14 America/Fortaleza] PHP Warning:  require_once(../views/includes/header.php): Failed to open stream: No such file or directory in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:43:14 America/Fortaleza] PHP Fatal error:  Uncaught Error: Failed opening required '../views/includes/header.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php:3
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:44:03 America/Fortaleza] PHP Warning:  require_once(../views/includes/header.php): Failed to open stream: No such file or directory in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:44:03 America/Fortaleza] PHP Fatal error:  Uncaught Error: Failed opening required '../views/includes/header.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php:3
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:44:06 America/Fortaleza] PHP Warning:  require_once(../views/includes/header.php): Failed to open stream: No such file or directory in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:44:06 America/Fortaleza] PHP Fatal error:  Uncaught Error: Failed opening required '../views/includes/header.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php:3
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:44:08 America/Fortaleza] PHP Warning:  require_once(../views/includes/header.php): Failed to open stream: No such file or directory in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:44:08 America/Fortaleza] PHP Fatal error:  Uncaught Error: Failed opening required '../views/includes/header.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php:3
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:44:08 America/Fortaleza] PHP Warning:  require_once(../views/includes/header.php): Failed to open stream: No such file or directory in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:44:08 America/Fortaleza] PHP Fatal error:  Uncaught Error: Failed opening required '../views/includes/header.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php:3
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:44:08 America/Fortaleza] PHP Warning:  require_once(../views/includes/header.php): Failed to open stream: No such file or directory in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:44:08 America/Fortaleza] PHP Fatal error:  Uncaught Error: Failed opening required '../views/includes/header.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php:3
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:44:33 America/Fortaleza] PHP Warning:  require_once(../views/includes/header.php): Failed to open stream: No such file or directory in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:44:33 America/Fortaleza] PHP Fatal error:  Uncaught Error: Failed opening required '../views/includes/header.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php:3
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:44:34 America/Fortaleza] PHP Warning:  require_once(../views/includes/header.php): Failed to open stream: No such file or directory in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3
+[22-Apr-2025 05:44:34 America/Fortaleza] PHP Fatal error:  Uncaught Error: Failed opening required '../views/includes/header.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php:3
+Stack trace:
+#0 {main}
+  thrown in /home1/adtc2m99/public_html/sistemas/escola/views/chamadas/editar_chamada.php on line 3

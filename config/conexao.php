@@ -1,15 +1,15 @@
 <?php
 define('ROOT_PATH', $_SERVER['DOCUMENT_ROOT'] . '/escola');
 
-$host = "localhost";
-$dbname = "escola";
-$username = "root";
-$password = "";
+//$host = "localhost";
+//$dbname = "escola";
+//$username = "root";
+//$password = "";
 
-//$host = "50.116.87.140";
-//$dbname = "adtc2m99_ebd";
-//$username = "adtc2m99_ebd";
-//$password = "Alves1974#";
+$host = "50.116.87.140";
+$dbname = "adtc2m99_ebd";
+$username = "adtc2m99_ebd";
+$password = "Alves1974#";
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);

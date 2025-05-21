@@ -1,15 +1,20 @@
 <?php
-
 require_once '../../config/conexao.php';
 
+// Definir cabeçalhos
+header('Content-Type: application/json; charset=utf-8');
+
+// Obter dados da requisição
 $input = json_decode(file_get_contents('php://input'), true);
 $acao = $_GET['acao'] ?? $input['acao'] ?? '';
-$id = $_GET['id'] ?? $input['id'] ?? 0;
+$id = (int) ($_GET['id'] ?? $input['id'] ?? 0);
 
-if ($acao == 'listar') {
+// Ação: LISTAR
+if ($acao === 'listar') {
     try {
         $sql = "
-            SELECT c.id, c.data, cl.nome AS classe_nome, c.oferta_classe, c.total_biblias, c.total_revistas, c.total_visitantes, c.trimestre
+            SELECT c.id, DATE_FORMAT(c.data, '%Y-%m-%d') AS data, cl.nome AS classe_nome, 
+                   c.oferta_classe, c.total_biblias, c.total_revistas, c.total_visitantes, c.trimestre
             FROM chamadas c
             JOIN classes cl ON c.classe_id = cl.id
         ";
@@ -19,18 +24,22 @@ if ($acao == 'listar') {
 
         echo json_encode([
             'status' => $chamadas ? 'success' : 'error',
-            'chamadas' => $chamadas ?: [],
+            'chamadas' => $chamadas,
             'message' => $chamadas ? '' : 'Nenhuma chamada encontrada'
         ]);
     } catch (PDOException $e) {
         echo json_encode(['status' => 'error', 'message' => 'Erro na consulta: ' . $e->getMessage()]);
     }
-} elseif ($acao == 'deletar') {
-    if ((int)$id > 0) {
+}
+
+// Ação: DELETAR
+elseif ($acao === 'deletar') {
+    if ($id > 0) {
         try {
             $stmt = $pdo->prepare("DELETE FROM chamadas WHERE id = :id");
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
+
             echo json_encode(['status' => 'success', 'message' => 'Chamada excluída com sucesso']);
         } catch (PDOException $e) {
             echo json_encode(['status' => 'error', 'message' => 'Erro ao excluir chamada: ' . $e->getMessage()]);
@@ -38,11 +47,18 @@ if ($acao == 'listar') {
     } else {
         echo json_encode(['status' => 'error', 'message' => 'ID inválido']);
     }
-} elseif ($acao == 'editar') {
-    if ((int)$id > 0) {
+}
+
+// Ação: EDITAR (buscar dados para edição)
+elseif ($acao === 'editar') {
+    if ($id > 0) {
         try {
-            $sql = "SELECT c.id, c.data, c.classe_id, c.oferta_classe, c.total_biblias, c.total_revistas, c.total_visitantes, c.trimestre
-                    FROM chamadas c WHERE c.id = :id";
+            $sql = "
+                SELECT c.id, DATE_FORMAT(c.data, '%Y-%m-%d') AS data, c.classe_id, 
+                       c.oferta_classe, c.total_biblias, c.total_revistas, c.total_visitantes, c.trimestre
+                FROM chamadas c 
+                WHERE c.id = :id
+            ";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
@@ -59,23 +75,33 @@ if ($acao == 'listar') {
     } else {
         echo json_encode(['status' => 'error', 'message' => 'ID inválido']);
     }
-} elseif ($acao == 'atualizar') {
-    if ((int)$id > 0) {
-        $data = $input['data'] ?? '';
-        $classe_id = $input['classe_id'] ?? '';
-        $oferta_classe = $input['oferta_classe'] ?? '';
-        $total_biblias = $input['total_biblias'] ?? 0;
-        $total_revistas = $input['total_revistas'] ?? 0;
-        $total_visitantes = $input['total_visitantes'] ?? 0;
-        $trimestre = $input['trimestre'] ?? '';
+}
 
-        if ($data && $classe_id && $oferta_classe && $total_biblias >= 0 && $total_revistas >= 0 && $total_visitantes >= 0 && $trimestre) {
+// Ação: ATUALIZAR
+elseif ($acao === 'atualizar') {
+    if ($id > 0) {
+        $data            = $input['data'] ?? '';
+        $classe_id       = $input['classe_id'] ?? null;
+        $oferta_classe   = $input['oferta_classe'] ?? null;
+        $total_biblias   = $input['total_biblias'] ?? 0;
+        $total_revistas  = $input['total_revistas'] ?? 0;
+        $total_visitantes = $input['total_visitantes'] ?? 0;
+        $trimestre       = $input['trimestre'] ?? '';
+
+        if ($data && $classe_id && $trimestre !== '') {
             try {
                 $stmt = $pdo->prepare("
-                    UPDATE chamadas SET data = :data, classe_id = :classe_id, oferta_classe = :oferta_classe, 
-                    total_biblias = :total_biblias, total_revistas = :total_revistas, total_visitantes = :total_visitantes, 
-                    trimestre = :trimestre WHERE id = :id
+                    UPDATE chamadas 
+                    SET data = :data, 
+                        classe_id = :classe_id, 
+                        oferta_classe = :oferta_classe,
+                        total_biblias = :total_biblias, 
+                        total_revistas = :total_revistas, 
+                        total_visitantes = :total_visitantes, 
+                        trimestre = :trimestre 
+                    WHERE id = :id
                 ");
+
                 $stmt->bindParam(':data', $data);
                 $stmt->bindParam(':classe_id', $classe_id, PDO::PARAM_INT);
                 $stmt->bindParam(':oferta_classe', $oferta_classe);
@@ -91,13 +117,19 @@ if ($acao == 'listar') {
                 echo json_encode(['status' => 'error', 'message' => 'Erro ao atualizar chamada: ' . $e->getMessage()]);
             }
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'Dados inválidos ou incompletos']);
+            echo json_encode(['status' => 'error', 'message' => 'Dados obrigatórios ausentes ou inválidos']);
         }
     } else {
         echo json_encode(['status' => 'error', 'message' => 'ID inválido']);
     }
 }
+
+// Ação inválida
+else {
+    echo json_encode(['status' => 'error', 'message' => 'Ação inválida']);
+}
 ?>
+
 
 
 
