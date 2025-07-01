@@ -368,19 +368,23 @@ $(document).ready(function() {
                 success: function(response) {
                     if (response.status === 'success' && response.data.data.length > 0) {
                         let alunosHtml = '';
-                        
-                        response.data.data.forEach(aluno => {
-                            alunosHtml += 
-                                `<div class="aluno-item" data-id="${aluno.id}">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>${aluno.nome}</strong>
-                                            <div class="text-muted small">${aluno.classe || 'Sem classe'}</div>
-                                        </div>
-                                        <i class="fas fa-user-check text-success" style="display: none;"></i>
-                                    </div>
-                                </div>`;
-                        });
+                                                  
+                          const alunosUnicos = {};
+                          response.data.data.forEach(aluno => {
+                              if (!alunosUnicos[aluno.id]) {
+                                  alunosUnicos[aluno.id] = true;
+                                  alunosHtml += 
+                                      `<div class="aluno-item" data-id="${aluno.id}">
+                                          <div class="d-flex justify-content-between align-items-center">
+                                              <div>
+                                                  <strong>${aluno.nome}</strong>
+                                                  <div class="text-muted small">${aluno.classe_nome || 'Sem classe'}</div>
+                                              </div>
+                                              <i class="fas fa-user-check text-success" style="display: none;"></i>
+                                          </div>
+                                      </div>`;
+                              }
+                          });
                         
                         $('#alunosLista').html(alunosHtml);
                         $('#alunosContainer').show();

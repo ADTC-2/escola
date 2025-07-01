@@ -48,7 +48,6 @@ try {
             $hoje = new DateTime();
             $mes = (int)$hoje->format('n');
             $ano = (int)$hoje->format('Y');
-
             $trimestre = ceil($mes / 3);
             $inicioMes = (($trimestre - 1) * 3) + 1;
 
@@ -58,26 +57,27 @@ try {
             $stmt = $pdo->prepare("
                 SELECT a.id, a.nome, c.nome AS classe_nome
                 FROM alunos a
-                JOIN matriculas m ON m.aluno_id = a.id AND m.status = 'ativo'
+                JOIN matriculas m 
+                    ON m.aluno_id = a.id 
+                    AND m.status = 'ativo'
+                    AND m.trimestre = :trimestre
+                    AND m.classe_id = :classe_id
+                    AND m.congregacao_id = :congregacao_id
                 JOIN classes c ON c.id = m.classe_id
-                WHERE m.classe_id = :classe_id 
-                AND m.congregacao_id = :congregacao_id
-                AND a.id NOT IN (
-                    SELECT p.aluno_id
-                    FROM presencas p
-                    JOIN chamadas ch ON ch.id = p.chamada_id
-                    WHERE ch.classe_id = :classe_id
-                      AND ch.congregacao_id = :congregacao_id
-                      AND ch.data_chamada BETWEEN :data_inicio AND :data_fim
-                    GROUP BY p.aluno_id, MONTH(ch.data_chamada)
-                    HAVING SUM(p.presente = 'presente') = 0
-                )
+                JOIN presencas p ON p.aluno_id = a.id AND p.presente = 'presente'
+                JOIN chamadas ch 
+                    ON ch.id = p.chamada_id
+                    AND ch.classe_id = m.classe_id
+                    AND ch.congregacao_id = m.congregacao_id
+                    AND ch.data_chamada BETWEEN :data_inicio AND :data_fim
+                GROUP BY a.id
                 ORDER BY a.nome
             ");
 
             $stmt->execute([
                 ':classe_id' => (int)$input['classe_id'],
                 ':congregacao_id' => (int)$input['congregacao_id'],
+                ':trimestre' => $trimestre,
                 ':data_inicio' => $dataInicio->format('Y-m-d'),
                 ':data_fim' => $dataFim->format('Y-m-d'),
             ]);
@@ -87,6 +87,9 @@ try {
                 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
             ]);
             break;
+
+
+
 
         case 'realizarSorteio':
             validarParametros(['alunos_ids', 'classe_id', 'congregacao_id'], $input);
