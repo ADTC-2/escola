@@ -146,86 +146,86 @@ class MatriculaController {
 
     // Método para migrar matrículas para o próximo trimestre
     public function migrarMatriculas($trimestre_atual, $trimestre_novo, $congregacao_id, $manter_status = true) {
-        try {
-            // Validação dos trimestres
-            if (empty($trimestre_atual) || empty($trimestre_novo)) {
-                throw new Exception("Trimestres atual e novo são obrigatórios.");
-            }
-            
-            if ($trimestre_atual === $trimestre_novo) {
-                throw new Exception("O novo trimestre deve ser diferente do trimestre atual.");
-            }
-            
-            // Chama o model para migrar as matrículas
-            $resultado = $this->model->migrarMatriculasParaNovoTrimestre(
-                $trimestre_atual, 
-                $trimestre_novo, 
-                $congregacao_id, 
-                $manter_status
-            );
-            
-            echo json_encode($resultado);
-        } catch (Exception $e) {
-            error_log("Erro no migrarMatriculas (Controller): " . $e->getMessage());
-            echo json_encode(['sucesso' => false, 'mensagem' => $e->getMessage()]);
-        }
-    }
-}
-
-// Verifica a ação na requisição e chama o método adequado
-if (isset($_GET['acao'])) {
-    $controller = new MatriculaController($pdo);
-
-    switch ($_GET['acao']) {
-        case 'listarMatriculas':
-            $controller->listarMatriculas();
-            break;
-        case 'criarMatricula':
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $data = json_decode(file_get_contents("php://input"), true);
-                $controller->criarMatricula($data);
-            }
-            break;
-        case 'atualizarMatricula':
-            if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-                $data = json_decode(file_get_contents("php://input"), true);
-                $id = $_GET['id'];
-                $controller->atualizarMatricula($id, $data);
-            }
-            break;
-        case 'excluirMatricula':
-            $id = $_GET['id'];
-            $controller->excluirMatricula($id);
-            break;
-        case 'carregarSelects':
-            $controller->carregarSelects();
-            break;
-        case 'buscarMatricula':
-            $id = $_GET['id'];
-            $controller->buscarMatricula($id);
-            break; 
-        case 'migrarMatriculas':
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $data = json_decode(file_get_contents("php://input"), true);
-                
-                if (!isset($data['trimestre_atual']) || !isset($data['novo_trimestre']) || !isset($data['congregacao_id'])) {
-                    echo json_encode(['sucesso' => false, 'mensagem' => 'Dados incompletos para migração.']);
-                    break;
+            try {
+                // Validação dos trimestres
+                if (empty($trimestre_atual) || empty($trimestre_novo)) {
+                    throw new Exception("Trimestres atual e novo são obrigatórios.");
                 }
                 
-                $controller->migrarMatriculas(
-                    $data['trimestre_atual'],
-                    $data['novo_trimestre'],
-                    $data['congregacao_id'],
-                    $data['manter_status'] ?? true
+                if ($trimestre_atual === $trimestre_novo) {
+                    throw new Exception("O novo trimestre deve ser diferente do trimestre atual.");
+                }
+                
+                // Chama o model para migrar as matrículas
+                $resultado = $this->model->migrarMatriculasParaNovoTrimestre(
+                    $trimestre_atual, 
+                    $trimestre_novo, 
+                    $congregacao_id, 
+                    $manter_status
                 );
+                
+                echo json_encode($resultado);
+            } catch (Exception $e) {
+                error_log("Erro no migrarMatriculas (Controller): " . $e->getMessage());
+                echo json_encode(['sucesso' => false, 'mensagem' => $e->getMessage()]);
             }
-            break;           
-        default:
-            echo json_encode(['sucesso' => false, 'mensagem' => 'Ação inválida.']);
-            break;
+        }
     }
-}
+
+    // Verifica a ação na requisição e chama o método adequado
+    if (isset($_GET['acao'])) {
+        $controller = new MatriculaController($pdo);
+
+        switch ($_GET['acao']) {
+            case 'listarMatriculas':
+                $controller->listarMatriculas();
+                break;
+            case 'criarMatricula':
+                if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                    $data = json_decode(file_get_contents("php://input"), true);
+                    $controller->criarMatricula($data);
+                }
+                break;
+            case 'atualizarMatricula':
+                if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+                    $data = json_decode(file_get_contents("php://input"), true);
+                    $id = $_GET['id'];
+                    $controller->atualizarMatricula($id, $data);
+                }
+                break;
+            case 'excluirMatricula':
+                $id = $_GET['id'];
+                $controller->excluirMatricula($id);
+                break;
+            case 'carregarSelects':
+                $controller->carregarSelects();
+                break;
+            case 'buscarMatricula':
+                $id = $_GET['id'];
+                $controller->buscarMatricula($id);
+                break; 
+            case 'migrarMatriculas':
+                if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                    $data = json_decode(file_get_contents("php://input"), true);
+                    
+                    if (!isset($data['trimestre_atual']) || !isset($data['novo_trimestre']) || !isset($data['congregacao_id'])) {
+                        echo json_encode(['sucesso' => false, 'mensagem' => 'Dados incompletos para migração.']);
+                        break;
+                    }
+                    
+                    $controller->migrarMatriculas(
+                        $data['trimestre_atual'],
+                        $data['novo_trimestre'],
+                        $data['congregacao_id'],
+                        $data['manter_status'] ?? true
+                    );
+                }
+                break;           
+            default:
+                echo json_encode(['sucesso' => false, 'mensagem' => 'Ação inválida.']);
+                break;
+        }
+    }
 
 
 

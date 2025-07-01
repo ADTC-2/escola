@@ -44,6 +44,17 @@ try {
         case 'getAlunosParaSorteio':
             validarParametros(['classe_id', 'congregacao_id'], $input);
 
+            // Calcula datas do trimestre atual
+            $hoje = new DateTime();
+            $mes = (int)$hoje->format('n');
+            $ano = (int)$hoje->format('Y');
+
+            $trimestre = ceil($mes / 3);
+            $inicioMes = (($trimestre - 1) * 3) + 1;
+
+            $dataInicio = new DateTime("$ano-$inicioMes-01");
+            $dataFim = (clone $dataInicio)->modify('+2 months')->modify('last day of this month');
+
             $stmt = $pdo->prepare("
                 SELECT a.id, a.nome, c.nome AS classe_nome
                 FROM alunos a
@@ -51,11 +62,24 @@ try {
                 JOIN classes c ON c.id = m.classe_id
                 WHERE m.classe_id = :classe_id 
                 AND m.congregacao_id = :congregacao_id
+                AND a.id NOT IN (
+                    SELECT p.aluno_id
+                    FROM presencas p
+                    JOIN chamadas ch ON ch.id = p.chamada_id
+                    WHERE ch.classe_id = :classe_id
+                      AND ch.congregacao_id = :congregacao_id
+                      AND ch.data_chamada BETWEEN :data_inicio AND :data_fim
+                    GROUP BY p.aluno_id, MONTH(ch.data_chamada)
+                    HAVING SUM(p.presente = 'presente') = 0
+                )
                 ORDER BY a.nome
             ");
+
             $stmt->execute([
                 ':classe_id' => (int)$input['classe_id'],
-                ':congregacao_id' => (int)$input['congregacao_id']
+                ':congregacao_id' => (int)$input['congregacao_id'],
+                ':data_inicio' => $dataInicio->format('Y-m-d'),
+                ':data_fim' => $dataFim->format('Y-m-d'),
             ]);
 
             echo json_encode([
@@ -75,7 +99,7 @@ try {
                 throw new Exception("Nenhum aluno válido selecionado");
             }
 
-            // Seleciona aleatoriamente um ganhador
+            // Sorteia aleatoriamente um aluno
             $ganhadorId = $alunosIds[array_rand($alunosIds)];
 
             // Obtém dados do ganhador
@@ -138,5 +162,6 @@ try {
         'message' => $e->getMessage()
     ]);
 }
+
 
 
