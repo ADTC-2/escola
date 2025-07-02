@@ -145,59 +145,74 @@ $(document).ready(function() {
 
     // Quando muda a congregação
     $('#congregacao').change(function() {
-        let congregacaoId = $(this).val();
-        $('#alunos-container').html('');
-        $('#totalPresentesLabel').html('<i class="fas fa-users me-1"></i> Total de Presentes: 0');
-        
-        if (congregacaoId) {
-            $.ajax({
-                url: '../../controllers/chamada.php',
-                type: 'POST',
-                data: { 
-                    acao: 'getClassesByCongregacao',
-                    congregacao_id: congregacaoId 
-                },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        let options = '<option value="">Selecione a Classe</option>';
-                        response.data.forEach(classe => {
-                            options += `<option value="${classe.id}">${classe.nome}</option>`;
-                        });
-                        $("#classe").html(options).prop('disabled', false);
-                    } else {
-                        $("#classe").html('<option value="">Nenhuma classe disponível</option>').prop('disabled', true);
-                        Swal.fire('Aviso', 'Nenhuma classe encontrada para esta congregação', 'info');
+            let congregacaoId = $(this).val();
+            $('#alunos-container').html('');
+            $('#totalPresentesLabel').html('<i class="fas fa-users me-1"></i> Total de Presentes: 0');
+            
+            if (congregacaoId) {
+                $.ajax({
+                    url: '../../controllers/chamada.php',
+                    type: 'POST',
+                    data: { 
+                        acao: 'getClassesByCongregacao',
+                        congregacao_id: congregacaoId 
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            let options = '<option value="">Selecione a Classe</option>';
+                            response.data.forEach(classe => {
+                                options += `<option value="${classe.id}">${classe.nome}</option>`;
+                            });
+                            $("#classe").html(options).prop('disabled', false);
+                        } else {
+                            $("#classe").html('<option value="">Nenhuma classe disponível</option>').prop('disabled', true);
+                            Swal.fire('Aviso', 'Nenhuma classe encontrada para esta congregação', 'info');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Erro', 'Falha ao carregar classes', 'error');
                     }
-                },
-                error: function() {
-                    Swal.fire('Erro', 'Falha ao carregar classes', 'error');
-                }
-            });
-        } else {
-            $("#classe").html('<option value="">Selecione a Classe</option>').prop('disabled', true);
-        }
-    });
+                });
+            } else {
+                $("#classe").html('<option value="">Selecione a Classe</option>').prop('disabled', true);
+            }
+        });
 
     // Quando muda a classe
-    $('#classe').change(function() {
+    $('#classe').change(function () {
         let classeId = $(this).val();
         let congregacaoId = $('#congregacao').val();
+        let trimestre = $('#trimestre').val();
+
+        // Verificações obrigatórias
+        if (!trimestre) {
+            Swal.fire('Atenção', 'Selecione o trimestre antes de buscar os alunos.', 'warning');
+            $('#classe').val(''); // opcional: limpa seleção da classe
+            return;
+        }
 
         if (classeId) {
             $.ajax({
                 url: '../../controllers/chamada.php',
                 type: 'POST',
-                data: { 
+                data: {
                     acao: 'getAlunosByClasse',
                     classe_id: classeId,
-                    congregacao_id: congregacaoId 
+                    congregacao_id: congregacaoId,
+                    trimestre: trimestre
                 },
                 dataType: 'json',
-                beforeSend: function() {
-                    $('#alunos-container').html('<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
+                beforeSend: function () {
+                    $('#alunos-container').html(`
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                        </div>
+                    `);
                 },
-                success: function(response) {
+                success: function (response) {
                     if (response.status === 'success' && response.data.data.length > 0) {
                         let alunosHtml = `
                             <div class="table-responsive">
@@ -209,8 +224,9 @@ $(document).ready(function() {
                                             <th class="text-center">Falta</th>
                                         </tr>
                                     </thead>
-                                    <tbody>`;
-                        
+                                    <tbody>
+                        `;
+
                         response.data.data.forEach(aluno => {
                             alunosHtml += `
                                 <tr class="presenca-option">
@@ -221,31 +237,32 @@ $(document).ready(function() {
                                     <td class="text-center">
                                         <input type="radio" name="presenca_${aluno.id}" class="aluno-falta" data-id="${aluno.id}" value="falta">
                                     </td>
-                                </tr>`;
+                                </tr>
+                            `;
                         });
-                        
+
                         alunosHtml += `</tbody></table></div>`;
                         $('#alunos-container').html(alunosHtml);
 
-                        // Marca todos como presentes por padrão
+                        // Marca todos como presentes
                         $('input.aluno-presenca').prop('checked', true);
                         atualizarTotalPresentes();
 
-                        // Adiciona evento de clique na linha toda
-                        $('.presenca-option').click(function(e) {
+                        // Clique na linha marca como presente
+                        $('.presenca-option').click(function (e) {
                             if (!$(e.target).is('input[type="radio"]')) {
-                                let radioPresente = $(this).find('input.aluno-presenca');
-                                radioPresente.prop('checked', true).trigger('change');
+                                $(this).find('input.aluno-presenca').prop('checked', true).trigger('change');
                             }
                         });
 
+                        // Atualiza total ao trocar presença/falta
+                        $('input[type="radio"]').off('change').on('change', atualizarTotalPresentes);
 
-                        $('input[type="radio"]').on('change', atualizarTotalPresentes);
                     } else {
                         $('#alunos-container').html('<div class="alert alert-warning">Nenhum aluno matriculado nesta classe.</div>');
                     }
                 },
-                error: function() {
+                error: function () {
                     Swal.fire('Erro', 'Falha ao carregar alunos', 'error');
                 }
             });
@@ -253,6 +270,7 @@ $(document).ready(function() {
             $('#alunos-container').html('');
         }
     });
+
 
     // Envio do formulário
     $('#formChamada').submit(function(e) {

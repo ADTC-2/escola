@@ -47,15 +47,18 @@ try {
             echo json_encode(['status' => 'success', 'data' => $classes ?: []]);
             break;
 
-        case 'getAlunosByClasse':
-            $classe_id = $input['classe_id'] ?? 0;
-            $congregacao_id = $input['congregacao_id'] ?? 0;
-            if (!$classe_id || !$congregacao_id) {
-                sendErrorResponse('IDs da classe ou congregação inválidos.');
-            }
-            $alunos = $chamada->getAlunosByClasse($classe_id, $congregacao_id);
-            echo json_encode(['status' => 'success', 'data' => $alunos ?: []]);
-            break;
+            case 'getAlunosByClasse':
+                $classe_id = $input['classe_id'] ?? 0;
+                $congregacao_id = $input['congregacao_id'] ?? 0;
+                $trimestre = $input['trimestre'] ?? null;
+
+                if (!$classe_id || !$congregacao_id || !$trimestre) {
+                    sendErrorResponse('IDs da classe, congregação ou trimestre inválidos.');
+                }
+
+                $alunos = $chamada->getAlunosByClasse($classe_id, $congregacao_id, $trimestre);
+                echo json_encode(['status' => 'success', 'data' => ['data' => $alunos ?: []]]);
+                break;
 
             case 'salvarChamada':
                 if (!isset($input['data'], $input['classe'], $input['professor'], $input['alunos'], $input['trimestre'])) {

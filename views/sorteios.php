@@ -220,18 +220,28 @@ $estatisticas = obterEstatisticasChamadasMensais($pdo);
           <div class="card-body">
             <form id="formSorteio">
               <div class="row mb-4">
-                <div class="col-md-6">
-                  <label for="sorteio_congregacao" class="form-label">Congregação</label>
-                  <select class="form-select" id="sorteio_congregacao" required>
-                    <option value="">Selecione a Congregação</option>
-                  </select>
-                </div>
-                <div class="col-md-6">
-                  <label for="sorteio_classe" class="form-label">Classe</label>
-                  <select class="form-select" id="sorteio_classe" required disabled>
-                    <option value="">Selecione a Classe</option>
-                  </select>
-                </div>
+                  <div class="col-md-4">
+                      <label for="sorteio_congregacao" class="form-label">Congregação</label>
+                      <select class="form-select" id="sorteio_congregacao" required>
+                          <option value="">Selecione a Congregação</option>
+                      </select>
+                  </div>
+                  <div class="col-md-4">
+                      <label for="sorteio_classe" class="form-label">Classe</label>
+                      <select class="form-select" id="sorteio_classe" required disabled>
+                          <option value="">Selecione a Classe</option>
+                      </select>
+                  </div>
+                  <div class="col-md-4">
+                      <label for="sorteio_trimestre" class="form-label">Trimestre</label>
+                      <select class="form-select" id="sorteio_trimestre" required>
+                          <option value="">Selecione o Trimestre</option>
+                          <option value="1">1º Trimestre</option>
+                          <option value="2">2º Trimestre</option>
+                          <option value="3">3º Trimestre</option>
+                          <option value="4">4º Trimestre</option>
+                      </select>
+                  </div>
               </div>
               
               <div id="alunosContainer" style="display: none;">
@@ -305,8 +315,15 @@ $(document).ready(function() {
                     Swal.fire('Erro', 'Não foi possível carregar as congregações', 'error');
                 }
             },
-            error: function() {
-                Swal.fire('Erro', 'Falha na comunicação com o servidor', 'error');
+            error: function(xhr) {
+                let errorMsg = 'Erro ao carregar congregações';
+                try {
+                    const response = xhr.responseJSON;
+                    if (response && response.message) {
+                        errorMsg = response.message;
+                    }
+                } catch (e) {}
+                Swal.fire('Erro', errorMsg, 'error');
             }
         });
     }
@@ -336,79 +353,113 @@ $(document).ready(function() {
                         $("#sorteio_classe").html(options).prop('disabled', false);
                     } else {
                         $("#sorteio_classe").html('<option value="">Nenhuma classe disponível</option>').prop('disabled', true);
+                        Swal.fire('Aviso', response.message || 'Nenhuma classe encontrada', 'info');
                     }
                 },
-                error: function() {
-                    Swal.fire('Erro', 'Falha ao carregar classes', 'error');
+                error: function(xhr) {
+                    let errorMsg = 'Erro ao carregar classes';
+                    try {
+                        const response = xhr.responseJSON;
+                        if (response && response.message) {
+                            errorMsg = response.message;
+                        }
+                    } catch (e) {}
+                    Swal.fire('Erro', errorMsg, 'error');
                 }
             });
         }
     });
 
-    // Quando muda a classe no sorteio
-    $('#sorteio_classe').change(function() {
-        const classeId = $(this).val();
-        const congregacaoId = $('#sorteio_congregacao').val();
-        $('#alunosContainer').hide();
-        $('#sorteioResultados').hide();
-        
-        if (classeId) {
-            $.ajax({
-                url: '../controllers/chamada.php',
-                type: 'POST',
-                data: { 
-                    acao: 'getAlunosByClasse',
-                    classe_id: classeId,
-                    congregacao_id: congregacaoId 
-                },
-                dataType: 'json',
-                beforeSend: function() {
-                    $('#alunosLista').html('<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>');
-                },
-                success: function(response) {
-                    if (response.status === 'success' && response.data.data.length > 0) {
-                        let alunosHtml = '';
-                                                  
-                          const alunosUnicos = {};
-                          response.data.data.forEach(aluno => {
-                              if (!alunosUnicos[aluno.id]) {
-                                  alunosUnicos[aluno.id] = true;
-                                  alunosHtml += 
-                                      `<div class="aluno-item" data-id="${aluno.id}">
-                                          <div class="d-flex justify-content-between align-items-center">
-                                              <div>
-                                                  <strong>${aluno.nome}</strong>
-                                                  <div class="text-muted small">${aluno.classe_nome || 'Sem classe'}</div>
-                                              </div>
-                                              <i class="fas fa-user-check text-success" style="display: none;"></i>
-                                          </div>
-                                      </div>`;
-                              }
-                          });
-                        
-                        $('#alunosLista').html(alunosHtml);
-                        $('#alunosContainer').show();
-                        
-                        // Adiciona evento de clique nos alunos
-                        $('.aluno-item').click(function() {
-                            $(this).toggleClass('selected');
-                            $(this).find('.fa-user-check').toggle();
-                            atualizarContadorSelecionados();
-                        });
-                        
-                        // Inicializa contador
+    
+// Quando muda a classe ou trimestre
+$('#sorteio_classe, #sorteio_trimestre').change(function() {
+    const classeId = $('#sorteio_classe').val();
+    const congregacaoId = $('#sorteio_congregacao').val();
+    const trimestre = $('#sorteio_trimestre').val();
+    
+    $('#alunosContainer').hide();
+    $('#sorteioResultados').hide();
+    
+    if (!classeId || !congregacaoId || !trimestre) {
+        return;
+    }
+
+    $.ajax({
+        url: '../controllers/sorteio.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            acao: 'getAlunosParaSorteio',
+            classe_id: classeId,
+            congregacao_id: congregacaoId,
+            trimestre: trimestre
+        }),
+        dataType: 'json',
+        beforeSend: function() {
+            $('#alunosLista').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Carregando alunos...</p></div>');
+        },
+        success: function(response) {
+            if (response.status === 'success') {
+                if (response.data && response.data.length > 0) {
+                    let alunosHtml = '';
+                    response.data.forEach(aluno => {
+                        alunosHtml += 
+                            `<div class="aluno-item" data-id="${aluno.id}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>${aluno.nome}</strong>
+                                        <div class="text-muted small">${aluno.classe_nome || 'Sem classe'}</div>
+                                    </div>
+                                    <i class="fas fa-user-check text-success" style="display: none;"></i>
+                                </div>
+                            </div>`;
+                    });
+                    
+                    $('#alunosLista').html(alunosHtml);
+                    $('#alunosContainer').show();
+                    
+                    $('.aluno-item').click(function() {
+                        $(this).toggleClass('selected');
+                        $(this).find('.fa-user-check').toggle();
                         atualizarContadorSelecionados();
-                    } else {
-                        $('#alunosLista').html('<div class="alert alert-warning">Nenhum aluno matriculado nesta classe.</div>');
-                    }
-                },
-                error: function() {
-                    Swal.fire('Erro', 'Falha ao carregar alunos', 'error');
+                    });
+                    
+                    atualizarContadorSelecionados();
+                } else {
+                    $('#alunosLista').html(`
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> 
+                            ${response.message || 'Nenhum aluno encontrado com os critérios atuais'}
+                        </div>
+                    `);
+                    $('#alunosContainer').show(); // Mostra o container mesmo sem alunos
                 }
-            });
+            } else {
+                $('#alunosLista').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        ${response.message || 'Erro ao carregar alunos'}
+                    </div>
+                `);
+            }
+        },
+        error: function(xhr) {
+            let errorMsg = 'Erro ao carregar alunos';
+            try {
+                const response = xhr.responseJSON;
+                if (response && response.message) {
+                    errorMsg = response.message;
+                }
+            } catch (e) {}
+            $('#alunosLista').html(`
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    ${errorMsg}
+                </div>
+            `);
         }
     });
-
+});
     // Atualiza contador de selecionados
     function atualizarContadorSelecionados() {
         const totalSelecionados = $('.aluno-item.selected').length;
@@ -430,76 +481,84 @@ $(document).ready(function() {
     });
 
     // Realizar sorteio via backend
-$('#btnRealizarSorteio').click(function() {
-    const alunosSelecionados = $('.aluno-item.selected');
-      
-      if (alunosSelecionados.length === 0) {
-          Swal.fire('Atenção', 'Selecione pelo menos um aluno para o sorteio', 'warning');
-          return;
-      }
+    $('#btnRealizarSorteio').click(function() {
+        const alunosSelecionados = $('.aluno-item.selected');
+        
+        if (alunosSelecionados.length === 0) {
+            Swal.fire('Atenção', 'Selecione pelo menos um aluno para o sorteio', 'warning');
+            return;
+        }
 
-      const alunosIds = [];
-      alunosSelecionados.each(function() {
-          alunosIds.push($(this).data('id'));
-      });
+        const alunosIds = [];
+        alunosSelecionados.each(function() {
+            alunosIds.push($(this).data('id'));
+        });
 
-      // Mostra área de resultados
-      $('#sorteioResultados').show().css('opacity', 0).animate({opacity: 1}, 500);
-      $('#resultadoSorteio').hide();
-      $('#animacaoSorteio').html('<div class="animate__animated animate__flash">Sorteando...</div>');
+        const classeId = $('#sorteio_classe').val();
+        const congregacaoId = $('#sorteio_congregacao').val();
 
-      // Desabilita o botão durante a requisição
-      const $btn = $(this);
-      $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Sorteando...');
+        if (!classeId || !congregacaoId) {
+            Swal.fire('Atenção', 'Selecione uma congregação e uma classe válidas', 'warning');
+            return;
+        }
 
-      $.ajax({
-          url: '../controllers/sorteio.php',
-          type: 'POST',
-          contentType: 'application/json',
-          data: JSON.stringify({
-              acao: 'realizarSorteio',
-              alunos_ids: alunosIds,
-              classe_id: $('#sorteio_classe').val(),
-              congregacao_id: $('#sorteio_congregacao').val()
-          }),
-          dataType: 'json',
-          success: function(response) {
-              if (response.status === 'success') {
-                  const ganhador = response.data.ganhador;
-                  
-                  $('#ganhadorNome').html(`<i class="fas fa-trophy me-2"></i>${ganhador.nome}`);
-                  $('#ganhadorDetalhes').html(`
-                      <p><i class="fas fa-users me-2"></i> Classe: ${ganhador.classe_nome || 'Não informada'}</p>
-                      <p><i class="fas fa-award me-2"></i> Parabéns!</p>
-                      <p><i class="fas fa-calendar me-2"></i> Sorteado em: ${response.data.data_sorteio}</p>
-                  `);
-                  
-                  $('#resultadoSorteio').fadeIn(1000);
-                  $('#animacaoSorteio').empty();
-              } else {
-                  Swal.fire('Erro', response.message || 'Erro desconhecido', 'error');
-                  $('#sorteioResultados').hide();
-              }
-          },
-          error: function(xhr) {
-              let errorMsg = 'Erro ao conectar com o servidor';
-              try {
-                  const response = xhr.responseJSON;
-                  if (response && response.message) {
-                      errorMsg = response.message;
-                  }
-              } catch (e) {
-                  console.error('Erro ao processar resposta:', e);
-              }
-              
-              Swal.fire('Erro', errorMsg, 'error');
-              $('#sorteioResultados').hide();
-          },
-          complete: function() {
-              $btn.prop('disabled', false).html('<i class="fas fa-random me-2"></i> Realizar Sorteio');
-          }
-      });
-  });
+        // Mostra área de resultados
+        $('#sorteioResultados').show().css('opacity', 0).animate({opacity: 1}, 500);
+        $('#resultadoSorteio').hide();
+        $('#animacaoSorteio').html('<div class="animate__animated animate__flash">Sorteando...</div>');
+
+        // Desabilita o botão durante a requisição
+        const $btn = $(this);
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Sorteando...');
+
+        $.ajax({
+            url: '../controllers/sorteio.php',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                acao: 'realizarSorteio',
+                alunos_ids: alunosIds,
+                classe_id: classeId,
+                congregacao_id: congregacaoId
+            }),
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    const ganhador = response.data.ganhador;
+                    
+                    $('#ganhadorNome').html(`<i class="fas fa-trophy me-2"></i>${ganhador.nome}`);
+                    $('#ganhadorDetalhes').html(`
+                        <p><i class="fas fa-users me-2"></i> Classe: ${ganhador.classe_nome || 'Não informada'}</p>
+                        <p><i class="fas fa-award me-2"></i> Parabéns!</p>
+                        <p><i class="fas fa-calendar me-2"></i> Sorteado em: ${response.data.data_sorteio}</p>
+                    `);
+                    
+                    $('#resultadoSorteio').fadeIn(1000);
+                    $('#animacaoSorteio').empty();
+                } else {
+                    Swal.fire('Erro', response.message || 'Erro desconhecido', 'error');
+                    $('#sorteioResultados').hide();
+                }
+            },
+            error: function(xhr) {
+                let errorMsg = 'Erro ao conectar com o servidor';
+                try {
+                    const response = xhr.responseJSON;
+                    if (response && response.message) {
+                        errorMsg = response.message;
+                    }
+                } catch (e) {
+                    console.error('Erro ao processar resposta:', e);
+                }
+                
+                Swal.fire('Erro', errorMsg, 'error');
+                $('#sorteioResultados').hide();
+            },
+            complete: function() {
+                $btn.prop('disabled', false).html('<i class="fas fa-random me-2"></i> Realizar Sorteio');
+            }
+        });
+    });
 
     // Carrega congregações ao iniciar
     carregarCongregacoes();

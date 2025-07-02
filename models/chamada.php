@@ -48,27 +48,30 @@ public function getClassesByCongregacao($congregacao_id) {
 
     
 // Método para obter os alunos de uma classe
-public function getAlunosByClasse($classe_id) {
+public function getAlunosByClasse($classe_id, $congregacao_id, $trimestre) {
     global $pdo;
 
-    // Consulta para obter os alunos associados à classe
-    $query = "SELECT a.id, a.nome
-              FROM alunos a
-              INNER JOIN matriculas m ON m.aluno_id = a.id
-              WHERE m.classe_id = ? AND m.status = 'ativo'";
+    $query = "
+        SELECT DISTINCT a.id, a.nome
+        FROM alunos a
+        INNER JOIN matriculas m ON m.aluno_id = a.id
+        WHERE m.classe_id = :classe_id
+          AND m.congregacao_id = :congregacao_id
+          AND m.trimestre = :trimestre
+          AND m.status = 'ativo'
+    ";
 
     $stmt = $pdo->prepare($query);
-    $stmt->bindValue(1, $classe_id, PDO::PARAM_INT);
+    $stmt->bindParam(':classe_id', $classe_id, PDO::PARAM_INT);
+    $stmt->bindParam(':congregacao_id', $congregacao_id, PDO::PARAM_INT);
+    $stmt->bindParam(':trimestre', $trimestre, PDO::PARAM_INT);
     $stmt->execute();
 
     $alunos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if (empty($alunos)) {
-        $this->sendErrorResponse('Nenhum aluno encontrado para esta classe.');
-    }
-
-    return ['status' => 'success', 'data' => $alunos];
+    return $alunos;
 }
+
 
 // Método sendErrorResponse (para enviar a resposta de erro)
 private function sendErrorResponse($mensagem) {
