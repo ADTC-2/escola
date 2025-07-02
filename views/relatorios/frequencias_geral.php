@@ -2,400 +2,584 @@
 require_once('../../config/conexao.php');
 include('../../views/includes/header.php');
 
+// --- Funções ---
+function calcularPeriodoTrimestre(int $trimestre): array {
+    $ano = date('Y');
+    $mes_inicio = ($trimestre - 1) * 3 + 1;
+    $mes_fim = $mes_inicio + 2;
+    $data_inicio = "$ano-" . str_pad($mes_inicio, 2, '0', STR_PAD_LEFT) . "-01";
+    $ultimo_dia = date("t", strtotime("$ano-" . str_pad($mes_fim, 2, '0', STR_PAD_LEFT) . "-01"));
+    $data_fim = "$ano-" . str_pad($mes_fim, 2, '0', STR_PAD_LEFT) . "-$ultimo_dia";
+    return [$data_inicio, $data_fim];
+}
+
 // --- Filtros ---
-$data_inicio = $_GET['data_inicio'] ?? '';
-$data_fim    = $_GET['data_fim'] ?? '';
 $congregacao_id = $_GET['congregacao_id'] ?? '';
 $classe_id = $_GET['classe_id'] ?? '';
 $trimestre = $_GET['trimestre'] ?? '';
-$limpar_duplicatas = isset($_GET['limpar_duplicatas']) ? true : false;
+$data_inicio = $_GET['data_inicio'] ?? '';
+$data_fim = $_GET['data_fim'] ?? '';
 
-// --- Função para pegar nome classe ---
-function getNomeClasse($pdo, $classe_id) {
-    $stmt = $pdo->prepare("SELECT nome FROM classes WHERE id = :id");
-    $stmt->execute([':id' => $classe_id]);
-    $r = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $r ? $r['nome'] : "Classe ID $classe_id";
-}
+// Inicializa variáveis
+$alunos = [];
+$top_presencas = [];
+$top_faltas = [];
+$trimestre_sem_dados = false;
 
-// --- Limpeza de chamadas duplicadas se pedido ---
-if ($limpar_duplicatas) {
-    $where = [];
-    $params = [];
-
-    if ($classe_id !== '') {
-        $where[] = 'c1.classe_id = :classe_id';
-        $params[':classe_id'] = $classe_id;
+// Definir período
+if (!empty($trimestre)) {
+    [$data_inicio, $data_fim] = calcularPeriodoTrimestre($trimestre);
+    
+    // Verificar se existe alguma chamada para este trimestre
+    $stmt = $pdo->prepare("SELECT COUNT(*) AS total FROM chamadas WHERE data BETWEEN ? AND ?");
+    $stmt->execute([$data_inicio, $data_fim]);
+    $result = $stmt->fetch();
+    
+    if ($result['total'] == 0) {
+        $trimestre_sem_dados = true;
     }
-    if ($data_inicio && $data_fim) {
-        $where[] = 'c1.data BETWEEN :data_inicio AND :data_fim';
-        $params[':data_inicio'] = $data_inicio;
-        $params[':data_fim'] = $data_fim;
+} else {
+    $data_inicio = $data_inicio ?: date('Y-m-01');
+    $data_fim = $data_fim ?: date('Y-m-d');
+}
+
+// --- Consulta principal (só executa se trimestre tiver dados ou se não for por trimestre) ---
+if (!$trimestre_sem_dados) {
+    $sql = "SELECT 
+                a.id,
+                a.nome AS aluno,
+                c.nome AS classe,
+                cg.nome AS congregacao,
+                COUNT(CASE WHEN p.presente IN ('presente', 'justificado') THEN 1 END) AS presencas,
+                COUNT(CASE WHEN p.presente = 'ausente' THEN 1 END) AS faltas,
+                COUNT(p.id) AS total,
+                CASE 
+                    WHEN COUNT(p.id) > 0 THEN 
+                        ROUND(COUNT(CASE WHEN p.presente IN ('presente', 'justificado') THEN 1 END) / COUNT(p.id) * 100, 1)
+                    ELSE 0
+                END AS frequencia
+            FROM alunos a
+            JOIN matriculas m ON m.aluno_id = a.id AND m.status = 'ativo'
+            JOIN classes c ON c.id = m.classe_id
+            JOIN congregacoes cg ON cg.id = m.congregacao_id
+            LEFT JOIN presencas p ON p.aluno_id = a.id
+            LEFT JOIN chamadas ch ON ch.id = p.chamada_id AND ch.classe_id = m.classe_id
+                AND ch.data BETWEEN :inicio AND :fim
+            WHERE 1=1";
+
+    $params = [':inicio' => $data_inicio, ':fim' => $data_fim];
+
+    if (!empty($congregacao_id)) {
+        $sql .= " AND cg.id = :congregacao";
+        $params[':congregacao'] = $congregacao_id;
     }
-    $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
-    $sqlDelete = "DELETE c1 FROM chamadas c1
-                  INNER JOIN chamadas c2
-                    ON c1.data = c2.data
-                    AND c1.classe_id = c2.classe_id
-                    AND c1.id > c2.id
-                  $whereSql";
-
-    $stmtDel = $pdo->prepare($sqlDelete);
-    foreach ($params as $k => $v) {
-        $stmtDel->bindValue($k, $v);
+    if (!empty($classe_id)) {
+        $sql .= " AND c.id = :classe";
+        $params[':classe'] = $classe_id;
     }
-    $stmtDel->execute();
 
-    $msg_limpeza = "Limpeza de chamadas duplicadas realizada com sucesso.";
-}
+    $sql .= " GROUP BY a.id ORDER BY frequencia DESC";
 
-// --- Consulta chamadas duplicadas ---
-$whereDup = [];
-$paramsDup = [];
-if ($classe_id !== '') {
-    $whereDup[] = 'classe_id = :classe_id_dup';
-    $paramsDup[':classe_id_dup'] = $classe_id;
-}
-if ($data_inicio && $data_fim) {
-    $whereDup[] = 'data BETWEEN :data_inicio_dup AND :data_fim_dup';
-    $paramsDup[':data_inicio_dup'] = $data_inicio;
-    $paramsDup[':data_fim_dup'] = $data_fim;
-}
-$whereSqlDup = $whereDup ? 'WHERE ' . implode(' AND ', $whereDup) : '';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $alunos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$sqlDup = "SELECT data, classe_id, COUNT(*) AS total_chamadas
-           FROM chamadas
-           $whereSqlDup
-           GROUP BY data, classe_id
-           HAVING total_chamadas > 1
-           ORDER BY data";
-
-$stmtDup = $pdo->prepare($sqlDup);
-foreach ($paramsDup as $k => $v) {
-    $stmtDup->bindValue($k, $v);
-}
-$stmtDup->execute();
-$duplicatas = $stmtDup->fetchAll(PDO::FETCH_ASSOC);
-
-// --- Ajuste intervalo datas por trimestre ---
-if ($trimestre && (!$data_inicio || !$data_fim)) {
-    $ano = date('Y');
-    switch ($trimestre) {
-        case '1': $data_inicio = "$ano-01-01"; $data_fim = "$ano-03-31"; break;
-        case '2': $data_inicio = "$ano-04-01"; $data_fim = "$ano-06-30"; break;
-        case '3': $data_inicio = "$ano-07-01"; $data_fim = "$ano-09-30"; break;
-        case '4': $data_inicio = "$ano-10-01"; $data_fim = "$ano-12-31"; break;
+    // Rankings
+    if (count($alunos) > 0) {
+        $top_presencas = array_slice($alunos, 0, 5);
+        $top_faltas = array_reverse(array_slice($alunos, -5, 5));
     }
 }
 
-// --- Consulta principal ---
-$sqlRel = "
-SELECT 
-    a.id AS aluno_id,
-    a.nome AS aluno_nome,
-    c.nome AS classe_nome,
-    cg.nome AS congregacao_nome,
-    CASE 
-        WHEN MONTH(ch.data) BETWEEN 1 AND 3 THEN 1
-        WHEN MONTH(ch.data) BETWEEN 4 AND 6 THEN 2
-        WHEN MONTH(ch.data) BETWEEN 7 AND 9 THEN 3
-        ELSE 4
-    END AS trimestre,
-    DATE_FORMAT(ch.data, '%Y-%m') AS mes,
-    COUNT(DISTINCT ch.id) AS total_registros,
-    COUNT(DISTINCT CASE WHEN p.presente IN ('presente', 'justificado') THEN ch.id END) AS total_presencas,
-    COUNT(DISTINCT CASE WHEN p.presente = 'ausente' THEN ch.id END) AS total_faltas
-FROM alunos a
-JOIN matriculas m ON m.aluno_id = a.id AND m.status = 'ativo'
-JOIN classes c ON c.id = m.classe_id
-JOIN congregacoes cg ON cg.id = m.congregacao_id
-LEFT JOIN presencas p ON p.aluno_id = a.id
-LEFT JOIN chamadas ch ON ch.id = p.chamada_id AND ch.classe_id = m.classe_id
-WHERE 1=1
-";
-
-if ($data_inicio && $data_fim) {
-    $sqlRel .= " AND ch.data BETWEEN :data_inicio AND :data_fim ";
-}
-if ($congregacao_id) {
-    $sqlRel .= " AND m.congregacao_id = :congregacao_id ";
-}
-if ($classe_id) {
-    $sqlRel .= " AND m.classe_id = :classe_id ";
-}
-if ($trimestre) {
-    $sqlRel .= " AND 
-        CASE 
-            WHEN MONTH(ch.data) BETWEEN 1 AND 3 THEN 1
-            WHEN MONTH(ch.data) BETWEEN 4 AND 6 THEN 2
-            WHEN MONTH(ch.data) BETWEEN 7 AND 9 THEN 3
-            ELSE 4
-        END = :trimestre ";
-}
-
-$sqlRel .= " GROUP BY a.id, trimestre, mes ORDER BY a.nome, trimestre, mes ";
-
-$stmtRel = $pdo->prepare($sqlRel);
-
-if ($data_inicio && $data_fim) {
-    $stmtRel->bindValue(':data_inicio', $data_inicio);
-    $stmtRel->bindValue(':data_fim', $data_fim);
-}
-if ($congregacao_id) {
-    $stmtRel->bindValue(':congregacao_id', $congregacao_id);
-}
-if ($classe_id) {
-    $stmtRel->bindValue(':classe_id', $classe_id);
-}
-if ($trimestre) {
-    $stmtRel->bindValue(':trimestre', $trimestre);
-}
-
-$stmtRel->execute();
-$relatorios = $stmtRel->fetchAll(PDO::FETCH_ASSOC);
-
-// --- Carregar dropdowns ---
-$congs = $pdo->query("SELECT id, nome FROM congregacoes ORDER BY nome")->fetchAll(PDO::FETCH_ASSOC);
-$classes = $pdo->query("SELECT id, nome FROM classes ORDER BY nome")->fetchAll(PDO::FETCH_ASSOC);
+// Dropdowns
+$congs = $pdo->query("SELECT id, nome FROM congregacoes ORDER BY nome")->fetchAll();
+$classes = $pdo->query("SELECT id, nome FROM classes ORDER BY nome")->fetchAll();
 ?>
 
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Relatório de Presenças e Limpeza de Chamadas Duplicadas</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-<link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
-<link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet" />
-<link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet" />
-
-<style>
-  .badge-presente { background-color: #28a745; color: white; }
-  .badge-falta { background-color: #dc3545; color: white; }
-  body { background-color: #f8f9fa; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Relatório de Presenças</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #4e73df;
+            --success: #1cc88a;
+            --danger: #e74a3b;
+            --warning: #f6c23e;
+        }
+        
+        body {
+            background-color: #f8f9fc;
+            font-family: 'Nunito', sans-serif;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        
+        .badge-presenca {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .badge-falta {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .badge-frequencia {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .ranking-item {
+            border-left: 4px solid;
+            transition: all 0.3s;
+        }
+        
+        .ranking-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .ranking-1 { border-color: var(--success); }
+        .ranking-2 { border-color: var(--warning); }
+        .ranking-3 { border-color: var(--danger); }
+        
+        #tabelaAlunos tbody tr {
+            transition: all 0.2s;
+        }
+        
+        #tabelaAlunos tbody tr:hover {
+            background-color: rgba(78, 115, 223, 0.05);
+        }
+        
+        .progress {
+            height: 10px;
+            border-radius: 5px;
+        }
+        
+        .progress-bar {
+            background-color: var(--primary);
+        }
+        
+        .alert-empty {
+            border-left: 4px solid var(--warning);
+        }
+    </style>
 </head>
 <body>
+    <div class="container-fluid py-4">
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-calendar-check mr-2"></i>Relatório Trimestral
+            </h1>
+            <div class="d-flex">
+                <button id="exportPdf" class="btn btn-danger btn-sm mr-2" <?= (count($alunos) == 0) ? 'disabled' : '' ?>>
+                    <i class="fas fa-file-pdf mr-1"></i>PDF
+                </button>
+                <button id="exportExcel" class="btn btn-success btn-sm" <?= (count($alunos) == 0) ? 'disabled' : '' ?>>
+                    <i class="fas fa-file-excel mr-1"></i>Excel
+                </button>
+            </div>
+        </div>
 
-<div class="container my-4">
-  <h3 class="text-center mb-4">📊 Relatório de Presenças por Aluno</h3>
+        <!-- Filtros -->
+        <div class="card mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-filter mr-1"></i> Filtros
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Congregação</label>
+                        <select name="congregacao_id" class="form-select">
+                            <option value="">Todas</option>
+                            <?php foreach($congs as $c): ?>
+                                <option value="<?= $c['id'] ?>" <?= $congregacao_id == $c['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($c['nome']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Classe</label>
+                        <select name="classe_id" class="form-select">
+                            <option value="">Todas</option>
+                            <?php foreach($classes as $cl): ?>
+                                <option value="<?= $cl['id'] ?>" <?= $classe_id == $cl['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($cl['nome']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Trimestre</label>
+                        <select name="trimestre" class="form-select">
+                            <option value="">Selecione</option>
+                            <option value="1" <?= $trimestre == 1 ? 'selected' : '' ?>>1º Trimestre</option>
+                            <option value="2" <?= $trimestre == 2 ? 'selected' : '' ?>>2º Trimestre</option>
+                            <option value="3" <?= $trimestre == 3 ? 'selected' : '' ?>>3º Trimestre</option>
+                            <option value="4" <?= $trimestre == 4 ? 'selected' : '' ?>>4º Trimestre</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Data Início</label>
+                        <input type="date" name="data_inicio" class="form-control" value="<?= $data_inicio ?>" <?= $trimestre ? 'readonly' : '' ?>>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Data Fim</label>
+                        <input type="date" name="data_fim" class="form-control" value="<?= $data_fim ?>" <?= $trimestre ? 'readonly' : '' ?>>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search mr-1"></i> Filtrar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
-  <!-- Filtros -->
-  <form method="get" class="row g-3 mb-4">
-    <div class="col-md-2">
-      <label for="data_inicio" class="form-label">Data Início</label>
-      <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="<?= htmlspecialchars($data_inicio) ?>">
-    </div>
-    <div class="col-md-2">
-      <label for="data_fim" class="form-label">Data Fim</label>
-      <input type="date" name="data_fim" id="data_fim" class="form-control" value="<?= htmlspecialchars($data_fim) ?>">
-    </div>
-    <div class="col-md-2">
-      <label for="congregacao_id" class="form-label">Congregação</label>
-      <select name="congregacao_id" id="congregacao_id" class="form-select">
-        <option value="">Todas</option>
-        <?php foreach($congs as $c): ?>
-          <option value="<?= $c['id'] ?>" <?= ($congregacao_id == $c['id']) ? 'selected' : '' ?>>
-            <?= htmlspecialchars($c['nome']) ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-    <div class="col-md-2">
-      <label for="classe_id" class="form-label">Classe</label>
-      <select name="classe_id" id="classe_id" class="form-select">
-        <option value="">Todas</option>
-        <?php foreach($classes as $cl): ?>
-          <option value="<?= $cl['id'] ?>" <?= ($classe_id == $cl['id']) ? 'selected' : '' ?>>
-            <?= htmlspecialchars($cl['nome']) ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-    <div class="col-md-2">
-      <label for="trimestre" class="form-label">Trimestre</label>
-      <select name="trimestre" id="trimestre" class="form-select">
-        <option value="">Todos</option>
-        <?php for ($i=1; $i<=4; $i++): ?>
-          <option value="<?= $i ?>" <?= ($trimestre == $i) ? 'selected' : '' ?>><?= $i ?>º</option>
-        <?php endfor; ?>
-      </select>
-    </div>
-    <div class="col-md-2 d-flex align-items-end gap-2">
-      <button type="submit" class="btn btn-primary flex-grow-1">Filtrar</button>
-      <button type="submit" name="limpar_duplicatas" value="1" class="btn btn-danger" onclick="return confirm('Confirma limpeza de chamadas duplicadas?')">Limpar Chamadas Duplicadas</button>
-    </div>
-  </form>
-
-<?php if (!empty($msg_limpeza)): ?>
-  <div class="alert alert-success" id="msg-limpeza"><?= htmlspecialchars($msg_limpeza) ?></div>
-<?php endif; ?>
-
-
-  <!-- Relatório -->
-  <div class="table-responsive">
-    <table id="tabela" class="table table-bordered table-striped nowrap w-100">
-      <thead class="table-dark">
-        <tr>
-          <th>Aluno</th>
-          <th>Classe</th>
-          <th>Congregação</th>
-          <th>Trimestre</th>
-          <th>Mês/Ano</th>
-          <th>Presenças</th>
-          <th>Faltas</th>
-          <th>Total Registros</th>
-          <th>%</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php
-        $sumP = $sumF = $sumT = 0;
-        $currentAluno = null;
-        $alunoP = $alunoF = $alunoT = 0;
+        <?php if ($trimestre_sem_dados): ?>
+            <div class="alert alert-warning alert-empty">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle fa-2x mr-3"></i>
+                    <div>
+                        <h5 class="alert-heading">Trimestre sem dados</h5>
+                        <p class="mb-0">O trimestre selecionado (<?= $trimestre ?>º) ainda não possui registros de chamadas.</p>
+                    </div>
+                </div>
+            </div>
+        <?php elseif (count($alunos) == 0 && !$trimestre_sem_dados): ?>
+            <div class="alert alert-info alert-empty">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-info-circle fa-2x mr-3"></i>
+                    <div>
+                        <h5 class="alert-heading">Nenhum resultado encontrado</h5>
+                        <p class="mb-0">Não foram encontrados registros para os filtros selecionados.</p>
+                    </div>
+                </div>
+            </div>
+        <?php else: ?>
         
-        foreach ($relatorios as $index => $r):
-          $p = (int)$r['total_presencas'];
-          $f = (int)$r['total_faltas'];
-          $t = (int)$r['total_registros'];
-          $perc = $t > 0 ? round($p / $t * 100, 2) : 0;
+            <!-- Cards Resumo -->
+            <div class="row mb-4">
+                <div class="col-xl-4 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Total Alunos
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        <?= count($alunos) ?>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-users fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-          // Se mudou de aluno, adiciona linha de total
-          if ($currentAluno !== null && $currentAluno != $r['aluno_id']) {
-            $alunoPerc = $alunoT > 0 ? round($alunoP / $alunoT * 100, 2) : 0;
-            ?>
-            <tr class="total-row">
-              <td colspan="5" class="text-end">Total do Aluno:</td>
-              <td class="text-center"><?= $alunoP ?></td>
-              <td class="text-center"><?= $alunoF ?></td>
-              <td class="text-center"><?= $alunoT ?></td>
-              <td class="text-center"><?= $alunoPerc ?>%</td>
-            </tr>
-            <?php
-            $alunoP = $alunoF = $alunoT = 0;
-          }
-          
-          $currentAluno = $r['aluno_id'];
-          $alunoP += $p;
-          $alunoF += $f;
-          $alunoT += $t;
-          
-          $sumP += $p;
-          $sumF += $f;
-          $sumT += $t;
-        ?>
-        <tr>
-          <td><?= htmlspecialchars($r['aluno_nome']) ?></td>
-          <td><?= htmlspecialchars($r['classe_nome']) ?></td>
-          <td><?= htmlspecialchars($r['congregacao_nome']) ?></td>
-          <td class="text-center"><?= $r['trimestre'] ?>º</td>
-          <td class="text-center"><?= date('m/Y', strtotime($r['mes'].'-01')) ?></td>
-          <td class="text-center"><span class="badge badge-presente"><?= $p ?></span></td>
-          <td class="text-center"><span class="badge badge-falta"><?= $f ?></span></td>
-          <td class="text-center"><?= $t ?></td>
-          <td class="text-center"><?= $perc ?>%</td>
-        </tr>
-        <?php 
-          // Adiciona total do último aluno
-          if ($index === count($relatorios) - 1) {
-            $alunoPerc = $alunoT > 0 ? round($alunoP / $alunoT * 100, 2) : 0;
-            ?>
-            <tr class="total-row">
-            <td colspan="5" class="text-end">Total do Aluno:</td>
-            <td class="text-center"><?= $alunoP ?></td>
-            <td class="text-center"><?= $alunoF ?></td>
-            <td class="text-center"><?= $alunoT ?></td>
-            <td class="text-center"><?= $alunoPerc ?>%</td>
-            </tr>
-            <?php
-          }
-        endforeach; 
-        ?>
-      </tbody>
-      <tfoot class="table-secondary fw-bold">
-        <tr class="total-geral-row">
-            <td colspan="5" class="text-end">Totais Gerais:</td>
-            <td class="text-center"><?= $sumP ?></td>
-            <td class="text-center"><?= $sumF ?></td>
-            <td class="text-center"><?= $sumT ?></td>
-            <td class="text-center"><?= $sumT > 0 ? round($sumP / $sumT * 100, 2).'%' : '0%' ?></td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
+                <div class="col-xl-4 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Média de Frequência
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        <?= count($alunos) > 0 ? round(array_sum(array_column($alunos, 'frequencia')) / count($alunos), 1) : 0 ?>%
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-percent fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-  <!-- Chamadas Duplicadas Encontradas -->
-  <h4 class="mt-5">Chamadas Duplicadas Encontradas</h4>
-  <?php if ($duplicatas): ?>
-    <div class="table-responsive">
-      <table class="table table-striped table-bordered">
-        <thead class="table-dark">
-          <tr>
-            <th>Data</th>
-            <th>Classe</th>
-            <th>Total Chamadas</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($duplicatas as $d): ?>
-            <tr>
-              <td><?= date('d/m/Y', strtotime($d['data'])) ?></td>
-              <td><?= htmlspecialchars(getNomeClasse($pdo, $d['classe_id'])) ?></td>
-              <td><?= $d['total_chamadas'] ?></td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
+                <div class="col-xl-4 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Período
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        <?= date('d/m/Y', strtotime($data_inicio)) ?> - <?= date('d/m/Y', strtotime($data_fim)) ?>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rankings -->
+            <div class="row mb-4">
+                <!-- Top Presenças -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-success text-white">
+                            <h6 class="m-0 font-weight-bold">
+                                <i class="fas fa-trophy mr-1"></i> Top 5 Presenças
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <?php foreach($top_presencas as $i => $aluno): ?>
+                                <div class="mb-3 ranking-item ranking-<?= $i+1 ?> p-3 rounded">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="font-weight-bold mb-1"><?= $i+1 ?>. <?= htmlspecialchars($aluno['aluno']) ?></h6>
+                                        <span class="badge badge-presenca"><?= $aluno['presencas'] ?> presenças</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between small">
+                                        <span><?= htmlspecialchars($aluno['classe']) ?></span>
+                                        <span class="font-weight-bold"><?= $aluno['frequencia'] ?>%</span>
+                                    </div>
+                                    <div class="progress mt-2">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: <?= $aluno['frequencia'] ?>%" 
+                                             aria-valuenow="<?= $aluno['frequencia'] ?>" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Faltas -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-danger text-white">
+                            <h6 class="m-0 font-weight-bold">
+                                <i class="fas fa-exclamation-triangle mr-1"></i> Top 5 Faltas
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <?php foreach($top_faltas as $i => $aluno): ?>
+                                <div class="mb-3 ranking-item ranking-<?= $i+1 ?> p-3 rounded">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="font-weight-bold mb-1"><?= $i+1 ?>. <?= htmlspecialchars($aluno['aluno']) ?></h6>
+                                        <span class="badge badge-falta"><?= $aluno['faltas'] ?> faltas</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between small">
+                                        <span><?= htmlspecialchars($aluno['classe']) ?></span>
+                                        <span class="font-weight-bold"><?= $aluno['frequencia'] ?>%</span>
+                                    </div>
+                                    <div class="progress mt-2">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: <?= $aluno['frequencia'] ?>%" 
+                                             aria-valuenow="<?= $aluno['frequencia'] ?>" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela de Alunos -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-table mr-1"></i> Relação Completa de Alunos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="tabelaAlunos" class="table table-bordered table-hover" width="100%" cellspacing="0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Aluno</th>
+                                    <th>Classe</th>
+                                    <th>Congregação</th>
+                                    <th>Presenças</th>
+                                    <th>Faltas</th>
+                                    <th>Total</th>
+                                    <th>Frequência</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach($alunos as $aluno): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($aluno['aluno']) ?></td>
+                                        <td><?= htmlspecialchars($aluno['classe']) ?></td>
+                                        <td><?= htmlspecialchars($aluno['congregacao']) ?></td>
+                                        <td class="text-center">
+                                            <span class="badge badge-presenca"><?= $aluno['presencas'] ?></span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge badge-falta"><?= $aluno['faltas'] ?></span>
+                                        </td>
+                                        <td class="text-center"><?= $aluno['total'] ?></td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress flex-grow-1 mr-2" style="height: 20px;">
+                                                    <div class="progress-bar" role="progressbar" 
+                                                         style="width: <?= $aluno['frequencia'] ?>%" 
+                                                         aria-valuenow="<?= $aluno['frequencia'] ?>" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                                <span class="badge badge-frequencia"><?= $aluno['frequencia'] ?>%</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
     </div>
-  <?php else: ?>
-    <div class="alert alert-info">Nenhuma chamada duplicada encontrada no filtro selecionado.</div>
-  <?php endif; ?>
-</div>
 
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 
-<script>
-$(function(){
-  $('#tabela').DataTable({
-    responsive: true,
-    scrollX: true,
-    dom: 'Bfrtip',
-    buttons: [
-      { extend: 'excelHtml5', className: 'btn btn-success btn-sm', text: '📊 Excel', exportOptions: {columns: ':visible'} },
-      { extend: 'pdfHtml5', className: 'btn btn-danger btn-sm', text: '📄 PDF', orientation: 'landscape', pageSize: 'A4', exportOptions: {columns: ':visible'} },
-      { extend: 'print', className: 'btn btn-secondary btn-sm', text: '🖨️ Imprimir', exportOptions: {columns: ':visible'} }
-    ],
-    order: [[0, 'asc'], [3, 'asc'], [4, 'asc']],
-    language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" }
-  });
-});
-</script>
-<script>
-    setTimeout(function() {
-    const alert = document.getElementById('msg-limpeza');
-    if (alert) {
-        alert.classList.remove('show');
-        setTimeout(() => alert.remove(), 500);
-    }
-    }, 5000); // 5000 milissegundos = 5 segundos
-</script>
+    <script>
+    $(document).ready(function() {
+        <?php if (count($alunos) > 0): ?>
+        // DataTable (só inicializa se houver dados)
+        var table = $('#tabelaAlunos').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    text: '<i class="fas fa-file-excel mr-1"></i> Excel',
+                    className: 'btn btn-success btn-sm',
+                    title: 'Relatorio_Presencas',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                },
+                {
+                    extend: 'pdfHtml5',
+                    text: '<i class="fas fa-file-pdf mr-1"></i> PDF',
+                    className: 'btn btn-danger btn-sm',
+                    title: 'Relatorio_Presencas',
+                    orientation: 'landscape',
+                    pageSize: 'A4',
+                    exportOptions: {
+                        columns: ':visible'
+                    },
+                    customize: function(doc) {
+                        doc.styles.tableHeader = {
+                            bold: true,
+                            fontSize: 10,
+                            color: 'white',
+                            fillColor: '#4e73df',
+                            alignment: 'center'
+                        };
+                        doc.defaultStyle.fontSize = 9;
+                    }
+                }
+            ],
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
+            },
+            responsive: true,
+            order: [[6, 'desc']],
+            columnDefs: [
+                { responsivePriority: 1, targets: 0 },
+                { responsivePriority: 2, targets: 6 }
+            ]
+        });
 
+        // Exportar PDF
+        $('#exportPdf').click(function() {
+            table.button('.buttons-pdf').trigger();
+        });
 
+        // Exportar Excel
+        $('#exportExcel').click(function() {
+            table.button('.buttons-excel').trigger();
+        });
+        <?php endif; ?>
+
+        // Atualizar datas quando selecionar trimestre
+        $('select[name="trimestre"]').change(function() {
+            const trimestre = $(this).val();
+            const anoAtual = new Date().getFullYear();
+            
+            if (trimestre) {
+                let inicio, fim;
+                
+                switch(trimestre) {
+                    case '1':
+                        inicio = `${anoAtual}-01-01`;
+                        fim = `${anoAtual}-03-31`;
+                        break;
+                    case '2':
+                        inicio = `${anoAtual}-04-01`;
+                        fim = `${anoAtual}-06-30`;
+                        break;
+                    case '3':
+                        inicio = `${anoAtual}-07-01`;
+                        fim = `${anoAtual}-09-30`;
+                        break;
+                    case '4':
+                        inicio = `${anoAtual}-10-01`;
+                        fim = `${anoAtual}-12-31`;
+                        break;
+                }
+                
+                $('input[name="data_inicio"]').val(inicio).prop('readonly', true);
+                $('input[name="data_fim"]').val(fim).prop('readonly', true);
+            } else {
+                $('input[name="data_inicio"], input[name="data_fim"]').prop('readonly', false);
+            }
+        });
+    });
+    </script>
 </body>
 </html>
-

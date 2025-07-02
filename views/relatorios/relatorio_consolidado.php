@@ -2,27 +2,35 @@
 include('../../config/conexao.php');
 include('../../views/includes/header.php');
 
-// Recebe filtros
-$data_inicio = $_GET['data_inicio'] ?? '';
-$data_fim = $_GET['data_fim'] ?? '';
-$congregacao_id = $_GET['congregacao_id'] ?? '';
-$trimestre = $_GET['trimestre'] ?? '';
-
-// Ajusta datas com base no filtro trimestre
-if (!empty($trimestre)) {
+// Utilitários
+function calcularPeriodoTrimestre(int $trimestre): array {
     $ano = date('Y');
     $mes_inicio = ($trimestre - 1) * 3 + 1;
     $mes_fim = $mes_inicio + 2;
-
     $data_inicio = "$ano-" . str_pad($mes_inicio, 2, '0', STR_PAD_LEFT) . "-01";
     $ultimo_dia = date("t", strtotime("$ano-" . str_pad($mes_fim, 2, '0', STR_PAD_LEFT) . "-01"));
     $data_fim = "$ano-" . str_pad($mes_fim, 2, '0', STR_PAD_LEFT) . "-$ultimo_dia";
-} else {
-    if (empty($data_inicio)) $data_inicio = date('Y-m-01');
-    if (empty($data_fim)) $data_fim = date('Y-m-d');
+    return [$data_inicio, $data_fim];
 }
 
-// Consulta para total trimestral (sem mês)
+function nomeTrimestre($num) {
+    return "{$num}º Trimestre";
+}
+
+// Filtros (sanitizados)
+$congregacao_id = isset($_GET['congregacao_id']) ? intval($_GET['congregacao_id']) : null;
+$trimestre = isset($_GET['trimestre']) ? intval($_GET['trimestre']) : null;
+$data_inicio = $_GET['data_inicio'] ?? '';
+$data_fim = $_GET['data_fim'] ?? '';
+
+if (!empty($trimestre)) {
+    [$data_inicio, $data_fim] = calcularPeriodoTrimestre($trimestre);
+} else {
+    $data_inicio = $data_inicio ?: date('Y-m-01');
+    $data_fim = $data_fim ?: date('Y-m-d');
+}
+
+// Consulta SQL
 $sql = "
 SELECT 
     a.id AS aluno_id,
@@ -42,8 +50,8 @@ FROM alunos a
 JOIN matriculas m ON m.aluno_id = a.id AND m.status = 'ativo'
 JOIN classes c ON c.id = m.classe_id
 JOIN congregacoes cg ON cg.id = m.congregacao_id
-LEFT JOIN presencas p ON p.aluno_id = a.id
-LEFT JOIN chamadas ch ON ch.id = p.chamada_id AND ch.classe_id = m.classe_id
+JOIN presencas p ON p.aluno_id = a.id
+JOIN chamadas ch ON ch.id = p.chamada_id AND ch.classe_id = m.classe_id
 WHERE ch.data BETWEEN :data_inicio AND :data_fim
   AND p.presente IN ('presente', 'ausente')
 ";
@@ -63,23 +71,29 @@ if (!empty($congregacao_id)) {
 $stmt->execute();
 $dados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Busca congregações para filtro
+// Congregações para o filtro
 $congs = $pdo->query("SELECT id, nome FROM congregacoes ORDER BY nome")->fetchAll(PDO::FETCH_ASSOC);
 
-// Rankings top 10 presenças e faltas (baseado no total trimestral)
-$top_presencas = $dados;
+// Consolidar ranking por aluno
+$resumo = [];
+foreach ($dados as $d) {
+    $id = $d['aluno_id'];
+    if (!isset($resumo[$id])) {
+        $resumo[$id] = $d;
+    } else {
+        $resumo[$id]['total_presencas'] += $d['total_presencas'];
+        $resumo[$id]['total_faltas'] += $d['total_faltas'];
+        $resumo[$id]['total_registros'] += $d['total_registros'];
+    }
+}
+
+$top_presencas = $resumo;
 usort($top_presencas, fn($a, $b) => $b['total_presencas'] <=> $a['total_presencas']);
 $top_presencas = array_slice($top_presencas, 0, 10);
 
-$top_faltas = $dados;
+$top_faltas = $resumo;
 usort($top_faltas, fn($a, $b) => $b['total_faltas'] <=> $a['total_faltas']);
 $top_faltas = array_slice($top_faltas, 0, 10);
-
-// Função para nome do trimestre
-function nome_trimestre($num) {
-    return "$numº Trimestre";
-}
-
 ?>
 
 <!DOCTYPE html>
@@ -88,6 +102,7 @@ function nome_trimestre($num) {
     <meta charset="UTF-8">
     <title>Relatório Trimestral de Presenças</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Estilos Bootstrap + DataTables -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
@@ -103,9 +118,9 @@ function nome_trimestre($num) {
 <div class="container-fluid py-4 px-3">
     <h4 class="mb-4 text-center">📊 Relatório Geral de Presenças por Trimestre</h4>
 
+    <!-- Formulário de filtro -->
     <form class="row g-3 mb-4" method="GET">
-
-        <div class="col-12 col-md-3">
+        <div class="col-md-3">
             <label>Congregação:</label>
             <select name="congregacao_id" class="form-select">
                 <option value="">Todas</option>
@@ -116,22 +131,24 @@ function nome_trimestre($num) {
                 <?php endforeach; ?>
             </select>
         </div>
-        <div class="col-12 col-md-2">
+        <div class="col-md-2">
             <label>Trimestre:</label>
             <select name="trimestre" class="form-select">
                 <option value="">Todos</option>
-                <option value="1" <?= ($trimestre == 1) ? 'selected' : '' ?>>1º Trimestre</option>
-                <option value="2" <?= ($trimestre == 2) ? 'selected' : '' ?>>2º Trimestre</option>
-                <option value="3" <?= ($trimestre == 3) ? 'selected' : '' ?>>3º Trimestre</option>
-                <option value="4" <?= ($trimestre == 4) ? 'selected' : '' ?>>4º Trimestre</option>
+                <?php for ($i = 1; $i <= 4; $i++): ?>
+                    <option value="<?= $i ?>" <?= ($trimestre == $i) ? 'selected' : '' ?>>
+                        <?= $i ?>º Trimestre
+                    </option>
+                <?php endfor; ?>
             </select>
         </div>
-        <div class="col-12 col-md-1 d-grid">
+        <div class="col-md-1 d-grid">
             <label>&nbsp;</label>
             <button class="btn btn-primary" type="submit">Filtrar</button>
         </div>
     </form>
 
+    <!-- Tabela de presenças -->
     <div class="table-responsive">
         <table id="tabela" class="table table-striped table-bordered nowrap" style="width:100%">
             <thead class="table-dark">
@@ -142,25 +159,30 @@ function nome_trimestre($num) {
                     <th>Trimestre</th>
                     <th>Presenças</th>
                     <th>Faltas</th>
+                    <th>% Frequência</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach($dados as $d): ?>
+                <?php foreach($dados as $d): 
+                    $freq = $d['total_registros'] > 0 ? round($d['total_presencas'] / $d['total_registros'] * 100, 1) : 0;
+                ?>
                     <tr>
                         <td><?= htmlspecialchars($d['aluno_nome']) ?></td>
                         <td><?= htmlspecialchars($d['classe_nome']) ?></td>
                         <td><?= htmlspecialchars($d['congregacao_nome']) ?></td>
-                        <td><?= nome_trimestre($d['trimestre']) ?></td>
+                        <td><?= nomeTrimestre($d['trimestre']) ?></td>
                         <td><span class="badge badge-presente"><?= $d['total_presencas'] ?></span></td>
                         <td><span class="badge badge-falta"><?= $d['total_faltas'] ?></span></td>
+                        <td><span class="badge bg-info"><?= $freq ?>%</span></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
     </div>
 
+    <!-- Rankings -->
     <div class="row mt-5">
-        <div class="col-12 col-md-6 mb-4">
+        <div class="col-md-6 mb-4">
             <h5 class="mb-3 text-success">🎯 Top 10 com Mais Presenças</h5>
             <ul class="list-group">
                 <?php foreach($top_presencas as $p): ?>
@@ -171,8 +193,7 @@ function nome_trimestre($num) {
                 <?php endforeach; ?>
             </ul>
         </div>
-
-        <div class="col-12 col-md-6 mb-4">
+        <div class="col-md-6 mb-4">
             <h5 class="mb-3 text-danger">⚠️ Top 10 com Mais Faltas</h5>
             <ul class="list-group">
                 <?php foreach($top_faltas as $f): ?>
@@ -186,7 +207,7 @@ function nome_trimestre($num) {
     </div>
 </div>
 
-<!-- Scripts JS para DataTables -->
+<!-- JS DataTables -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
@@ -209,16 +230,25 @@ $(document).ready(function () {
         },
         dom: 'Bfrtip',
         buttons: [
-            { extend: 'copyHtml5', text: 'Copiar', exportOptions: { columns: ':visible' } },
-            { extend: 'excelHtml5', text: 'Excel', exportOptions: { columns: ':visible' } },
             { 
-                extend: 'pdfHtml5', 
-                text: 'PDF', 
-                orientation: 'landscape', 
+                extend: 'copyHtml5', 
+                text: 'Copiar', 
+                exportOptions: { columns: ':visible' } 
+            },
+            { 
+                extend: 'excelHtml5', 
+                text: 'Excel', 
+                exportOptions: { columns: ':visible' } 
+            },
+            { 
+                extend: 'pdfHtml5',
+                text: 'PDF',
+                orientation: 'landscape',
                 pageSize: 'A4',
                 title: 'Relatório Geral de Presenças por Trimestre',
                 exportOptions: { columns: ':visible' },
                 customize: function (doc) {
+                    // Estilo do cabeçalho
                     doc.styles.tableHeader = {
                         bold: true,
                         fontSize: 10,
@@ -226,13 +256,19 @@ $(document).ready(function () {
                         fillColor: '#343a40',
                         alignment: 'center'
                     };
+                    // Estilo do título
                     doc.styles.title = {
                         fontSize: 14,
                         alignment: 'center',
                         bold: true
                     };
+                    // Estilo padrão
                     doc.defaultStyle.fontSize = 9;
+
+                    // Largura automática para todas as colunas
                     doc.content[1].table.widths = Array(doc.content[1].table.body[0].length + 1).join('*').split('');
+
+                    // Rodapé
                     doc.footer = function(currentPage, pageCount) {
                         return {
                             text: 'Página ' + currentPage.toString() + ' de ' + pageCount,
@@ -241,15 +277,23 @@ $(document).ready(function () {
                             fontSize: 8
                         };
                     };
+                },
+                columnStyles: {
+                    4: { alignment: 'center' }, // Presenças
+                    5: { alignment: 'center' }, // Faltas
+                    6: { alignment: 'center' }  // % Frequência
                 }
             },
-            { extend: 'print', text: 'Imprimir', exportOptions: { columns: ':visible' } }
+            { 
+                extend: 'print', 
+                text: 'Imprimir', 
+                exportOptions: { columns: ':visible' } 
+            }
         ]
     });
 });
 </script>
 
+
 </body>
 </html>
-
-
